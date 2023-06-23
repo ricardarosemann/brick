@@ -4,15 +4,16 @@ title: "default"
 periods: [2000, 2005, 2010, 2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050,
           2055, 2060, 2070, 2080, 2090, 2100, 2110, 2130, 2150]
 startyear: 2005
-regionmapping: NULL # NULL: country-level resolution
-regions: NULL       # NULL: all regions from mapping
+regionmapping: NA # NA: country-level resolution
+regions: NULL     # NULL: all regions from mapping
 # data
 inputRevision: "0.0.1"
-startingPoint: NULL # previous model run to start from
+startingPoint: NA # previous model run to start from
 # solvers
 gamsCall:  gams
 solverLP:  cplex
 solverNLP: conopt4
+solverQCP: conopt4
 # model switches
 switches:
   RUNTYPE:         scenario # scenario: run of future scenario, calibartion: calibrateion to historic stock, matching: matching historic stocks and flows to sources

@@ -12,7 +12,11 @@ p_specCostDem                "floor-space specific demolition cost in USD/m2"
 
 p_population(reg,loc,typ,inc,ttot)          "number of people in million"
 p_floorPerCap(reg,loc,typ,inc,ttot)         "floor space per capita in m2"
-p_stockHist(bs,hs,vin,reg,loc,typ,inc,ttot) "historic stock of buildings in million m2"
+
+p_stockHist(bs,hs,vin,reg,loc,typ,inc,ttot)              "historic stock of buildings in million m2"
+p_constructionHist(bs,hs,reg,loc,typ,inc,ttot)           "historic flow of new buildings in million m2/yr"
+p_renovationHist(bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings in million m2/yr"
+p_demolitionHist(bs,hs,vin,reg,loc,typ,inc,ttot)         "historic flow of demolished buildings in million m2/yr"
 
 p_shareDem(vin,ttot)           "minimum share of demolition at end of life"
 p_shareRenBS(bs,ttot,ttot)     "minimum share of renovation from the building shell reaching end of life"
@@ -27,6 +31,12 @@ p_runtime(reg,loc,typ,inc)                  "model runtime"
 p_handle(reg,loc,typ,inc)                   "parallel model handle parameter"
 p_repyFullSysLP(solveinfo)                  "model and solver summary: fullSysLP"
 p_repyFullSysNLP(reg,loc,typ,inc,solveinfo) "model and solver summary: fullSysNLP"
+
+p_refWeight(ref,reg,ttot) "weight of reference source in input matching"
+p_flowVariationWeight     "weight of flow variation in matching objective"
+
+p_refVals(ref,refVar,reg,ttot) "reference values to match"
+p_refValsMed(ref,reg)          "median non-zero reference value to normalise deviations"
 ;
 
 scalars
@@ -41,6 +51,10 @@ priceSensHS "price sensitivity of heating system choice" /2.5E-1/
 variables
 v_totSysCost               "total system cost incl. diversity preference in EUR"
 v_SysCost(reg,loc,typ,inc) "system cost incl. diversity preference in EUR"
+v_flowVariationTot         "total temporal variation of flows"
+v_refDeviationTot          "total weighted squared deviation of quantities from reference sources"
+v_refDeviationVar(ref,refVar,reg,ttot) "deviation from each variable in reference sources"
+v_matchingObj              "matching objective: reference deviation and flow variation"
 ;
 
 positive variables
@@ -52,10 +66,25 @@ v_DemCost(reg,loc,typ,inc,ttot) "demolition cost cash flow in EUR/yr"
 v_HeteroPrefCon(reg,loc,typ,inc,ttot) "diversity preference for construction"
 v_HeteroPrefRen(reg,loc,typ,inc,ttot) "diversity preference for renovation"
 
-v_stock(bs,hs,vin,reg,loc,typ,inc,ttot)              "stock of buildings in million m2"
-v_construction(bs,hs,reg,loc,typ,inc,ttot)           "flow of new buildings in million m2/yr"
-v_renovation(bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "flow of renovated and untouched buildings in million m2/yr"
-v_demolition(bs,hs,vin,reg,loc,typ,inc,ttot)         "flow of demolished buildings in million m2/yr"
+v_stock(qty,bs,hs,vin,reg,loc,typ,inc,ttot)              "stock of buildings in million m2"
+v_construction(qty,bs,hs,reg,loc,typ,inc,ttot)           "flow of new buildings in million m2/yr"
+v_renovation(qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "flow of renovated and untouched buildings in million m2/yr"
+v_demolition(qty,bs,hs,vin,reg,loc,typ,inc,ttot)         "flow of demolished buildings in million m2/yr"
+
+v_dwelSizeStock(vin,reg,loc,typ,inc,ttot)              "average dwelling size of the stock in m2/dwel"
+v_dwelSizeConstruction(reg,loc,typ,inc,ttot)           "average dwelling size of newly constructed buildings in m2/dwel"
+v_dwelSizeRenovation(vin,reg,loc,typ,inc,ttot) "average dwelling size of renovated buildings in m2/dwel"
+v_dwelSizeDemolition(vin,reg,loc,typ,inc,ttot)         "average dwelling size of demolished buildings in m2/dwel"
+
+v_dwelSize_Odyssee(refVar,reg,ttot) "dwelling size at the aggregation of Odyssee_dwelSize in m2/dwel"
+v_vinShare_EUBDB(refVar,reg,ttot)   "vintage shares at the aggregation of EUBDB_vintage"
+v_renRate_EuropeanCommissionRenovation(refVar,reg,ttot)
+v_heatingShare_Odyssee(refVar,reg,ttot) "share of heating systems in the stock"
+v_heatingShare_IDEES(refVar,reg,ttot) "share of heating systems in the stock"
+
+v_flowVariation(varFLow,qty,reg,loc,typ,inc,ttot) "temporal variation of flows"
+
+v_refDeviation(ref,reg,ttot)        "summed squared deviation from reference sources"
 ;
 
 equations
@@ -69,12 +98,23 @@ q_DemCost(reg,loc,typ,inc,ttot) "demolition cost"
 q_HeteroPrefCon(reg,loc,typ,inc,ttot) "diversity preference for construction"
 q_HeteroPrefRen(reg,loc,typ,inc,ttot) "diversity preference for renovation"
 
-q_stockBalNext(bs,hs,vin,reg,loc,typ,inc,ttot)      "building stock balance: flows into next time step"
-q_stockBalPrev(bs,hs,vin,reg,loc,typ,inc,ttot)      "building stock balance: flows from previous time step"
-q_housingDemand(reg,loc,typ,inc,ttot)                 "demand for floor space"
-q_buildingLifeTime(bs,hs,vin,reg,loc,typ,inc,ttot)  "minimum demolition from builing life time"
-q_buildingShellLifeTime(bs,vin,reg,loc,typ,inc,ttot) "minimum renovation from building shell life time"
-q_heatingSystemLifeTime(hs,vin,reg,loc,typ,inc,ttot) "minimum renovation from heating system life time"
+q_stockBalNext(qty,bs,hs,vin,reg,loc,typ,inc,ttot)  "building stock balance: flows into next time step"
+q_stockBalPrev(qty,bs,hs,vin,reg,loc,typ,inc,ttot)  "building stock balance: flows from previous time step"
+q_housingDemand(reg,loc,typ,inc,ttot)                "demand for floor space"
+q_buildingLifeTime(qty,bs,hs,vin,reg,loc,typ,inc,ttot)   "minimum demolition from builing life time"
+q_buildingShellLifeTime(qty,bs,vin,reg,loc,typ,inc,ttot) "minimum renovation from building shell life time"
+q_heatingSystemLifeTime(qty,hs,vin,reg,loc,typ,inc,ttot) "minimum renovation from heating system life time"
+
+q_dwelSizeStock(vin,reg,loc,typ,inc,ttot)      "dwelling size of the stock in m2/dwel"
+q_dwelSizeConstruction(reg,loc,typ,inc,ttot)   "dwelling size of newly constructed buildings in m2/dwel"
+q_dwelSizeRenovation(vin,reg,loc,typ,inc,ttot) "dwelling size of renovated buildings in m2/dwel"
+q_dwelSizeDemolition(vin,reg,loc,typ,inc,ttot) "dwelling size of demolished buildings in m2/dwel"
+
+q_dwelSize_Odyssee(refVar,reg,ttot) "dwelling size at the aggregation of Odyssee_dwelSize in m2/dwel"
+q_vinShare_EUBDB(refVar,reg,ttot)   "vintage shares at the aggregation of EUBDB_vintage"
+q_renRate_EuropeanCommissionRenovation(refVar,reg,ttot)
+q_heatingShare_Odyssee(refVar,reg,ttot) "share of heating systems in the stock"
+q_heatingShare_IDEES(refVar,reg,ttot) "share of heating systems in the stock"
 
 q_minDivConBS(bs,hsr,reg,loc,typ,inc,t)             "minimum building shell diversity in construction"
 q_minDivConHS(bs,hsr,reg,loc,typ,inc,t)             "minimum heating system diversity in construction"
@@ -82,4 +122,17 @@ q_minDivRenBS(bs,hsr,bsr,hsr,vin,reg,loc,typ,inc,t) "minimum building shell dive
 q_minDivRenHS(bs,hsr,bsr,hsr,vin,reg,loc,typ,inc,t) "minimum heating system diversity in renovation"
 
 q_maxRenRate(reg,ttot) "Maximum renovation rate"
+
+q_flowVariationTot                                   "total temporal variation of flows"
+q_flowVariation(varFLow,qty,reg,loc,typ,inc,ttot) "temporal variation of flows"
+
+
+q_refDeviationTot            "total deviation of quantities from reference sources"
+q_refDeviation(ref,reg,ttot) " deviation of quantities from reference source"
+
+q_refDeviationTot                   "total squared deviation of quantities from reference source"
+q_refDeviation(ref,reg,ttot)        "summed squared deviation from reference sources"
+q_refDeviationVar(ref,refVar,reg,t) "deviation from each variable in reference sources"
+
+q_matchingObj "matching objective: reference deviation and flow variation"
 ;

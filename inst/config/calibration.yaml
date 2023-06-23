@@ -1,0 +1,11 @@
+---
+title: "calibration"
+basedOn: "default.yaml"
+# scope and resolution
+periods: [2000, 2010, 2020]
+startyear: 2010
+regions: DEU
+# switches
+switches:
+  RUNTYPE: calibration
+...

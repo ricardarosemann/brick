@@ -12,7 +12,7 @@ model fullSysLP "full system linear optimisation"
   q_stockBalPrev
   q_housingDemand
   q_buildingLifeTime
-  q_buildingShellLifeTime
+*  q_buildingShellLifeTime  !! rule out building shell dimension
   q_heatingSystemLifeTime
 *  q_minDivConHS
 *  q_minDivConBS
@@ -34,7 +34,7 @@ model fullSysNLP "full system linear optimisation"
   q_stockBalPrev
   q_housingDemand
   q_buildingLifeTime
-  q_buildingShellLifeTime
+*  q_buildingShellLifeTime  !! rule out building shell dimension
   q_heatingSystemLifeTime
   q_HeteroPrefCon
   q_HeteroPrefRen
@@ -42,6 +42,26 @@ model fullSysNLP "full system linear optimisation"
   /
 ;
 
+
+model matching "find stock and flows that best match reference sources"
+  /
+  q_matchingObj
+  q_refDeviationTot
+  q_refDeviationVar
+  q_refDeviation
+  q_stockBalNext
+  q_stockBalPrev
+*  q_dwelSizeStock
+*  q_dwelSizeConstruction
+*  q_dwelSize_Odyssee
+  q_renRate_EuropeanCommissionRenovation
+  q_heatingShare_Odyssee
+  q_heatingShare_IDEES
+*  q_vinShare_EUBDB
+*  q_flowVariation
+*  q_flowVariationTot
+  /
+;
 
 
 
@@ -57,12 +77,17 @@ $endif.filtersubs
 * solvers
 option lp  = %solverLP%;
 option nlp = %solverNLP%;
+option qcp = %solverQCP%;
 
 
 
 *** scenario run ---------------------------------------------------------------
 
 $ifthen.scenario "%RUNTYPE%" == "scenario"
+
+* measure stocks and flows in floor area
+q("dwel") = no;
+q("area") = yes;
 
 * linear model
 $ifthenE.lp (sameas("%SOLVEPROBLEM%","lp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))
@@ -117,3 +142,37 @@ p_repyFullSysNLP(subs,'objval')    = fullSysNLP.objval;
 $endif.parallel
 
 $endif.nlp
+
+$endif.scenario
+
+
+
+*** calibration run ------------------------------------------------------------
+
+$ifthen.calibration "%RUNTYPE%" == "calibration"
+
+*** find historic flows that match given stock
+
+p_constructionHist(state,subs,ttot) = v_construction.l("area",state,subs,ttot);
+p_renovationHist(ren,vin,subs,ttot) = v_renovation.l("area",ren,vin,subs,ttot);
+p_demolitionHist(state,vin,subs,ttot) = v_demolition.l("area",state,vin,subs,ttot);
+
+
+$endif.calibration
+
+
+
+*** matching run ---------------------------------------------------------------
+
+$ifthen.matching "%RUNTYPE%" == "matching"
+
+* measure stocks and flows in both floor area and number of dwellings
+q(qty) = yes;
+
+* measure stocks and flows in floor area
+q("dwel") = no;
+q("area") = yes;
+
+solve matching minimizing v_matchingObj using qcp;
+
+$endif.matching
