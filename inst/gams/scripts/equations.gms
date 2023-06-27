@@ -43,7 +43,9 @@ q_ConCost(subs,t)..
   =e=
   sum(state,
     v_construction("area",state,subs,t)
-    * p_specCostCon
+    * sum(cost,
+        p_specCostCon(cost,state,subs,t)
+      )
   )
 ;
 
@@ -56,7 +58,9 @@ q_RenCost(subs,t)..
   =e=
   sum(vin$vinExists(t,vin), sum(renAllowed,
     v_renovation("area",renAllowed,vin,subs,t)
-    * p_specCostRen(renAllowed)
+    * sum(cost,
+        p_specCostRen(cost,renAllowed,vin,subs,t)
+      )
   ))
 ;
 
@@ -65,12 +69,12 @@ q_RenCost(subs,t)..
 
 * calculate cash flow of operation cost with area-specific cost
 
-q_OpeCost(subs,t)..
+q_OpeCost(subs(reg,loc,typ,inc),t)..
   v_OpeCost(subs,t)
   =e=
   sum((state,vinExists(t,vin)),
     v_stock("area",state,vin,subs,t)
-    * p_specCostOpe(state,t)
+    * p_specCostOpe(state,vin,reg,loc,typ,t)
   )
 ;
 
@@ -475,6 +479,42 @@ q_flowVariation(varFlow,q,subs,t)$((ord(t) lt card(t)))..
 
 
 
+*** dwelling size --------------------------------------------------------------
+
+* average dwelling size converts number of dwellings to floor space
+
+q_dwelSizeStock(vin,subs,ttot)$vinExists(ttot,vin)..
+  sum(state, v_stock("area",state,vin,subs,ttot))
+  =e=
+  v_dwelSizeStock(vin,subs,ttot)
+  * sum(state, v_stock("dwel",state,vin,subs,ttot))
+;
+
+q_dwelSizeConstruction(subs,ttot)..
+  sum(state, v_construction("area",state,subs,ttot))
+  =e=
+  v_dwelSizeConstruction(subs,ttot)
+  * sum(state, v_construction("dwel",state,subs,ttot))
+;
+
+q_dwelSizeRenovation(vin,subs,ttot)$vinExists(ttot,vin)..
+  sum(ren, v_renovation("area",ren,vin,subs,ttot))
+  =e=
+  v_dwelSizeRenovation(vin,subs,ttot)
+  * sum(ren, v_renovation("dwel",ren,vin,subs,ttot))
+;
+
+q_dwelSizeDemolition(vin,subs,ttot)$vinExists(ttot,vin)..
+  sum(state, v_demolition("area",state,vin,subs,ttot))
+  =e=
+  v_dwelSizeDemolition(vin,subs,ttot)
+  * sum(state, v_demolition("dwel",state,vin,subs,ttot))
+;
+
+
+
+$ifthen.matching "%RUNTYPE%" == "matching"
+
 *** matching objective ---------------------------------------------------------
 q_matchingObj..
   v_matchingObj
@@ -484,26 +524,6 @@ q_matchingObj..
   p_flowVariationWeight
   * v_flowVariationTot
 ;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -631,40 +651,6 @@ q_refDeviationVar(refVarExists(r,refVar,reg,t))..
 
 
 
-*** dwelling size --------------------------------------------------------------
-
-* average dwelling size converts number of dwellings to floor space
-
-q_dwelSizeStock(vin,subs,ttot)$vinExists(ttot,vin)..
-  sum(state, v_stock("area",state,vin,subs,ttot))
-  =e=
-  v_dwelSizeStock(vin,subs,ttot)
-  * sum(state, v_stock("dwel",state,vin,subs,ttot))
-;
-
-q_dwelSizeConstruction(subs,ttot)..
-  sum(state, v_construction("area",state,subs,ttot))
-  =e=
-  v_dwelSizeConstruction(subs,ttot)
-  * sum(state, v_construction("dwel",state,subs,ttot))
-;
-
-q_dwelSizeRenovation(vin,subs,ttot)$vinExists(ttot,vin)..
-  sum(ren, v_renovation("area",ren,vin,subs,ttot))
-  =e=
-  v_dwelSizeRenovation(vin,subs,ttot)
-  * sum(ren, v_renovation("dwel",ren,vin,subs,ttot))
-;
-
-q_dwelSizeDemolition(vin,subs,ttot)$vinExists(ttot,vin)..
-  sum(state, v_demolition("area",state,vin,subs,ttot))
-  =e=
-  v_dwelSizeDemolition(vin,subs,ttot)
-  * sum(state, v_demolition("dwel",state,vin,subs,ttot))
-;
-
-
-
 *** matching variables ---------------------------------------------------------
 
 * dwelling size at Odyssee reporting aggregation
@@ -763,3 +749,5 @@ q_renRate_EuropeanCommissionRenovation(refVar,reg,t)$refVarExists("EuropeanCommi
     )
   )
 ;
+
+$endif.matching

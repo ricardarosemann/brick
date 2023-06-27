@@ -80,6 +80,14 @@ createInputData <- function(path,
   # SETS -----------------------------------------------------------------------
 
 
+  ## fundamentals ====
+
+  cost <- m$addSet( # nolint: object_usage_linter.
+    "cost",
+    records = c("tangible", "intangible"),
+    description = "type of cost")
+
+
   ## temporal ====
 
   startyear <- config[["startyear"]]
@@ -154,12 +162,12 @@ createInputData <- function(path,
 
   bsr <- m$addSet(
     "bsr",
-    records = c("original", "rMedium", 0),
+    # records = c("original", "rMedium", 0),  # TODO: temporary deactivation of renovation
+    records = c("original", 0),
     description = "renovated building shell")
   hsr <- m$addSet(
     "hsr",
-    records = c(0, "biom", "dihe", "ehp1", "gabo", "libo", "reel",
-    "sobo"),
+    records = c(0, "biom", "dihe", "ehp1", "gabo", "libo", "reel", "sobo"),
     description = "renovated heating system")
   bs <-  m$addSet(
     "bs",
@@ -232,13 +240,18 @@ createInputData <- function(path,
   ## specific cost ====
 
   ### construction ####
-  invisible(m$addParameter(
+  p_specCostCon <- expandSets(cost, bs, hs, reg, loc, typ, inc, ttot) %>%
+    filter(.data[["cost"]] == "tangible") %>%
+    mutate(value = 2500)
+  m$addParameter(
     "p_specCostCon",
-    records = 2500,
-    description = "floor-space specific construction cost in USD/m2"))
+    c(cost, bs, hs, reg, loc, typ, inc, ttot),
+    p_specCostCon,
+    description = "floor-space specific construction cost in USD/m2")
 
   ### renovation ####
-  p_specCostRen <- expandSets(bs, hs, bsr, hsr) %>%
+  p_specCostRen <- expandSets(cost, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot) %>%
+    filter(.data[["cost"]] == "tangible") %>%
     mutate(value = ifelse(.data[["bsr"]] == "0",
                           ifelse(.data[["hsr"]] == "0",
                                  0,
@@ -248,16 +261,18 @@ createInputData <- function(path,
                                  1000)))
   p_specCostRen <- m$addParameter(
     "p_specCostRen",
-    c(state, stateR),
+    c(cost, state, stateR, vin, reg, loc, typ, inc, ttot),
     p_specCostRen,
     description = "floor-space specific renovation cost in USD/m2")
 
 
   ### operation ####
-  ueDem <- c(original = 150,
-             # rLight = 0.873 * 150, # nolint
-             rMedium = 0.589 * 150)
-             # rDeep = 0.34 * 150) # nolint
+  ueDem <- c(
+    original = 150#,
+    # rLight = 0.873 * 150, # nolint
+    # rMedium = 0.589 * 150, # nolint
+    # rDeep = 0.34 * 150 # nolint
+  )
   eff <- c(reel = 0.95,
            ehp1 = 3,
            libo = 0.83,
@@ -280,7 +295,7 @@ createInputData <- function(path,
                          sobo = 0.7,
                          dihe = 0.09,
                          biom = 0.1)
-  p_specCostOpe <- expandSets(bs, hs, ttot = t) %>%
+  p_specCostOpe <- expandSets(bs, hs, vin, reg, loc, typ, ttot = t) %>%
     mutate(ttot = as.numeric(as.character(.data[["ttot"]])),
            value = ueDem[as.character(.data[["bs"]])] /
              eff[as.character(.data[["hs"]])] *
@@ -289,7 +304,7 @@ createInputData <- function(path,
                 pmax(.data[["ttot"]] - 2020, 0) / (2100 - 2020)))
   p_specCostOpe <- m$addParameter(
     "p_specCostOpe",
-    c(state, ttot),
+    c(state, vin, reg, loc, typ, ttot),
     p_specCostOpe,
     description = "floor-space specific operation cost in USD/(m2.yr)")
 
@@ -328,7 +343,7 @@ createInputData <- function(path,
     left_join(vintages, by = "vin") %>%
     mutate(ttot = as.numeric(as.character(.data[["ttot"]])),
            tcon = (.data[["from"]] + pmin(.data[["ttot"]], .data[["to"]])) / 2,
-           p = pweibull(.data[["ttot"]] - .data[["tcon"]], 1.97, 67.34)) %>%
+           p = pweibull(.data[["ttot"]] - .data[["tcon"]], 2.95, 70.82)) %>%
     left_join(p_dt$records %>%
                 mutate(ttot_1 = as.numeric(as.character(.data[["ttot_1"]]))) %>%
                 rename(dt = "value"),
@@ -407,7 +422,8 @@ createInputData <- function(path,
     filter(!((.data[["hs"]] %in% c("ehp1", "dihe") &
                 .data[["hsr"]] %in% c("reel", "sobo", "libo", "gabo")) |
                (.data[["bs"]] == "rMedium" &
-                  .data[["bsr"]] == "original")))
+                  .data[["bsr"]] == "original")),
+           .data[["bsr"]] == "0") # TODO: temporary deactivation of renovation
   renAllowed <- m$addSet(
     "renAllowed",
     domain = c(bs, hs, bsr, hsr),
@@ -424,7 +440,7 @@ createInputData <- function(path,
     as.quitte(na.rm = TRUE) %>%
     filter(.data[["variable"]] == "floor",
            .data[["region"]] %in% reg$getUELs(),
-           as.character(.data[["period"]]) %in% thist$getUELs()) %>%
+           as.character(.data[["period"]]) %in% ttot$getUELs()) %>%
     revalue.levels(vintage = c(`after 2010` = "2011-2020"),
                    heating = c(`resistElec` = "reel",
                                `heatpump`   = "ehp1",

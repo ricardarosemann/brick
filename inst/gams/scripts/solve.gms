@@ -51,13 +51,14 @@ model matching "find stock and flows that best match reference sources"
   q_refDeviation
   q_stockBalNext
   q_stockBalPrev
+  q_buildingLifeTime !! TODO: make this a matching target, not a hard constraint
 *  q_dwelSizeStock
 *  q_dwelSizeConstruction
 *  q_dwelSize_Odyssee
   q_renRate_EuropeanCommissionRenovation
   q_heatingShare_Odyssee
   q_heatingShare_IDEES
-*  q_vinShare_EUBDB
+  q_vinShare_EUBDB
 *  q_flowVariation
 *  q_flowVariationTot
   /
@@ -81,15 +82,28 @@ option qcp = %solverQCP%;
 
 
 
-*** scenario run ---------------------------------------------------------------
+*** scenario / calibration run -------------------------------------------------
 
-$ifthen.scenario "%RUNTYPE%" == "scenario"
+$ifthenE.fullSys (sameas("%RUNTYPE%","scenario"))or(sameas("%RUNTYPE%","calibration"))
 
 * measure stocks and flows in floor area
 q("dwel") = no;
 q("area") = yes;
 
+
+$ifthen.calibration "%RUNTYPE%" == "calibration"
+
+* start iteration loop
+loop(iteration,
+
+$endif.calibration
+
+
 * linear model
+$ifthen.calibration "%RUNTYPE%" == "calibration"
+if(iteration.val eq 1,
+$endif.calibration
+
 $ifthenE.lp (sameas("%SOLVEPROBLEM%","lp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))
 solve fullSysLP minimizing v_totSysCost using lp;
 p_repyFullSysLP('solvestat') = fullSysLP.solvestat;
@@ -98,25 +112,23 @@ p_repyFullSysLP('resusd')    = fullSysLP.resusd;
 p_repyFullSysLP('objval')    = fullSysLP.objval;
 $endif.lp
 
+$ifthen.calibration "%RUNTYPE%" == "calibration"
+);
+$endif.calibration
+
 
 * non-linear model
-$ifthenE.nlp (sameas("%SOLVEPROBLEM%","nlp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))
+$ifthenE.nlp (sameas("%SOLVEPROBLEM%","nlp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))or(sameas("%RUNTYPE%","calibration"))
+
 $ifthen.parallel "%PARALLEL%" == "TRUE"
+
 subs(all_subs) = no;
 fullSysNLP.SolveLink = 3;
 
 loop(all_subs,
   subs(all_subs) = yes;
-
   solve fullSysNLP minimizing v_totSysCost using nlp;
-
-  p_repyFullSysNLP(subs,'solvestat') = fullSysNLP.solvestat;
-  p_repyFullSysNLP(subs,'modelstat') = fullSysNLP.modelstat;
-  p_repyFullSysNLP(subs,'resusd')    = fullSysNLP.resusd;
-  p_repyFullSysNLP(subs,'objval')    = fullSysNLP.objval;
-
   subs(all_subs) = no;
-
   p_handle(all_subs) = fullSysNLP.handle;
 );
 
@@ -133,32 +145,87 @@ repeat
 until card(p_handle) = 0;
 
 subs(all_subs) = yes;
+
 $else.parallel
+
 solve fullSysNLP minimizing v_totSysCost using nlp;
-p_repyFullSysNLP(subs,'solvestat') = fullSysNLP.solvestat;
-p_repyFullSysNLP(subs,'modelstat') = fullSysNLP.modelstat;
-p_repyFullSysNLP(subs,'resusd')    = fullSysNLP.resusd;
-p_repyFullSysNLP(subs,'objval')    = fullSysNLP.objval;
+
 $endif.parallel
+
+p_repyFullSysNLP(all_subs,'solvestat') = fullSysNLP.solvestat;
+p_repyFullSysNLP(all_subs,'modelstat') = fullSysNLP.modelstat;
+p_repyFullSysNLP(all_subs,'resusd')    = fullSysNLP.resusd;
+p_repyFullSysNLP(all_subs,'objval')    = fullSysNLP.objval;
 
 $endif.nlp
 
-$endif.scenario
-
-
-
-*** calibration run ------------------------------------------------------------
 
 $ifthen.calibration "%RUNTYPE%" == "calibration"
 
-*** find historic flows that match given stock
+p_repyFullSysNLPIter(iteration,all_subs,'solvestat') = fullSysNLP.solvestat;
+p_repyFullSysNLPIter(iteration,all_subs,'modelstat') = fullSysNLP.modelstat;
+p_repyFullSysNLPIter(iteration,all_subs,'resusd')    = fullSysNLP.resusd;
+p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
 
-p_constructionHist(state,subs,ttot) = v_construction.l("area",state,subs,ttot);
-p_renovationHist(ren,vin,subs,ttot) = v_renovation.l("area",ren,vin,subs,ttot);
-p_demolitionHist(state,vin,subs,ttot) = v_demolition.l("area",state,vin,subs,ttot);
+*** check calibration deviation
+p_calibDeviationCon(iteration,state,subs,t)$(abs(p_constructionHist(state,subs,t)) > eps) =
+  v_construction.l("area",state,subs,t)
+  / p_constructionHist(state,subs,t)
+;
+p_calibDeviationRen(iteration,ren,vin,subs,t)$(abs(p_renovationHist(ren,vin,subs,t)) > eps) =
+  v_renovation.l("area",ren,vin,subs,t)
+  / p_renovationHist(ren,vin,subs,t)
+;
 
+*** update intangible cost
+
+* finite deviation
+p_specCostCon("intangible",state,subs,t)$(    p_constructionHist(state,subs,t) > eps
+                                          and p_calibDeviationCon(iteration,state,subs,t) > eps) =
+  p_specCostCon("intangible",state,subs,t)
+  +
+  p_calibSpeed("construction")
+  * log(p_calibDeviationCon(iteration,state,subs,t))
+;
+
+p_specCostRen("intangible",ren,vin,subs,t)$(    p_renovationHist(ren,vin,subs,t) > eps
+                                            and p_calibDeviationRen(iteration,ren,vin,subs,t) > eps) =
+  p_specCostRen("intangible",ren,vin,subs,t)
+  +
+  p_calibSpeed("renovation")
+  * log(p_calibDeviationRen(iteration,ren,vin,subs,t))
+;
+
+* zero targets or zero acual value-
+p_specCostCon("intangible",state,subs,t)$(    (p_constructionHist(state,subs,t) <= eps)
+                                          xor (v_construction.l("area",state,subs,t) <= eps))
+  =
+  p_specCostCon("intangible",state,subs,t)
+  + sign(p_calibDeviationCon(iteration,state,subs,t) - 1)
+  * (
+      0.5 * abs(p_specCostCon("intangible",state,subs,t))
+      + 0.1 * p_specCostCon("tangible",state,subs,t)$(abs(p_specCostCon("intangible",state,subs,t)) <= eps)
+    )
+;
+
+p_specCostRen("intangible",ren,vin,subs,t)$(    (p_renovationHist(ren,vin,subs,t) <= eps)
+                                            xor (v_renovation.l("area",ren,vin,subs,t) <= eps)) =
+  p_specCostRen("intangible",ren,vin,subs,t)
+  + sign(p_calibDeviationRen(iteration,ren,vin,subs,t) - 1)
+  * (
+      0.5 * abs(p_specCostRen("intangible",ren,vin,subs,t))
+      + 0.1 * p_specCostRen("tangible",ren,vin,subs,t)$(abs(p_specCostRen("intangible",ren,vin,subs,t)) <= eps)
+    )
+;
+
+
+*** end iteration loop
+);
 
 $endif.calibration
+
+
+$endif.fullSys
 
 
 

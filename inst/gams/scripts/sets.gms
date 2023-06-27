@@ -10,12 +10,6 @@ hs(hsr) "heating system"
 *** vintages
 vin "construction vintage cohort"
 
-*** stock and flows
-var "mayor variables of the model"
-  / stock, construction, renovation, demolition /
-varFlow(var) "flow variables of the model"
-  / construction, renovation, demolition /
-
 *** stock subset dimesions
 reg "regions"
 loc "location of building (rural, urban)"
@@ -29,6 +23,17 @@ t(ttot)     "modelled time steps"
 thist(ttot) "historic time steps"
 tinit(ttot) "initial modelling time step"
 
+*** model fundamentals
+cost "type of cost"
+  /
+  tangible   "tangible cost (exogenous)"
+  intangible "intangible cost (identified in calibration)"
+  /
+var "mayor variables of the model"
+  / stock, construction, renovation, demolition /
+varFlow(var) "flow variables of the model"
+  / construction, renovation, demolition /
+
 *** model analytics
 solveinfo	"model and solver stats"
   /
@@ -37,6 +42,9 @@ solveinfo	"model and solver stats"
   resusd    "time the solver used to solve the model in seconds"
   objval    "objective function value"
   /
+
+*** calibration iteration
+iteration "calibration iteration" / 1*5 /
 
 *** matching reference sources
 qty    "quantity unit to measure stocks and flows in"
@@ -167,15 +175,18 @@ renEffective(bs,hs,bsr,hsr)$(not(sameas(bsr,"0") and sameas(hsr,"0"))) = yes;
 
 *** temporal fixes, to be checked ---------------------------------------------
 
+$ifthen.matching "%RUNTYPE%" == "matching"
+
 * define refs here to avoid recalculating matching data
 r(ref) = no;
 r("mredgebuildings_location") = yes;
 r("mredgebuildings_buildingType") = yes;
 r("mredgebuildings_heating") = yes;
 r("mredgebuildings_vintage") = no;
-r("EUBDB_vintage") = no;
+r("EUBDB_vintage") = yes;
 r("Odyssee_constructionFloor") = yes;
 r("Odyssee_heatingShare") = yes;
 r("IDEES_heatingShare") = yes;
 r("EuropeanCommissionRenovation") = yes;
 
+$endif.matching

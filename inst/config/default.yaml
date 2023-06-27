@@ -4,11 +4,12 @@ title: "default"
 periods: [2000, 2005, 2010, 2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050,
           2055, 2060, 2070, 2080, 2090, 2100, 2110, 2130, 2150]
 startyear: 2005
-regionmapping: NA # NA: country-level resolution
-regions: NULL     # NULL: all regions from mapping
+regionmapping: NULL # NULL: country-level resolution
+regions: NULL       # NULL: all regions from mapping
 # data
 inputRevision: "0.0.1"
-startingPoint: NA # previous model run to start from
+startingPoint: NULL # previous model run to start from
+matchingRun: NULL   # matching run, only for calibration (TODO: to be removed when migrating to mredgebuidlings)
 # solvers
 gamsCall:  gams
 solverLP:  cplex
@@ -19,7 +20,7 @@ switches:
   RUNTYPE:         scenario # scenario: run of future scenario, calibartion: calibrateion to historic stock, matching: matching historic stocks and flows to sources
   SOLVEPROBLEM:    lpnlp    # lp: linear problem, nlp: non-linear problem, lpnlp: first lp then start nlp from there
   PARALLEL:        TRUE     # parallel solving of nlp for each subs
-  EARLYDEMOLITION: TRUE     # allow demolition before end of life time
+  EARLYDEMOLITION: FALSE    # allow demolition before end of life time
   FILTERSUBS:      FALSE    # off: default setting without filtering, reg.loc.typ.inc:
 # gams parameters
 gamsOptions:

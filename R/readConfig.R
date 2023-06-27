@@ -70,7 +70,7 @@ readConfig <- function(config = NULL, basisOf = NULL) {
          "not a ", class(config))
   }
 
-  # interrupt circle dependecy
+  # interrupt circle dependency
   if (!is.null(basisOf)) {
     if (basisOf == customCfgPath) {
       stop("this config is based on itself: ", basisOf)
@@ -102,10 +102,10 @@ readConfig <- function(config = NULL, basisOf = NULL) {
     }
     out <- list()
     for (key in names(x)) {
-      out[[key]] <- if (key %in% names(y)) {
+      if (key %in% names(y)) {
         if (is.list(x[[key]])) {
           if (is.list(y[[key]])) {
-            overwriteList(x[[key]], y[[key]])
+            out[[key]] <- overwriteList(x[[key]], y[[key]])
           } else {
             stop("For the key '", key, "', your config has only one value ",
                  "but there is a list in the default config ", defaultCfgPath)
@@ -116,12 +116,20 @@ readConfig <- function(config = NULL, basisOf = NULL) {
                  "but there is just one value in the default config ",
                  defaultCfgPath)
           } else {
-            y[[key]]
+            if (is.null(y[[key]])) {
+              out[key] <- list(NULL)
+            } else {
+              out[[key]] <- y[[key]]
+            }
+
           }
         }
       } else {
-        x[[key]]
-      }
+        if (is.null(x[[key]])) {
+          out[key] <- list(NULL)
+        } else {
+          out[[key]] <- x[[key]]
+        }      }
     }
     return(out)
   }

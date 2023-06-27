@@ -5,10 +5,10 @@ p_dtVin(ttot,vin) "intersection of time step and vintage cohort in yr"
 p_householdSize(reg,loc,typ,inc,ttot) "household size in cap"
 p_floorPerCap(reg,loc,typ,inc,ttot)   "average floor space per capita in stock in m2/cap"
 
-p_specCostCon                "floor-space specific construction cost in USD/m2"
-p_specCostRen(bs,hs,bsr,hsr) "floor-space specific renovation cost in USD/m2"
-p_specCostOpe(bs,hs,ttot)    "floor-space specific operation cost in USD/(m2.yr)"
-p_specCostDem                "floor-space specific demolition cost in USD/m2"
+p_specCostCon(cost,bs,hs,reg,loc,typ,inc,ttot)             "floor-space specific construction cost in USD/m2"
+p_specCostRen(cost,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "floor-space specific renovation cost in USD/m2"
+p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot)                  "floor-space specific operation cost in USD/(m2.yr)"
+p_specCostDem                                              "floor-space specific demolition cost in USD/m2"
 
 p_population(reg,loc,typ,inc,ttot)          "number of people in million"
 p_floorPerCap(reg,loc,typ,inc,ttot)         "floor space per capita in m2"
@@ -31,12 +31,17 @@ p_runtime(reg,loc,typ,inc)                  "model runtime"
 p_handle(reg,loc,typ,inc)                   "parallel model handle parameter"
 p_repyFullSysLP(solveinfo)                  "model and solver summary: fullSysLP"
 p_repyFullSysNLP(reg,loc,typ,inc,solveinfo) "model and solver summary: fullSysNLP"
+p_repyFullSysNLPIter(iteration,reg,loc,typ,inc,solveinfo) "model and solver summary in every iteration: fullSysNLP"
 
 p_refWeight(ref,reg,ttot) "weight of reference source in input matching"
 p_flowVariationWeight     "weight of flow variation in matching objective"
 
 p_refVals(ref,refVar,reg,ttot) "reference values to match"
 p_refValsMed(ref,reg)          "median non-zero reference value to normalise deviations"
+
+p_calibSpeed(varFLow)                                                 "Control of the step size in the calibration iteration"
+p_calibDeviationCon(iteration,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
+p_calibDeviationRen(iteration,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
 ;
 
 scalars

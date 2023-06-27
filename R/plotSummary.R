@@ -95,6 +95,10 @@ plotSummary <- function(path, showHistStock = FALSE) {
 
   # CHECK INPUT ----------------------------------------------------------------
 
+  if (!dir.exists(path)) {
+    stop("Path does not exist: ", path)
+  }
+
   # find gdx file in given path
   gdxNames <- c("output.gdx",
                 "abort.gdx")
@@ -105,38 +109,14 @@ plotSummary <- function(path, showHistStock = FALSE) {
     return(NULL)
   }
 
-  readSymbol <- function(symbol) {
-    obj <- m[symbol]
-    data <- obj$records
-    colnames(data) <- sub("_[0-9]*$", "", colnames(data))
-    switch(class(obj)[1],
-      Variable = {
-        data <- data %>%
-          select(-"marginal", -"lower", -"upper", -"scale") %>%
-          rename(value = "level")
-      }
-    )
-    return(data)
-  }
-
 
 
   # READ DATA ----
 
   m <- Container$new(gdx)
 
-  demand <- rbind(readSymbol("p_population") %>%
-                    mutate(variable = "pop"),
-                  readSymbol("p_floorPerCap") %>%
-                    mutate(variable = "floorPerCap")) %>%
-    calc_addVariable(demand = "pop * floorPerCap", only.new = TRUE) %>%
-    group_by(across(all_of(c("reg", "ttot", "typ")))) %>%
-    summarise(value = sum(.data[["value"]]), .groups = "drop") %>%
-    mutate(ttot = as.numeric(as.character(.data[["ttot"]])))
-
-  dt <- readSymbol("p_dt") %>%
-    select("ttot", dt = "value") %>%
-    mutate(ttot = as.numeric(as.character(.data[["ttot"]])))
+  dt <- readSymbol(m, "p_dt") %>%
+    select("ttot", dt = "value")
 
   #  bar width
   width <- 0.4 * min(dt[["dt"]])
@@ -151,31 +131,26 @@ plotSummary <- function(path, showHistStock = FALSE) {
     mutate(limit = .data[["ttot"]] + .data[["dt"]] * (row_number() - 1.5)) %>%
     getElement("limit")
 
-  dtVin <- readSymbol("p_dtVin")
+  dtVin <- readSymbol(m, "p_dtVin")
   t2vin <- dtVin %>%
     group_by(.data[["ttot"]]) %>%
     arrange(-.data[["value"]]) %>%
     filter(row_number() == 1) %>%
-    select("ttot", "vin") %>%
-    mutate(ttot = as.numeric(as.character(.data[["ttot"]])))
+    select("ttot", "vin")
 
-  stock <- rbind(readSymbol("v_stock") %>%
+  stock <- rbind(readSymbol(m, "v_stock") %>%
                    mutate(historic = FALSE),
-                 readSymbol("p_stockHist") %>%
+                 readSymbol(m, "p_stockHist") %>%
                    mutate(historic = TRUE)) %>%
-    mutate(ttot = as.numeric(as.character(.data[["ttot"]])),
-           pos = .data[["ttot"]] + (0.5 - .data[["historic"]]) * width * 1.2) %>%
+    mutate(pos = .data[["ttot"]] + (0.5 - .data[["historic"]]) * width * 1.2) %>%
     filter(.data[["ttot"]] >= 2000)
 
-  construction <- readSymbol("v_construction") %>%
-    mutate(ttot = as.numeric(as.character(.data[["ttot"]])))
+  construction <- readSymbol(m, "v_construction")
 
-  demolition <- readSymbol("v_demolition") %>%
-    mutate(ttot = as.numeric(as.character(.data[["ttot"]]))) %>%
+  demolition <- readSymbol(m, "v_demolition") %>%
     filter(.data[["ttot"]] >= 2000)
 
-  renovation <- readSymbol("v_renovation") %>%
-    mutate(ttot = as.numeric(as.character(.data[["ttot"]]))) %>%
+  renovation <- readSymbol(m, "v_renovation") %>%
     filter(.data[["ttot"]] >= 2000)
 
 
@@ -198,7 +173,6 @@ plotSummary <- function(path, showHistStock = FALSE) {
       geom_col(aes(x = if (showHistStock) .data[["pos"]] else .data[["ttot"]],
         fill = .data[[fillDim]]),
         width = width) +
-      geom_line(data = demand, linewidth = 1) +
       facet_wrap("typ")
     if (showHistStock) {
       pStock <- pStock +

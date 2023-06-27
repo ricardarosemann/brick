@@ -13,7 +13,7 @@ createMatchingData(path, config, refs, overwrite = FALSE)
 
 \item{refs}{named list of matching references}
 
-\item{overwrite}{boolean, should existing data be overwritten?}
+\item{overwrite}{logical, should existing data be overwritten?}
 }
 \description{
 Create data for reference matching
