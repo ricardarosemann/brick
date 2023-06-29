@@ -2,16 +2,13 @@
 ErrStock(state,vin,subs,ttot)$(    not(vinExists(ttot,vin))
                                and sum(q, v_stock.l(q,state,vin,subs,ttot) > 0)) = yes;
 
-ErrConstruction(state,subs,ttot)$(    thist(ttot)
-                                  and sum(q, v_construction.l(q,state,subs,ttot) > 0)) = yes;
+ErrConstruction(state,subs,ttot) = no;
 
-ErrRenovation(state,stateFull,vin,subs,ttot)$(    (   thist(ttot)
-                                                   or not(vinExists(ttot,vin))
+ErrRenovation(state,stateFull,vin,subs,ttot)$(    (   not(vinExists(ttot,vin))
                                                    or not(renAllowed(state,stateFull)))
                                               and sum(q, v_renovation.l(q,state,stateFull,vin,subs,ttot) > 0)) = yes;
 
-ErrDemolition(state,vin,subs,ttot)$(    (thist(ttot)
-                                         or not(vinExists(ttot,vin)))
+ErrDemolition(state,vin,subs,ttot)$(    not(vinExists(ttot,vin))
                                     and sum(q, v_demolition.l(q,state,vin,subs,ttot) > 0)) = yes;
 
 

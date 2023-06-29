@@ -94,6 +94,11 @@ createInputData <- function(path,
     records = c("stock", "construction", "renovation", "demolition"),
     description = "mayor variables of the model")
 
+  qty <- m$addSet(
+    "qty",
+    records = c("area", "dwel"),
+    description = "quantity unit to measure stocks and flows in")
+
 
   ## temporal ====
 
@@ -591,11 +596,13 @@ createInputData <- function(path,
                                `heat`       = "dihe")) %>%
     mutate(buildingShell  = "original",
            inc = "all",
+           qty = "area",
            value = .data[["value"]] / 1E6) %>%
     group_by(across(all_of(c("heating", "vintage", "region", "location",
                              "buildingType", "inc", "period")))) %>%
     complete(buildingShell = bs$getUELs(), fill = list(value = 0)) %>%
-    select(bs = "buildingShell",
+    select("qty",
+           bs = "buildingShell",
            hs = "heating",
            vin = "vintage",
            reg = "region",
@@ -615,7 +622,7 @@ createInputData <- function(path,
 
   p_stockHist <- m$addParameter(
     "p_stockHist",
-    c(bs, hs, vin, reg, loc, typ, inc, ttot),
+    c(qty, bs, hs, vin, reg, loc, typ, inc, ttot),
     p_stockHist,
     description = "historic stock of buildings in million m2"
   )

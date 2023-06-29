@@ -4,12 +4,14 @@ title: "default"
 periods: [2000, 2005, 2010, 2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050,
           2055, 2060, 2070, 2080, 2090, 2100, 2110, 2130, 2150]
 startyear: 2005
+endyear: 2100
 regionmapping: NULL # NULL: country-level resolution
 regions: NULL       # NULL: all regions from mapping
+historic: NULL      # run to consider as history before startyear
 # data
 inputRevision: "0.0.1"
-iamcSwitch: NULL   # temporary switch for IAMC contribution
-startingPoint: NULL # previous model run to start from
+iamcSwitch: NULL    # temporary switch for IAMC contribution
+startingPoint: NULL # previous model run to use as initial starting point
 matchingRun: NULL   # matching run, only for calibration (TODO: to be removed when migrating to mredgebuidlings)
 # solvers
 gamsCall:  gams

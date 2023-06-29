@@ -28,9 +28,22 @@ $endif.calibration
 
 *** starting point -------------------------------------------------------------
 
-v_stock.l("area",state,vin,subs,ttot)$vinExists(ttot,vin) =
-  p_stockHist(state,vin,subs,ttot);
+v_stock.l(qty,state,vin,subs,ttot)$vinExists(ttot,vin) =
+  p_stockHist(qty,state,vin,subs,ttot);
 $if exist "start.gdx" execute_loadpoint "start";
+
+
+
+*** history --------------------------------------------------------------------
+
+$ifthen.history exist "history.gdx"
+execute_load "history", p_stockHist =        v_stock.l
+                        p_constructionHist = v_construction.l
+                        p_renovationHist =   v_renovation.l
+                        p_demolitionHist =   v_demolition.l
+;
+$endif.history
+
 
 
 *** temp -----------------------------------------------------------------------

@@ -36,6 +36,8 @@ startModel <- function(config = NULL,
 
   copyInitialGdx(path, cfg)
 
+  copyHistoryGdx(path, cfg)
+
   createInputData(path, cfg)
 
   if (cfg[["switches"]][["RUNTYPE"]] == "matching") {

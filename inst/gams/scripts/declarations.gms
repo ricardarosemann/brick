@@ -13,10 +13,10 @@ p_specCostDem                                              "floor-space specific
 p_population(reg,loc,typ,inc,ttot)          "number of people in million"
 p_floorPerCap(reg,loc,typ,inc,ttot)         "floor space per capita in m2"
 
-p_stockHist(bs,hs,vin,reg,loc,typ,inc,ttot)              "historic stock of buildings in million m2"
-p_constructionHist(bs,hs,reg,loc,typ,inc,ttot)           "historic flow of new buildings in million m2/yr"
-p_renovationHist(bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings in million m2/yr"
-p_demolitionHist(bs,hs,vin,reg,loc,typ,inc,ttot)         "historic flow of demolished buildings in million m2/yr"
+p_stockHist(qty,bs,hs,vin,reg,loc,typ,inc,ttot)              "historic stock of buildings in million m2"
+p_constructionHist(qty,bs,hs,reg,loc,typ,inc,ttot)           "historic flow of new buildings in million m2/yr"
+p_renovationHist(qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings in million m2/yr"
+p_demolitionHist(qty,bs,hs,vin,reg,loc,typ,inc,ttot)         "historic flow of demolished buildings in million m2/yr"
 
 p_shareDem(vin,ttot)           "minimum share of demolition at end of life"
 p_shareRenBS(bs,ttot,ttot)     "minimum share of renovation from the building shell reaching end of life"

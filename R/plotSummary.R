@@ -20,6 +20,9 @@
 #'
 plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
 
+  config <- readConfig(file.path(path, "config", "config.yaml"))
+  endyear <- config[["endyear"]]
+
   # PLOT STYLE -----------------------------------------------------------------
 
   techColour <- list(`0`  = "black",
@@ -117,7 +120,8 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
   m <- Container$new(gdx)
 
   dt <- readSymbol(m, "p_dt") %>%
-    select("ttot", dt = "value")
+    select("ttot", dt = "value") %>%
+    filter(.data[["ttot"]] <= endyear)
 
   #  bar width
   width <- 0.4 * min(dt[["dt"]])
@@ -144,15 +148,19 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
                  readSymbol(m, "p_stockHist") %>%
                    mutate(historic = TRUE)) %>%
     mutate(pos = .data[["ttot"]] + (0.5 - .data[["historic"]]) * width * 1.2) %>%
-    filter(.data[["ttot"]] >= 2000)
+    filter(.data[["ttot"]] >= 2000,
+           .data[["ttot"]] <= endyear)
 
-  construction <- readSymbol(m, "v_construction")
+  construction <- readSymbol(m, "v_construction") %>%
+    filter(.data[["ttot"]] <= endyear)
 
   demolition <- readSymbol(m, "v_demolition") %>%
-    filter(.data[["ttot"]] >= 2000)
+    filter(.data[["ttot"]] >= 2000,
+           .data[["ttot"]] <= endyear)
 
   renovation <- readSymbol(m, "v_renovation") %>%
-    filter(.data[["ttot"]] >= 2000)
+    filter(.data[["ttot"]] >= 2000,
+           .data[["ttot"]] <= endyear)
 
 
 

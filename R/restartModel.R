@@ -22,6 +22,7 @@ restartModel <- function(path = NULL,
                          copyScripts = FALSE,
                          copyStartPoint = FALSE,
                          recreateInputData = FALSE,
+                         copyHistory = FALSE,
                          recreateMatchingData = FALSE,
                          reaggregateMatching = FALSE,
                          references = NULL) {
@@ -65,6 +66,11 @@ restartModel <- function(path = NULL,
   if (copyStartPoint) {
     copyInitialGdx(path, cfg, TRUE)
   }
+
+  if (copyHistory) {
+    copyHistoryGdx(path, cfg, TRUE)
+  }
+
   if (copyScripts) {
     copyGamsFiles(path, TRUE)
   }

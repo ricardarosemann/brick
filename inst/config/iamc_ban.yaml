@@ -1,6 +1,6 @@
 ---
 title: iamc_ban
 basedOn: iamc_base.yaml
-#startyear: 2025
+startyear: 2025
 iamcSwitch: boilerBan
 ...
