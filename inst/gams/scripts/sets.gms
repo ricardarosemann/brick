@@ -140,6 +140,9 @@ ErrRenovation(bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Error in flow of renovate
 ErrDemolition(bs,hs,vin,reg,loc,typ,inc,ttot)         "Error in flow of demolished buildings"
 
 refVarRef(ref,refVar) "mapping references to reference variables"
+
+*** heating system ban
+hsBan(var,reg,ttot,hs) "heating systems are forbidden in the respective variable after given period"
 ;
 
 *** aliases
@@ -153,6 +156,7 @@ alias(renAllowed,renAllowed2);
 *** load fundamental sets
 $gdxin input.gdx
 $load renAllowed
+$load hsBan
 $gdxin
 
 $ifthen.matching "%RUNTYPE%" == "matching"

@@ -4,7 +4,7 @@
 \alias{prepareFuelPrices}
 \title{Prepare fuel prices}
 \usage{
-prepareFuelPrices(carbonPrice)
+prepareFuelPrices(carbonPrice = NULL, regions, periods)
 }
 \arguments{
 \item{carbonPrice}{data.frame with time series of carbon price}

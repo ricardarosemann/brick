@@ -16,6 +16,7 @@
 #'   revalue.levels calc_addVariable
 #' @importFrom dplyr %>% mutate select group_by summarise filter ungroup arrange
 #'   left_join right_join .data rename lag all_of across sym rename_with
+#'   inner_join everything
 #' @importFrom tidyr complete
 #' @importFrom madrat calcOutput readSource
 #' @importFrom magclass collapseDim mselect getYears mbind getItems<- getItems
@@ -24,6 +25,7 @@
 #' @importFrom gamstransfer Container
 #' @importFrom stats pweibull
 #' @importFrom utils head tail
+#' @importFrom zoo rollmean
 #' @export
 #'
 createInputData <- function(path,
@@ -208,6 +210,42 @@ createInputData <- function(path,
     description = "income quantile")
 
 
+  ## boiler ban ====
+  hsBan <- expandSets(var, reg, ttot, hs) %>%
+    mutate(across(everything(), as.character)) %>%
+        mutate(ttot = as.numeric(.data[["ttot"]]))
+  if ("boilerBan" %in% config[["iamcSwitch"]]) {
+    hsBanConfig <- inline.data.frame(
+      "var;           tout;  hs",
+      "renovation;    2025;  sobo",
+      "renovation;    2025;  libo",
+      "renovation;    2030;  gabo",
+      "construction;  2025;  sobo",
+      "construction;  2025;  libo",
+      "construction;  2030;  gabo"
+    ) %>%
+      group_by(across(everything())) %>%
+      mutate(ttot = head(ttotNum, 1)) %>%
+      complete(ttot = ttotNum) %>%
+      ungroup() %>%
+      filter(.data[["ttot"]] > .data[["tout"]]) %>%
+      select(-"tout")
+
+    hsBan <- hsBan %>%
+      inner_join(hsBanConfig, by = intersect(colnames(hsBan),
+                                             colnames(hsBanConfig))) %>%
+      select("var", "reg", "ttot", "hs")
+  } else {
+    hsBan <- NULL
+  }
+  hsBan <- m$addSet(
+    "hsBan",
+    records = hsBan,
+    domain = c(var, reg, ttot, hs),
+    description = "heating systems are forbidden in the respective variable after given period"
+  )
+
+
 
   # PARAMETERS -----------------------------------------------------------------
 
@@ -364,7 +402,7 @@ createInputData <- function(path,
     "biom;  0.70")
 
   # fuel price
-  carbonPrice <- if (config[["priceAssump"]] == "carbonPrice") {
+  carbonPrice <- if ("carbonPrice" %in% config[["iamcSwitch"]]) {
     data.frame(
       period = c(2020, 2030, 2050),
       value = c(0, 300, 500))
@@ -475,12 +513,12 @@ createInputData <- function(path,
   p_shareRenHS <- m$addParameter( # nolint: object_usage_linter.
     "p_shareRenHS",
     c(hs, ttot2, ttot),
-    shareRen("hs", ttot, 3, 20),
+    shareRen("hs", ttot, 5, 20),
     description = "minimum share of renovation from the heating system reaching end of life")
   p_shareRenHSinit <- m$addParameter( # nolint: object_usage_linter.
     "p_shareRenHSinit",
     c(hs, ttot2, ttot),
-    shareRen("hs", tinit, 3, 20, 6),
+    shareRen("hs", tinit, 5, 20, 6),
     description = "minimum share of renovation from the heating system of initial stock reaching end of life")
 
 
@@ -617,9 +655,27 @@ createInputData <- function(path,
   p_floorPerCap <- readSource("EDGE", subtype = "Floorspace") %>%
     mselect(scenario = "gdp_SSP2",
             variable = "residential",
-            year = paste0("y", ttot$getUELs()),
             region = reg$getUELs()) %>%
-    collapseDim(3.1)
+    collapseDim(3.1) %>%
+    as.quitte(na.rm = TRUE) %>%
+    group_by(.data[["region"]]) %>%
+    arrange(.data[["period"]]) %>%
+    mutate(value = rollmean(.data[["value"]], 3, na.pad = TRUE)) %>%
+    left_join(p_stockHist$records %>%
+                mutate(ttot = as.numeric(as.character(.data[["ttot"]]))) %>%
+                group_by(across(all_of(c("ttot", "reg")))) %>%
+                summarise(value = sum(.data[["value"]]), .groups = "drop"),
+              by = c(period = "ttot", region = "reg")) %>%
+    group_by(.data[["region"]]) %>%
+    mutate(value = .data[["value.x"]] *
+             (.data[["value.y"]] / .data[["value.x"]])[.data[["period"]] == min(ttotNum)]) %>%
+    ungroup() %>%
+    select(-"value.x", -"value.y") %>%
+    filter(.data[["period"]] %in% ttotNum) %>%
+    as.quitte() %>%
+    as.magpie()
+
+
   p_floorPerCap <- pop %>%
     mselect(year = getYears(p_floorPerCap)) %>%
     add_dimension(add = "variable", nm = "pop") %>%

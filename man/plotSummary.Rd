@@ -4,10 +4,12 @@
 \alias{plotSummary}
 \title{Plot Summary of a run}
 \usage{
-plotSummary(path, showHistStock = FALSE)
+plotSummary(path, facet = "typ", showHistStock = FALSE)
 }
 \arguments{
 \item{path}{character, path to the run}
+
+\item{facet}{character, dimension to resolve as facets}
 
 \item{showHistStock}{logical, show given historic next to the modeled stock}
 }

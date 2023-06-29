@@ -1,12 +1,12 @@
 ---
 title: iamc_base
 # scope and resolution
-periods: [2000, 2005, 2010, 2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050]
+periods: [2000, 2005, 2010, 2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050,
+          2060, 2070]
 startyear: 2005
 regions: [AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV,
           HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD, POL, PRT, ROU, SVK, SVN, SWE]
 #startingPoint: output/iamc_base_2023-06-29_09.15.39
 switches:
   SOLVEPROBLEM: lpnlp
- 
 ...
