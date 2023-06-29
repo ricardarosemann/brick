@@ -5,6 +5,7 @@
 #' @author Robin Hasse
 #'
 #' @param path character, path to the run
+#' @param facet character, dimension to resolve as facets
 #' @param showHistStock logical, show given historic next to the modeled stock
 #'
 #' @importFrom quitte as.quitte calc_addVariable
@@ -17,7 +18,7 @@
 #' @importFrom ggpubr ggarrange
 #' @export
 #'
-plotSummary <- function(path, showHistStock = FALSE) {
+plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
 
   # PLOT STYLE -----------------------------------------------------------------
 
@@ -165,7 +166,7 @@ plotSummary <- function(path, showHistStock = FALSE) {
 
     pStock <- stock %>%
       filter(showHistStock | !.data[["historic"]]) %>%
-      group_by(across(all_of(c("typ", fillDim, "ttot", "historic", "pos")))) %>%
+      group_by(across(all_of(c(facet, fillDim, "ttot", "historic", "pos")))) %>%
       summarise(value = sum(.data[["value"]], na.rm = TRUE),
                 .groups = "drop") %>%
       ggplot(aes_string("ttot", "value")) +
@@ -173,13 +174,13 @@ plotSummary <- function(path, showHistStock = FALSE) {
       geom_col(aes(x = if (showHistStock) .data[["pos"]] else .data[["ttot"]],
         fill = .data[[fillDim]]),
         width = width) +
-      facet_wrap("typ")
+      facet_wrap(facet)
     if (showHistStock) {
       pStock <- pStock +
         geom_point(aes(.data[["pos"]]), shape = 13,
                    data = stock %>%
                      filter(.data[["historic"]]) %>%
-                     group_by(across(all_of(c("pos", "typ")))) %>%
+                     group_by(across(all_of(c("pos", facet)))) %>%
                      summarise(value = sum(.data[["value"]]), .groups = "drop"))
     }
     pStock <- addTheme(pStock, "Stock", "Floor space in million m2", TRUE, FALSE)
@@ -187,18 +188,18 @@ plotSummary <- function(path, showHistStock = FALSE) {
     ## construction ====
     pCon <- construction %>%
       left_join(t2vin, by = "ttot") %>%
-      group_by(across(all_of(c("typ", fillDim, "ttot")))) %>%
+      group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
       summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
       left_join(dt, by = "ttot") %>%
       ggplot(aes(fill = .data[[fillDim]])) +
       geom_col(aes(.data[["ttot"]], .data[["value"]], width = .data[["dt"]] - gap),
                just = 1) +
-      facet_wrap("typ")
+      facet_wrap(facet)
     pCon <- addTheme(pCon, "Construction", "", TRUE)
 
     ## demolition ====
     pDem <- demolition %>%
-      group_by(across(all_of(c("typ", fillDim, "ttot")))) %>%
+      group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
       summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
       left_join(dt, by = "ttot") %>%
       ggplot() +
@@ -207,7 +208,7 @@ plotSummary <- function(path, showHistStock = FALSE) {
                    width = .data[["dt"]] - gap),
                position = position_stack(reverse = TRUE),
                just = 1) +
-      facet_wrap("typ")
+      facet_wrap(facet)
     pDem <- addTheme(pDem, "Demolition", "Floor space in million m2/yr", TRUE)
 
     ## renovation ====
@@ -222,7 +223,7 @@ plotSummary <- function(path, showHistStock = FALSE) {
                     mutate(value = -.data[["value"]],
                            renovation = "from")
     ) %>%
-      group_by(across(all_of(c("typ", fillDim, "ttot", "renovation")))) %>%
+      group_by(across(all_of(c(facet, fillDim, "ttot", "renovation")))) %>%
       summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
       left_join(dt, by = "ttot") %>%
       ggplot() +
@@ -231,7 +232,7 @@ plotSummary <- function(path, showHistStock = FALSE) {
                    width = .data[["dt"]] - gap),
                position = position_stack(reverse = TRUE),
                just = 1) +
-      facet_wrap("typ") +
+      facet_wrap(facet) +
       geom_hline(yintercept = 0)
     pRen <-  addTheme(pRen, "Renovation", "") +
       expand_limits(y = 0.05)

@@ -7,7 +7,7 @@
 readSymbol(m, symbol, selectArea = TRUE)
 }
 \arguments{
-\item{m}{gams container}
+\item{m}{gams Container}
 
 \item{symbol}{character, name of gams object}
 

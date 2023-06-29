@@ -4,14 +4,12 @@
 \alias{aggregateMatching}
 \title{Aggregate matching run results for calibration}
 \usage{
-aggregateMatching(pathCalib, configCalib, pathMatching, overwrite = FALSE)
+aggregateMatching(path, config, overwrite = FALSE)
 }
 \arguments{
-\item{pathCalib}{character, path to calibration run}
+\item{path}{character, path to calibration run}
 
-\item{configCalib}{named list, configuration of calibration run}
-
-\item{pathMatching}{character, path to matching run}
+\item{config}{named list, configuration of calibration run}
 
 \item{overwrite}{logical, should existing data be overwritten?}
 }

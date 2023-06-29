@@ -17,11 +17,11 @@ q_totSysCost..
 * sum all cost components and benefit for heterogeneity in contruction and
 * renovation choices and discount them to t0 for each subset
 
-q_SysCost(subs)..
+q_SysCost(subs(reg,loc,typ,inc))..
   v_SysCost(subs)
   =e=
   sum(t,
-    p_discountFac(t)
+    p_discountFac(typ,t)
     * p_dt(t)
     * (  v_ConCost(subs,t)
        + v_RenCost(subs,t)
@@ -514,6 +514,33 @@ q_dwelSizeDemolition(vin,subs,ttot)$vinExists(ttot,vin)..
 
 
 $ifthen.matching "%RUNTYPE%" == "matching"
+
+*** force pleasant heating distribution ----------------------------------------
+
+* For testing purposes
+
+* force finite share for all heating system options
+q_finiteHeatingShareCon(bs,hs,subs,t)..
+  v_construction("area",bs,hs,subs,t)
+  =g=
+  0.05
+  *
+  sum(hs2,
+    v_construction("area",bs,hs2,subs,t)
+  )
+;
+
+q_finiteHeatingShareRen(state,bsr,hsr,vin,subs,t)$vinExists(t,vin)..
+  v_renovation("area",state,bsr,hsr,vin,subs,t)
+  =g=
+  0.05
+  *
+  sum(hsr2,
+    v_renovation("area",state,bsr,hsr2,vin,subs,t)
+  )
+;
+
+
 
 *** matching objective ---------------------------------------------------------
 q_matchingObj..

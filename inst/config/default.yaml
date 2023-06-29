@@ -8,6 +8,7 @@ regionmapping: NULL # NULL: country-level resolution
 regions: NULL       # NULL: all regions from mapping
 # data
 inputRevision: "0.0.1"
+priceAssump: current   # temporary switch for IAMC contribution
 startingPoint: NULL # previous model run to start from
 matchingRun: NULL   # matching run, only for calibration (TODO: to be removed when migrating to mredgebuidlings)
 # solvers

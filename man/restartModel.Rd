@@ -11,6 +11,7 @@ restartModel(
   copyStartPoint = FALSE,
   recreateInputData = FALSE,
   recreateMatchingData = FALSE,
+  reaggregateMatching = FALSE,
   references = NULL
 )
 }
@@ -26,6 +27,8 @@ restartModel(
 \item{recreateInputData}{boolean, recreate input data}
 
 \item{recreateMatchingData}{boolean, recreate matching data}
+
+\item{reaggregateMatching}{boolean, reaggregate matching results}
 
 \item{references}{named list, not implemented yet}
 }

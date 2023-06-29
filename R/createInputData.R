@@ -82,10 +82,15 @@ createInputData <- function(path,
 
   ## fundamentals ====
 
-  cost <- m$addSet( # nolint: object_usage_linter.
+  cost <- m$addSet(
     "cost",
     records = c("tangible", "intangible"),
     description = "type of cost")
+
+  var <- m$addSet(
+    "var",
+    records = c("stock", "construction", "renovation", "demolition"),
+    description = "mayor variables of the model")
 
 
   ## temporal ====
@@ -240,9 +245,44 @@ createInputData <- function(path,
   ## specific cost ====
 
   ### construction ####
-  p_specCostCon <- expandSets(cost, bs, hs, reg, loc, typ, inc, ttot) %>%
+
+  # investment cost of Germany from https://www.iea.org/articles/are-renewable-heating-options-cost-competitive-with-fossil-fuels-in-the-residential-sector
+  # average across multiple matching technologies
+  hsUnitCost <- inline.data.frame(
+    "hs;    hsInstCost",
+    "reel;   3000",  # wild guess
+    "ehp1;  14200",
+    "libo;   6350",
+    "gabo;   5100",
+    "sobo;   6350",  # assumption: equal to libo
+    "dihe;  10000",  # wild guess
+    "biom;   9100",
+    "0;         0"
+  )
+  # assumption to make unit prices relative to floor space
+  m2PerUnit <- inline.data.frame(
+    "typ;  m2PerUnit",
+    "SFH;  100",
+    "MFH;  200"
+  )
+  constCost <- inline.data.frame(
+    "bs;        constCost",
+    "original;  1615"  # Mastrucci et al. 2021
+  )
+  p_specCostCon <- expandSets(cost, bs, hs, reg, loc, typ, inc, ttot)
+  p_specCostConTang <- p_specCostCon %>%
     filter(.data[["cost"]] == "tangible") %>%
-    mutate(value = 2500)
+    left_join(constCost, by = "bs") %>%
+    left_join(hsUnitCost, by = "hs") %>%
+    left_join(m2PerUnit, by = "typ") %>%
+    mutate(value =
+             .data[["constCost"]] +
+             .data[["hsInstCost"]] / .data[["m2PerUnit"]]) %>%
+    select(-"constCost", -"hsInstCost", -"m2PerUnit")
+  p_specCostConIntang <- p_specCostCon %>%
+    filter(.data[["cost"]] == "intangible") %>%
+    addAssump("inst/assump/costIntangCon.csv")
+  p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang)
   m$addParameter(
     "p_specCostCon",
     c(cost, bs, hs, reg, loc, typ, inc, ttot),
@@ -250,15 +290,25 @@ createInputData <- function(path,
     description = "floor-space specific construction cost in USD/m2")
 
   ### renovation ####
-  p_specCostRen <- expandSets(cost, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot) %>%
+  renCost <- inline.data.frame(
+    "bsr;      renCost",
+    "original; 487",
+    "0;        0"
+  )
+  p_specCostRen <- expandSets(cost, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+  p_specCostRenTang <- p_specCostRen %>%
     filter(.data[["cost"]] == "tangible") %>%
-    mutate(value = ifelse(.data[["bsr"]] == "0",
-                          ifelse(.data[["hsr"]] == "0",
-                                 0,
-                                 300),
-                          ifelse(.data[["hsr"]] == "0",
-                                 900,
-                                 1000)))
+    left_join(renCost, by = "bsr") %>%
+    left_join(hsUnitCost, by = c(hsr = "hs")) %>%
+    left_join(m2PerUnit, by = "typ") %>%
+    mutate(value =
+             .data[["renCost"]] +
+             .data[["hsInstCost"]] / .data[["m2PerUnit"]]) %>%
+    select(-"renCost", -"hsInstCost", -"m2PerUnit")
+  p_specCostRenIntang <- p_specCostRen %>%
+    filter(.data[["cost"]] == "intangible") %>%
+    addAssump("inst/assump/costIntangRen.csv")
+  p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang)
   p_specCostRen <- m$addParameter(
     "p_specCostRen",
     c(cost, state, stateR, vin, reg, loc, typ, inc, ttot),
@@ -267,46 +317,96 @@ createInputData <- function(path,
 
 
   ### operation ####
-  ueDem <- c(
-    original = 150#,
-    # rLight = 0.873 * 150, # nolint
-    # rMedium = 0.589 * 150, # nolint
-    # rDeep = 0.34 * 150 # nolint
+
+  # from EU Commission report on Renovation
+  renovationFactor <- inline.data.frame(
+    "bs;        factor",
+    "original;  1",
+    "rLight;    0.873",
+    "rMedium;   0.589",
+    "rDeep;     0.34"
   )
-  eff <- c(reel = 0.95,
-           ehp1 = 3,
-           libo = 0.83,
-           gabo = 0.9,
-           sobo = 0.72,
-           dihe = 0.9,
-           biom = 0.8)
-  # https://www.oekofen.com/de-de/aktueller-pelletspreis/
-  fuelPrice <- c(reel = 0.3,
-                 ehp1 = 0.3,
-                 libo = 0.088,
-                 gabo = 0.1,
-                 sobo = 0.06,
-                 dihe = 0.09,
-                 biom = 0.073)
-  fuelPriceLongTerm <- c(reel = 0.2,
-                         ehp1 = 0.2,
-                         libo = 0.6,
-                         gabo = 0.4,
-                         sobo = 0.7,
-                         dihe = 0.09,
-                         biom = 0.1)
+
+  # floor-space specific UE demand for space heating
+  vinMap <- inline.data.frame(
+    "vin;          vinHotmaps",
+    "before 1945;  Before 1945",
+    "1945-1969;    1945 - 1969",
+    "1970-1979;    1970 - 1979",
+    "1980-1989;    1980 - 1989",
+    "1990-1999;    1990 - 1999",
+    "2000-2010;    2000 - 2010",
+    "2011-2020;    Post 2010",
+    "2021-2030;    Post 2010",
+    "2031-2040;    Post 2010",
+    "2041-2050;    Post 2010",
+    "2051-2060;    Post 2010",
+    "2061-2070;    Post 2010",
+    "2071-2080;    Post 2010",
+    "2081-2090;    Post 2010",
+    "2091-2100;    Post 2010",
+    "after 2100;   Post 2010"
+  )
+  ueDem <- prepareUEHeatingDemand(reg$getUELs()) %>%
+    rename(vinHotmaps = "vin", reg = "region", ueDem = "value") %>%
+    right_join(vinMap, by = "vinHotmaps", relationship = "many-to-many") %>%
+    select(-"vinHotmaps")
+
+  # FE-to-UE efficiency
+  eff <- inline.data.frame(
+    "hs;    eff",
+    "reel;  0.98",
+    "ehp1;  3.00",
+    "libo;  0.74",
+    "gabo;  0.90",
+    "sobo;  0.75",
+    "dihe;  0.98",
+    "biom;  0.70")
+
+  # fuel price
+  carbonPrice <- if (config[["priceAssump"]] == "carbonPrice") {
+    data.frame(
+      period = c(2020, 2030, 2050),
+      value = c(0, 300, 500))
+  } else {
+    NULL
+  }
+
+  heatingCarrierMap <- inline.data.frame(
+    "hs;    carrier",
+    "reel;  Electricity",
+    "ehp1;  Electricity",
+    "libo;  Liquids - Oil",
+    "gabo;  Gases - Fossil Gas",
+    "sobo;  Solids - Coal",
+    "dihe;  Heat",
+    "biom;  Solids - Biomass"
+  )
+  fuelPrices <- prepareFuelPrices(carbonPrice, reg$getUELs(), ttotNum) %>%
+    right_join(heatingCarrierMap, by = "carrier", relationship = "many-to-many") %>%
+    select(-"carrier") %>%
+    mutate(value = .data[["value"]] / 1E3) %>%# EUR/MWh -> EUR/kWh
+    rename(fuelPrice = "value", reg = "region", ttot = "period")
+
   p_specCostOpe <- expandSets(bs, hs, vin, reg, loc, typ, ttot = t) %>%
-    mutate(ttot = as.numeric(as.character(.data[["ttot"]])),
-           value = ueDem[as.character(.data[["bs"]])] /
-             eff[as.character(.data[["hs"]])] *
-             (fuelPrice[as.character(.data[["hs"]])] +
-                (fuelPriceLongTerm[as.character(.data[["hs"]])] - fuelPrice[as.character(.data[["hs"]])]) *
-                pmax(.data[["ttot"]] - 2020, 0) / (2100 - 2020)))
+    mutate(ttot = as.numeric(as.character(.data[["ttot"]]))) %>%
+    left_join(fuelPrices, by = c("hs", "reg", "ttot")) %>%
+    left_join(ueDem, by = c("vin", "reg", "typ")) %>%
+    left_join(eff, by = "hs") %>%
+    left_join(renovationFactor, by = "bs") %>%
+    mutate(value =
+             .data[["fuelPrice"]] *
+             .data[["ueDem"]] *
+             .data[["factor"]] /
+             .data[["eff"]]) %>%
+    select(-"fuelPrice", -"ueDem", -"factor", -"eff")
+
   p_specCostOpe <- m$addParameter(
     "p_specCostOpe",
     c(state, vin, reg, loc, typ, ttot),
     p_specCostOpe,
-    description = "floor-space specific operation cost in USD/(m2.yr)")
+    description = "floor-space specific operation cost in EUR/(m2.yr)")
+
 
   ### demolition ####
   invisible(m$addParameter(
@@ -327,9 +427,9 @@ createInputData <- function(path,
       mutate(ttot  = as.numeric(as.character(.data[["ttot"]])),
              ttot2 = as.numeric(as.character(.data[["ttot2"]]))) %>%
       left_join(p_dt$records %>%
-                  mutate(ttot_1 = as.numeric(as.character(.data[["ttot_1"]]))) %>%
+                  mutate(ttot = as.numeric(as.character(.data[["ttot"]]))) %>%
                   rename(dt = "value"),
-                by = c(ttot = "ttot_1")) %>%
+                by = c(ttot = "ttot")) %>%
       mutate(lifetime = .data[["ttot"]] - .data[["ttot2"]]
              + .data[["dt"]] / 2 + standingLifetTime,
              value = pweibull(.data[["lifetime"]], shape, scale),
@@ -345,9 +445,9 @@ createInputData <- function(path,
            tcon = (.data[["from"]] + pmin(.data[["ttot"]], .data[["to"]])) / 2,
            p = pweibull(.data[["ttot"]] - .data[["tcon"]], 2.95, 70.82)) %>%
     left_join(p_dt$records %>%
-                mutate(ttot_1 = as.numeric(as.character(.data[["ttot_1"]]))) %>%
+                mutate(ttot = as.numeric(as.character(.data[["ttot"]]))) %>%
                 rename(dt = "value"),
-              by = c(ttot = "ttot_1")) %>%
+              by = "ttot") %>%
     group_by(.data[["vin"]]) %>%
     arrange(.data[["ttot"]]) %>%
     mutate(value = c(0, diff(.data[["p"]])) /
@@ -387,12 +487,14 @@ createInputData <- function(path,
   ## other ====
 
   ### discount factor ####
-  p_discountFac <- expandSets(ttot) %>%
+  p_discountFac <- expandSets(typ, ttot) %>%
     mutate(ttot = as.numeric(as.character(.data[["ttot"]])),
-           value = 1 / (1 + 0.07)^(.data[["ttot"]] - as.numeric(t0$records)))
+           r = c(SFH = 0.21, MFH = 0.25)[.data[["typ"]]], # Giraudet et al. 2012
+           value = 1 / (1 + .data[["r"]])^(.data[["ttot"]] - as.numeric(t0$records))) %>%
+    select(-"r")
   p_discountFac <- m$addParameter(
     "p_discountFac",
-    ttot,
+    c(typ, ttot),
     p_discountFac,
     description = "discount factor w.r.t. t0")
 

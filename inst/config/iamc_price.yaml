@@ -1,0 +1,6 @@
+---
+title: iamc_price
+basedOn: iamc_base.yaml
+#startyear: 2025
+priceAssump: carbonPrice
+...

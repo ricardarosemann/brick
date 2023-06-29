@@ -24,7 +24,7 @@ p_shareRenHS(hs,ttot,ttot)     "minimum share of renovation from the heating sys
 p_shareRenBSinit(bs,ttot,ttot) "minimum share of renovation from the building shell of initial stock reaching end of life"
 p_shareRenHSinit(hs,ttot,ttot) "minimum share of renovation from the heating system of initial stock reaching end of life"
 
-p_discountFac(ttot)         "discount factor w.r.t. t0"
+p_discountFac(typ,ttot)         "discount factor w.r.t. t0"
 p_renAllowed(bs,hs,bsr,hsr) "1 if renovation is allowed else 0"
 
 p_runtime(reg,loc,typ,inc)                  "model runtime"
@@ -49,8 +49,8 @@ t0 "reference year for discounting"
 
 epsilon "offset to avoid log(0)" /1E-4/
 
-priceSensBS "price sensitivity of building shell choice" /2.0E-1/
-priceSensHS "price sensitivity of heating system choice" /2.5E-1/
+priceSensBS "price sensitivity of building shell choice" /8.0E-2/
+priceSensHS "price sensitivity of heating system choice" /1E-1/
 ;
 
 variables
@@ -140,4 +140,6 @@ q_refDeviation(ref,reg,ttot)        "summed squared deviation from reference sou
 q_refDeviationVar(ref,refVar,reg,t) "deviation from each variable in reference sources"
 
 q_matchingObj "matching objective: reference deviation and flow variation"
+q_finiteHeatingShareCon(bs,hs,reg,loc,typ,inc,ttot)
+q_finiteHeatingShareRen(bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot)
 ;

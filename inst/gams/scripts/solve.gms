@@ -59,6 +59,8 @@ model matching "find stock and flows that best match reference sources"
   q_heatingShare_Odyssee
   q_heatingShare_IDEES
   q_vinShare_EUBDB
+  q_finiteHeatingShareCon
+  q_finiteHeatingShareRen
 *  q_flowVariation
 *  q_flowVariationTot
   /
@@ -128,6 +130,7 @@ fullSysNLP.SolveLink = 3;
 loop(all_subs,
   subs(all_subs) = yes;
   solve fullSysNLP minimizing v_totSysCost using nlp;
+
   subs(all_subs) = no;
   p_handle(all_subs) = fullSysNLP.handle;
 );
@@ -135,6 +138,12 @@ loop(all_subs,
 repeat
   loop(all_subs$handleCollect(p_handle(all_subs)),
 		p_runtime(all_subs) = fullSysNLP.resusd;
+
+  p_repyFullSysNLP(all_subs,'solvestat') = fullSysNLP.solvestat;
+  p_repyFullSysNLP(all_subs,'modelstat') = fullSysNLP.modelstat;
+  p_repyFullSysNLP(all_subs,'resusd')    = fullSysNLP.resusd;
+  p_repyFullSysNLP(all_subs,'objval')    = fullSysNLP.objval;
+
     if(handleStatus(p_handle(all_subs)),
       fullSysNLP.handle = p_handle(all_subs);
       display$handleDelete(p_handle(all_subs)) 'trouble deleting handles' ;
@@ -150,12 +159,14 @@ $else.parallel
 
 solve fullSysNLP minimizing v_totSysCost using nlp;
 
+p_repyFullSysNLP(subs,'solvestat') = fullSysNLP.solvestat;
+p_repyFullSysNLP(subs,'modelstat') = fullSysNLP.modelstat;
+p_repyFullSysNLP(subs,'resusd')    = fullSysNLP.resusd;
+p_repyFullSysNLP(subs,'objval')    = fullSysNLP.objval;
+
 $endif.parallel
 
-p_repyFullSysNLP(all_subs,'solvestat') = fullSysNLP.solvestat;
-p_repyFullSysNLP(all_subs,'modelstat') = fullSysNLP.modelstat;
-p_repyFullSysNLP(all_subs,'resusd')    = fullSysNLP.resusd;
-p_repyFullSysNLP(all_subs,'objval')    = fullSysNLP.objval;
+
 
 $endif.nlp
 

@@ -145,6 +145,7 @@ refVarRef(ref,refVar) "mapping references to reference variables"
 *** aliases
 alias(state,state2);
 alias(stateFull,stateFull2);
+alias(renAllowed,renAllowed2);
 
 
 *** initialise multi-dimensional sets ------------------------------------------
