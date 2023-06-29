@@ -42,6 +42,7 @@ model fullSysNLP "full system linear optimisation"
   /
 ;
 
+$ifthen.matching "%RUNTYPE%" == "matching"
 
 model matching "find stock and flows that best match reference sources"
   /
@@ -65,6 +66,7 @@ model matching "find stock and flows that best match reference sources"
 *  q_flowVariationTot
   /
 ;
+$endif.matching
 
 
 

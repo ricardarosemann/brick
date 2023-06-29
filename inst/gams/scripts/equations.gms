@@ -429,6 +429,43 @@ q_maxRenRate(reg,t)..
 ;
 
 
+
+*** dwelling size --------------------------------------------------------------
+
+* average dwelling size converts number of dwellings to floor space
+
+q_dwelSizeStock(vin,subs,ttot)$vinExists(ttot,vin)..
+  sum(state, v_stock("area",state,vin,subs,ttot))
+  =e=
+  v_dwelSizeStock(vin,subs,ttot)
+  * sum(state, v_stock("dwel",state,vin,subs,ttot))
+;
+
+q_dwelSizeConstruction(subs,ttot)..
+  sum(state, v_construction("area",state,subs,ttot))
+  =e=
+  v_dwelSizeConstruction(subs,ttot)
+  * sum(state, v_construction("dwel",state,subs,ttot))
+;
+
+q_dwelSizeRenovation(vin,subs,ttot)$vinExists(ttot,vin)..
+  sum(ren, v_renovation("area",ren,vin,subs,ttot))
+  =e=
+  v_dwelSizeRenovation(vin,subs,ttot)
+  * sum(ren, v_renovation("dwel",ren,vin,subs,ttot))
+;
+
+q_dwelSizeDemolition(vin,subs,ttot)$vinExists(ttot,vin)..
+  sum(state, v_demolition("area",state,vin,subs,ttot))
+  =e=
+  v_dwelSizeDemolition(vin,subs,ttot)
+  * sum(state, v_demolition("dwel",state,vin,subs,ttot))
+;
+
+
+
+$ifthen.matching "%RUNTYPE%" == "matching"
+
 *** variation of flows ---------------------------------------------------------
 
 * sum all temporal variation in the flow variables to one number
@@ -478,42 +515,6 @@ q_flowVariation(varFlow,q,subs,t)$((ord(t) lt card(t)))..
 ;
 
 
-
-*** dwelling size --------------------------------------------------------------
-
-* average dwelling size converts number of dwellings to floor space
-
-q_dwelSizeStock(vin,subs,ttot)$vinExists(ttot,vin)..
-  sum(state, v_stock("area",state,vin,subs,ttot))
-  =e=
-  v_dwelSizeStock(vin,subs,ttot)
-  * sum(state, v_stock("dwel",state,vin,subs,ttot))
-;
-
-q_dwelSizeConstruction(subs,ttot)..
-  sum(state, v_construction("area",state,subs,ttot))
-  =e=
-  v_dwelSizeConstruction(subs,ttot)
-  * sum(state, v_construction("dwel",state,subs,ttot))
-;
-
-q_dwelSizeRenovation(vin,subs,ttot)$vinExists(ttot,vin)..
-  sum(ren, v_renovation("area",ren,vin,subs,ttot))
-  =e=
-  v_dwelSizeRenovation(vin,subs,ttot)
-  * sum(ren, v_renovation("dwel",ren,vin,subs,ttot))
-;
-
-q_dwelSizeDemolition(vin,subs,ttot)$vinExists(ttot,vin)..
-  sum(state, v_demolition("area",state,vin,subs,ttot))
-  =e=
-  v_dwelSizeDemolition(vin,subs,ttot)
-  * sum(state, v_demolition("dwel",state,vin,subs,ttot))
-;
-
-
-
-$ifthen.matching "%RUNTYPE%" == "matching"
 
 *** force pleasant heating distribution ----------------------------------------
 
