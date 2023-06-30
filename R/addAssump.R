@@ -11,7 +11,7 @@ addAssump <- function(df, assumpFile) {
     chunk <- assump[assump$.chunk == no, ]
     cols <- sapply(chunk, function(c) sum(!is.na(c)))
     if (length(setdiff(unique(cols), c(0, nrow(chunk))))) {
-      stop("Problem in chunk no ", no, ". Every dimesnion of a chunk has to ",
+      stop("Problem in chunk no ", no, ". Every dimension of a chunk has to ",
            "be either entirely empty or entirely defined")
     }
     cols <- setdiff(union(colnames(chunk[, cols > 0]), "value"), ".chunk")

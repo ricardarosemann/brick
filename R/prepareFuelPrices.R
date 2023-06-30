@@ -8,7 +8,7 @@
 #' @importFrom tidyr pivot_longer replace_na
 #' @export
 
-prepareFuelPrices <- function(carbonPrice = NULL, regions, periods) {
+prepareFuelPrices <- function(carbonPrice = NULL, regions, periods, result = "fuelPrices") {
 
 
 
@@ -83,7 +83,7 @@ prepareFuelPrices <- function(carbonPrice = NULL, regions, periods) {
 
   # extremely rough assumption based on remind results
   emissionIntensityHeat <- data.frame(
-      period  = c(2000, 2020, 2040),
+      period  = c(2000, 2020, 2045),
       value   = c(0.4, 0.3, 0),
       region = head(regions, 1)) %>%
     group_by(.data[["period"]]) %>%
@@ -114,7 +114,7 @@ prepareFuelPrices <- function(carbonPrice = NULL, regions, periods) {
                           mean(.data[["value"]], na.rm = TRUE),
                           .data[["value"]])) %>%
     ungroup() %>%
-    mutate(value = ifelse(.data[["period"]] == 2030,
+    mutate(value = ifelse(.data[["period"]] == 2035,
                           0,
                           .data[["value"]])) %>%
     interpolate_missing_periods(periods, expand.values = TRUE) %>%
@@ -182,5 +182,7 @@ prepareFuelPrices <- function(carbonPrice = NULL, regions, periods) {
 
 
 
-  return(finalPrices)
+  return(switch(result,
+                fuelPrices        = finalPrices,
+                emissionIntensity = emissionIntensity))
 }

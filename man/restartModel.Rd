@@ -10,6 +10,7 @@ restartModel(
   copyScripts = FALSE,
   copyStartPoint = FALSE,
   recreateInputData = FALSE,
+  copyHistory = FALSE,
   recreateMatchingData = FALSE,
   reaggregateMatching = FALSE,
   references = NULL

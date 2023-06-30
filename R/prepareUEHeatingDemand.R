@@ -1,6 +1,7 @@
 #' Usefule energy demand for space heating
 #'
 #' From hotmaps in kWh/(m2.yr)
+#' @export
 
 prepareUEHeatingDemand <- function(regions) {
 
