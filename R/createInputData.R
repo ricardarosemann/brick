@@ -222,12 +222,12 @@ createInputData <- function(path,
   if ("boilerBan" %in% config[["iamcSwitch"]]) {
     hsBanConfig <- inline.data.frame(
       "var;           tout;  hs",
-      "renovation;    2030;  sobo",
-      "renovation;    2030;  libo",
-      "renovation;    2025;  gabo",
-      "construction;  2030;  sobo",
-      "construction;  2030;  libo",
-      "construction;  2025;  gabo"
+      "renovation;    2025;  sobo",
+      "renovation;    2025;  libo",
+      "renovation;    2030;  gabo",
+      "construction;  2025;  sobo",
+      "construction;  2025;  libo",
+      "construction;  2030;  gabo"
     ) %>%
       group_by(across(everything())) %>%
       mutate(ttot = head(ttotNum, 1)) %>%
