@@ -301,20 +301,20 @@ q_buildingShellLifeTime(q,bs,vin,subs,ttot)$(    vinExists(ttot,vin)
     )
   )
   =g=
-  sum(hs,
+  sum(hsr,
     sum(ttot2$(    ttot2.val le ttot.val
                and p_shareRenBS(bs,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
       p_shareRenBS(bs,ttot2,ttot)
       * (
-        v_construction(q,bs,hs,subs,ttot2) * p_dtVin(ttot2,vin)
-        + sum(state$renAllowed(state,bs,hs),
-            v_renovation(q,state,bs,hs,vin,subs,ttot2) * p_dt(ttot2)
+        sum(hs(hsr), v_construction(q,bs,hs,subs,ttot2)) * p_dtVin(ttot2,vin)
+        + sum(state$renAllowed(state,bs,hsr),
+            v_renovation(q,state,bs,hsr,vin,subs,ttot2) * p_dt(ttot2)
           )
         )
       +
       p_shareRenBSinit(bs,ttot2,ttot)
-      * v_stock(q,bs,hs,vin,subs,ttot2)$(tinit(ttot2))
+      * sum(hs(hsr), v_stock(q,bs,hs,vin,subs,ttot2)$(tinit(ttot2)))
     )
   )
 ;
@@ -338,20 +338,20 @@ q_heatingSystemLifeTime(q,hs,vin,subs,ttot)$(    vinExists(ttot,vin)
     )
   )
   =g=
-  sum(bs,
+  sum(bsr,
     sum(ttot2$(    ttot2.val le ttot.val
                and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
       p_shareRenHS(hs,ttot2,ttot)
       * (
-        v_construction(q,bs,hs,subs,ttot2) * p_dtVin(ttot2,vin)
-        + sum(state$renAllowed(state,bs,hs),
-            v_renovation(q,state,bs,hs,vin,subs,ttot2) * p_dt(ttot2)
+        sum(bs(bsr), v_construction(q,bs,hs,subs,ttot2)) * p_dtVin(ttot2,vin)
+        + sum(state$renAllowed(state,bsr,hs),
+            v_renovation(q,state,bsr,hs,vin,subs,ttot2) * p_dt(ttot2)
           )
         )
       +
       p_shareRenHSinit(hs,ttot2,ttot)
-      * v_stock(q,bs,hs,vin,subs,ttot2)$(tinit(ttot2))
+      * sum(bs(bsr), v_stock(q,bs,hs,vin,subs,ttot2)$(tinit(ttot2)))
     )
   )
 ;
