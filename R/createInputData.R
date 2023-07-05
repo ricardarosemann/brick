@@ -20,7 +20,7 @@
 #' @importFrom tidyr complete
 #' @importFrom madrat calcOutput readSource
 #' @importFrom magclass collapseDim mselect getYears mbind getItems<- getItems
-#'   add_dimension
+#'   add_dimension time_interpolate
 #' @importFrom gdxrrw igdx wgdx
 #' @importFrom gamstransfer Container
 #' @importFrom stats pweibull
@@ -549,9 +549,10 @@ createInputData <- function(path,
     collapseDim(dim = "variable")
   urbanShare <- calcOutput("Urban", aggregate = FALSE) %>%
     mselect(iso3c = reg$getUELs(),
-            year = paste0("y", ttot$getUELs()),
+            year = paste0("y", ttotNum),
             variable = "urb_SSP2") %>%
-    collapseDim(dim = "variable")
+    collapseDim(dim = "variable") %>%
+    time_interpolate(ttotNum)
   p_population <- mbind(
     magclass::setNames(pop * urbanShare, "urban"),
     magclass::setNames(pop * (1 - urbanShare), "rural")
