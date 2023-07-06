@@ -61,7 +61,13 @@ prepareFuelPrices <- function(carbonPrice = NULL, regions, periods, result = "fu
   }
   pricesDH <- readSource("Energiforsk2016") %>%
     as.quitte(na.rm = TRUE) %>%
-    select("region", "period", "value") %>%
+    select("region", "period", "value")
+  pricesDH <- pricesDH %>%
+    group_by(.data[["period"]]) %>%
+    summarise(value = mean(.data[["value"]]),
+              region = setdiff(regions, pricesDH$region),
+              .groups = "drop") %>%
+    rbind(pricesDH) %>%
     filter(.data[["region"]] %in% regions) %>%
     mutate(value = .data[["value"]] * 3.6) %>% # EUR/GJ -> EUR/MWh
     group_by(.data[["region"]]) %>%
