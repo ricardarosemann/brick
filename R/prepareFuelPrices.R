@@ -83,7 +83,7 @@ prepareFuelPrices <- function(carbonPrice = NULL, regions, periods, result = "fu
 
   # extremely rough assumption based on remind results
   emissionIntensityHeat <- data.frame(
-      period  = c(2000, 2020, 2045),
+      period  = c(2000, 2022, 2045),
       value   = c(0.4, 0.3, 0),
       region = head(regions, 1)) %>%
     group_by(.data[["period"]]) %>%
