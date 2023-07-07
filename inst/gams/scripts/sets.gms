@@ -28,6 +28,7 @@ cost "type of cost"
   /
   tangible   "tangible cost (exogenous)"
   intangible "intangible cost (identified in calibration)"
+  markup     "markup costs (to represent individual preferences)"
   /
 var "mayor variables of the model"
   / stock, construction, renovation, demolition /

@@ -11,6 +11,8 @@ historic: NULL      # run to consider as history before startyear
 # data
 inputRevision: "0.0.1"
 iamcSwitch: NULL    # temporary switch for IAMC contribution
+markupPct: NULL     # temporary value for IAMC contribution with preference markups
+compareGdx: NULL    # temporary value for providing a GDX for comparison
 startingPoint: NULL # previous model run to use as initial starting point
 matchingRun: NULL   # matching run, only for calibration (TODO: to be removed when migrating to mredgebuidlings)
 # solvers

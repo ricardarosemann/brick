@@ -1,0 +1,9 @@
+---
+title: iamc_skeptic
+basedOn: iamc_base.yaml
+regions: DEU
+startyear: 2005
+iamcSwitch: ["reel", "ehp1", "biom", "dihe"]
+markupPct: 0.3
+compareGdx: "output/iamc_base_2023-07-06_16.43.59/output.gdx"
+...

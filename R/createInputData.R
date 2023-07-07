@@ -86,7 +86,7 @@ createInputData <- function(path,
 
   cost <- m$addSet(
     "cost",
-    records = c("tangible", "intangible"),
+    records = c("tangible", "intangible", "markup"),
     description = "type of cost")
 
   var <- m$addSet(
@@ -302,6 +302,7 @@ createInputData <- function(path,
     "biom;   9100",
     "0;         0"
   )
+  hsUnitGaBo <- (hsUnitCost %>% filter(hs == "gabo"))[["hsInstCost"]]
   # assumption to make unit prices relative to floor space
   m2PerUnit <- inline.data.frame(
     "typ;  m2PerUnit",
@@ -325,7 +326,13 @@ createInputData <- function(path,
   p_specCostConIntang <- p_specCostCon %>%
     filter(.data[["cost"]] == "intangible") %>%
     addAssump("inst/assump/costIntangCon.csv")
-  p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang)
+  p_specCostConMarkup <- p_specCostCon %>%
+    filter(.data[["cost"]] == "markup") %>%
+    left_join(m2PerUnit, by = "typ") %>%
+    mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
+      config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
+    select(-"m2PerUnit")
+  p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang, p_specCostConMarkup)
   m$addParameter(
     "p_specCostCon",
     c(cost, bs, hs, reg, loc, typ, inc, ttot),
@@ -351,7 +358,13 @@ createInputData <- function(path,
   p_specCostRenIntang <- p_specCostRen %>%
     filter(.data[["cost"]] == "intangible") %>%
     addAssump("inst/assump/costIntangRen.csv")
-  p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang)
+  p_specCostRenMarkup <- p_specCostRen %>%
+    filter(.data[["cost"]] == "markup") %>%
+    left_join(m2PerUnit, by = "typ") %>%
+    mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
+      config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
+    select(-"m2PerUnit")
+  p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang, p_specCostRenMarkup)
   p_specCostRen <- m$addParameter(
     "p_specCostRen",
     c(cost, state, stateR, vin, reg, loc, typ, inc, ttot),
