@@ -52,7 +52,7 @@ startModel <- function(config = NULL,
           gamsCall = cfg[["gamsCall"]])
 
   plotSummary(path, NULL, showHistStock = cfg[["switches"]][["RUNTYPE"]] %in% c("calibration", "matching") ||
-                cfg[["title"]] == "iamc_base")
+                cfg[["title"]] == "iamc_base", compareGdx = cfg[["compareGdx"]])
 
   if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
     plotRefDeviation(path)

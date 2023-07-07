@@ -18,10 +18,11 @@
 #' @importFrom ggpubr ggarrange
 #' @export
 #'
-plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
+plotSummary <- function(path, facet = "typ", showHistStock = FALSE, compareGdx = NULL) {
 
-  config <- readConfig(file.path(path, "config", "config.yaml"))
-  endyear <- config[["endyear"]]
+  # config <- readConfig(file.path(path, "config", "config.yaml"))
+  # endyear <- config[["endyear"]]
+  endyear <- 2045
 
   # PLOT STYLE -----------------------------------------------------------------
 
@@ -52,7 +53,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
     `after 2100`  = "#5fb0ef"
   )
   techLabel <- c(`0`  = "no change",
-                 reel = "Resitive electric",
+                 reel = "Resistive electric",
                  ehp1 = "Heat pump",
                  libo = "Liquids boiler",
                  gabo = "Gas boiler",
@@ -161,66 +162,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
   renovation <- readSymbol(m, "v_renovation") %>%
     filter(.data[["ttot"]] >= 2000,
            .data[["ttot"]] <= endyear)
-
-
-
-  # PLOT ----
-
-  for (fillDim in c("hs", "vin")) {
-
-
-
-    ## stock ====
-
-    pStock <- stock %>%
-      filter(showHistStock | !.data[["historic"]]) %>%
-      group_by(across(all_of(c(facet, fillDim, "ttot", "historic", "pos")))) %>%
-      summarise(value = sum(.data[["value"]], na.rm = TRUE),
-                .groups = "drop") %>%
-      ggplot(aes_string("ttot", "value")) +
-      geom_area(aes(fill = .data[[fillDim]]), alpha = 0.2 * !showHistStock) +
-      geom_col(aes(x = if (showHistStock) .data[["pos"]] else .data[["ttot"]],
-        fill = .data[[fillDim]]),
-        width = width) +
-      facet_wrap(facet)
-    if (showHistStock) {
-      pStock <- pStock +
-        geom_point(aes(.data[["pos"]]), shape = 13,
-                   data = stock %>%
-                     filter(.data[["historic"]]) %>%
-                     group_by(across(all_of(c("pos", facet)))) %>%
-                     summarise(value = sum(.data[["value"]]), .groups = "drop"))
-    }
-    pStock <- addTheme(pStock, "Stock", "Floor space in million m2", TRUE, FALSE)
-
-    ## construction ====
-    pCon <- construction %>%
-      left_join(t2vin, by = "ttot") %>%
-      group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
-      summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
-      left_join(dt, by = "ttot") %>%
-      ggplot(aes(fill = .data[[fillDim]])) +
-      geom_col(aes(.data[["ttot"]], .data[["value"]], width = .data[["dt"]] - gap),
-               just = 1) +
-      facet_wrap(facet)
-    pCon <- addTheme(pCon, "Construction", "", TRUE)
-
-    ## demolition ====
-    pDem <- demolition %>%
-      group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
-      summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
-      left_join(dt, by = "ttot") %>%
-      ggplot() +
-      geom_col(aes(.data[["ttot"]], .data[["value"]],
-                   fill = .data[[fillDim]],
-                   width = .data[["dt"]] - gap),
-               position = position_stack(reverse = TRUE),
-               just = 1) +
-      facet_wrap(facet)
-    pDem <- addTheme(pDem, "Demolition", "Floor space in million m2/yr", TRUE)
-
-    ## renovation ====
-    pRen <- rbind(renovation %>%
+  renovation <- rbind(renovation %>%
                     filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
                     select(-"hs", -"bs") %>%
                     rename(hs = "hsr", bs = "bsr") %>%
@@ -230,33 +172,302 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
                     select(-"hsr", -"bsr") %>%
                     mutate(value = -.data[["value"]],
                            renovation = "from")
-    ) %>%
-      group_by(across(all_of(c(facet, fillDim, "ttot", "renovation")))) %>%
-      summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
-      left_join(dt, by = "ttot") %>%
-      ggplot() +
-      geom_col(aes(.data[["ttot"]], .data[["value"]],
-                   fill = .data[[fillDim]],
-                   width = .data[["dt"]] - gap),
-               position = position_stack(reverse = TRUE),
-               just = 1) +
-      facet_wrap(facet) +
-      geom_hline(yintercept = 0)
-    pRen <-  addTheme(pRen, "Renovation", "") +
-      expand_limits(y = 0.05)
+    )
+    
 
-    # join plots
-    print(ggarrange(pStock, pCon, pDem, pRen,
-                    ncol = 1, align = "v",
-                    legend = "right", common.legend = TRUE))
+  # PLOT ----
+  for (fillDim in c("hs", "vin")) {
 
-    # save plot
-    plotDir <- file.path(path, "plots")
-    if (!dir.exists(plotDir)) {
-      dir.create(plotDir)
+    for (plSh in c(TRUE, FALSE)) {
+
+      ## stock ====
+
+      pStock <- stock %>%
+        filter(showHistStock | !.data[["historic"]]) %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot", "historic", "pos")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE),
+                  .groups = "drop")
+      if (plSh) {
+        pStock <- pStock %>%
+        group_by(across(all_of(c(facet, "ttot", "historic", "pos")))) %>%
+        mutate(value = proportions(value))
+      }
+      pStock <- pStock %>%
+        ggplot(aes_string("ttot", "value")) +
+        geom_area(aes(fill = .data[[fillDim]]), alpha = 0.2 * !showHistStock) +
+        geom_col(aes(x = if (showHistStock) .data[["pos"]] else .data[["ttot"]],
+          fill = .data[[fillDim]]),
+          width = width) +
+        facet_wrap(facet)
+      if (showHistStock) {
+        pStock <- pStock +
+          geom_point(aes(.data[["pos"]]), shape = 13,
+                    data = stock %>%
+                      filter(.data[["historic"]]) %>%
+                      group_by(across(all_of(c("pos", facet)))) %>%
+                      summarise(value = sum(.data[["value"]]), .groups = "drop"))
+      }
+      pStock <- addTheme(pStock, "Stock", "Floor space in million m2", TRUE, FALSE)
+
+      ## construction ====
+      pCon <- construction %>%
+        left_join(t2vin, by = "ttot") %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop")
+      if (plSh) {
+      pCon <- pCon %>%
+        group_by(across(all_of(c(facet, "ttot")))) %>%
+        mutate(value = proportions(value))
+      }
+      pCon <- pCon %>%
+        left_join(dt, by = "ttot") %>%
+        ggplot(aes(fill = .data[[fillDim]])) +
+        geom_col(aes(.data[["ttot"]], .data[["value"]], width = .data[["dt"]] - gap),
+                just = 1) +
+        facet_wrap(facet)
+      pCon <- addTheme(pCon, "Construction", "", TRUE)
+
+      ## demolition ====
+      pDem <- demolition %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop")
+      if (plSh) {
+        pDem <- pDem %>%
+        group_by(across(all_of(c(facet, "ttot")))) %>%
+        mutate(value = proportions(value))
+      }
+      pDem <- pDem %>%
+        left_join(dt, by = "ttot") %>%
+        ggplot() +
+        geom_col(aes(.data[["ttot"]], .data[["value"]],
+                    fill = .data[[fillDim]],
+                    width = .data[["dt"]] - gap),
+                position = position_stack(reverse = TRUE),
+                just = 1) +
+        facet_wrap(facet)
+      pDem <- addTheme(pDem, "Demolition", "Floor space in million m2/yr", TRUE)
+
+      ## renovation ====
+      pRen <- renovation %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot", "renovation")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop")
+      if (plSh) {
+      pRen <- pRen %>%
+        group_by(across(all_of(c(facet, "ttot", "renovation")))) %>%
+        mutate(value = proportions(value))
+      }
+      pRen <- pRen %>%
+        left_join(dt, by = "ttot") %>%
+        ggplot() +
+        geom_col(aes(.data[["ttot"]], .data[["value"]],
+                    fill = .data[[fillDim]],
+                    width = .data[["dt"]] - gap),
+                position = position_stack(reverse = TRUE),
+                just = 1) +
+        facet_wrap(facet) +
+        geom_hline(yintercept = 0)
+      pRen <-  addTheme(pRen, "Renovation", "") +
+        expand_limits(y = 0.05)
+
+      # join plots
+      print(ggarrange(pStock, pCon, pDem, pRen,
+                      ncol = 1, align = "v",
+                      legend = "right", common.legend = TRUE))
+
+      # save plot
+      plotDir <- file.path(path, "plots")
+      if (!dir.exists(plotDir)) {
+        dir.create(plotDir)
+      }
+      if (plSh) {
+        name_share <- "Share"
+      } else {
+        name_share <- ""
+      }
+      plotFile <- file.path(plotDir, paste0("summary_", fillDim, name_share, ".png"))
+      ggsave(plotFile, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
+
     }
-    plotFile <- file.path(plotDir, paste0("summary_", fillDim, ".png"))
-    ggsave(plotFile, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
+  }
+
+    # If applicable: Read data and plot differences
+  if (!is.null(compareGdx)) {
+
+    fillDim <- "hs"
+
+    for (plSh in c(TRUE, FALSE)) {
+
+      # Read data
+
+      k <- Container$new(compareGdx)
+
+      stockDiff <- rbind(readSymbol(k, "v_stock") %>%
+                    mutate(historic = FALSE),
+                  readSymbol(k, "p_stockHist") %>%
+                    mutate(historic = TRUE)) %>%
+        mutate(pos = .data[["ttot"]] + (0.5 - .data[["historic"]]) * width * 1.2) %>%
+        filter(.data[["ttot"]] >= 2000,
+              .data[["ttot"]] <= endyear) %>%
+        rename(valueComp = value)
+      stockDiff <- full_join(stock, stockDiff)
+      if (plSh) {
+        stockDiff <- stockDiff %>%
+          group_by(ttot, hs, pos, historic) %>%
+          summarise(value = sum(value, na.rm = TRUE), valueComp = sum(valueComp, na.rm = TRUE)) %>%
+          group_by(ttot, historic) %>%
+          mutate(value = proportions(value), valueComp = proportions(valueComp))
+      }
+      stockDiff <- stockDiff %>%
+        mutate(value = .data[["value"]] - .data[["valueComp"]])
+
+      constructionDiff <- readSymbol(k, "v_construction") %>%
+        filter(.data[["ttot"]] <= endyear) %>%
+        rename(valueComp = value)
+      constructionDiff <- full_join(construction, constructionDiff)
+      if (plSh) {
+        constructionDiff <- constructionDiff %>%
+          group_by(ttot, hs) %>%
+          summarise(value = sum(value, na.rm = TRUE), valueComp = sum(valueComp, na.rm = TRUE)) %>%
+          group_by(ttot) %>%
+          mutate(value = proportions(value), valueComp = proportions(valueComp))
+      }
+      constructionDiff <- constructionDiff %>%
+        mutate(value = .data[["value"]] - .data[["valueComp"]])
+
+      demolitionDiff <- readSymbol(k, "v_demolition") %>%
+        filter(.data[["ttot"]] >= 2000,
+              .data[["ttot"]] <= endyear) %>%
+        rename(valueComp = value)
+      demolitionDiff <- full_join(demolition, demolitionDiff)
+      if (plSh) {
+        demolitionDiff <- demolitionDiff %>%
+          group_by(ttot, hs) %>%
+          summarise(value = sum(value, na.rm = TRUE), valueComp = sum(valueComp, na.rm = TRUE)) %>%
+          group_by(ttot) %>%
+          mutate(value = proportions(value), valueComp = proportions(valueComp))
+      }
+      demolitionDiff <- demolitionDiff %>%
+        mutate(value = .data[["value"]] - .data[["valueComp"]])
+
+      renovationDiff <- readSymbol(k, "v_renovation") %>%
+        filter(.data[["ttot"]] >= 2000,
+              .data[["ttot"]] <= endyear) %>%
+        rename(valueComp = value)
+      renovationDiff <- rbind(renovationDiff %>%
+                    filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
+                    select(-"hs", -"bs") %>%
+                    rename(hs = "hsr", bs = "bsr") %>%
+                    mutate(renovation = "to"),
+                  renovationDiff %>%
+                    filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
+                    select(-"hsr", -"bsr") %>%
+                    mutate(valueComp = -.data[["valueComp"]],
+                           renovation = "from")
+      )
+      
+      renovationDiff <- full_join(renovation, renovationDiff) %>%
+        group_by(across(-all_of(c("renovation", "bs", "value", "valueComp")))) %>%
+        summarise(value = sum(value), valueComp = sum(valueComp), .groups = "drop")
+      
+      if (plSh) {
+        renovationDiff <- renovationDiff %>%
+          group_by(ttot, hs) %>%
+          summarise(value = sum(value, na.rm = TRUE), valueComp = sum(valueComp, na.rm = TRUE)) %>%
+          group_by(ttot) %>%
+          mutate(value = proportions(value), valueComp = proportions(valueComp))
+      }
+      renovationDiff <- renovationDiff %>%
+        mutate(value = .data[["value"]] - .data[["valueComp"]])
+
+      ## stock ====
+
+      pStock <- stockDiff %>%
+        filter(showHistStock | !.data[["historic"]]) %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot", "pos")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE),
+                  .groups = "drop") %>%
+        ggplot(aes_string("ttot", "value")) +
+        geom_area(aes(fill = .data[[fillDim]]), alpha = 0.2 * !showHistStock) +
+        geom_col(aes(x = if (showHistStock) .data[["pos"]] else .data[["ttot"]],
+          fill = .data[[fillDim]]),
+          width = width) +
+        facet_wrap(facet)
+      if (showHistStock) {
+        pStock <- pStock +
+          geom_point(aes(.data[["pos"]]), shape = 13,
+                    data = stock %>%
+                      filter(.data[["historic"]]) %>%
+                      group_by(across(all_of(c("pos", facet)))) %>%
+                      summarise(value = sum(.data[["value"]]), .groups = "drop"))
+      }
+      pStock <- addTheme(pStock, "Stock", "Floor space in million m2", TRUE, FALSE)
+
+      ## construction ====
+      pCon <- constructionDiff %>%
+        left_join(t2vin, by = "ttot") %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
+        left_join(dt, by = "ttot") %>%
+        ggplot(aes(fill = .data[[fillDim]])) +
+        geom_col(aes(.data[["ttot"]], .data[["value"]], width = .data[["dt"]] - gap),
+                just = 1) +
+        facet_wrap(facet)
+      pCon <- addTheme(pCon, "Construction", "", TRUE)
+
+      ## demolition ====
+      pDem <- demolitionDiff %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
+        left_join(dt, by = "ttot") %>%
+        ggplot() +
+        geom_col(aes(.data[["ttot"]], .data[["value"]],
+                    fill = .data[[fillDim]],
+                    width = .data[["dt"]] - gap),
+                position = position_stack(reverse = TRUE),
+                just = 1) +
+        facet_wrap(facet)
+      pDem <- addTheme(pDem, "Demolition", "Floor space in million m2/yr", TRUE)
+
+      ## renovation ====
+      pRen <- renovationDiff %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
+        left_join(dt, by = "ttot") %>%
+        ggplot() +
+        geom_col(aes(.data[["ttot"]], .data[["value"]],
+                    fill = .data[[fillDim]],
+                    width = .data[["dt"]] - gap),
+                position = position_stack(reverse = TRUE),
+                just = 1) +
+        facet_wrap(facet) +
+        geom_hline(yintercept = 0)
+      pRen <-  addTheme(pRen, "Renovation", "") +
+        expand_limits(y = 0.05)
+
+      # join plots
+      print(ggarrange(pStock, pCon, pDem, pRen,
+                      ncol = 1, align = "v",
+                      legend = "right", common.legend = TRUE))
+
+      # save plot
+      plotDir <- file.path(path, "plots")
+      if (!dir.exists(plotDir)) {
+        dir.create(plotDir)
+      }
+
+      if (plSh) {
+        name_share <- "Share"
+      } else {
+        name_share <- ""
+      }
+      plotFile <- file.path(plotDir, paste0("summary_", fillDim, "Diff",
+        name_share, ".png"))
+      plotFileSingle <- file.path(plotDir, paste0("summary_", fillDim, "DiffSgl",
+        name_share, ".png"))
+      ggsave(plotFile, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
+      ggsave(plotFileSingle, plot = pStock, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
+
+    }
 
   }
 
