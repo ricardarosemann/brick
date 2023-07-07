@@ -75,7 +75,7 @@ loadMadratData <- function(config) {
 
     # directory to look for the madrat tgz file
     repositories <- list(NULL)
-    names(repositories) <- file.path(getOption("MADRAT_MAINFOLDER"), "output")
+    names(repositories) <- "/p/projects/rd3mod/inputdata/output"
 
     # load tgz file and unpack it in input folder
     download_distribute(madratNew, repositories, brick.file())
