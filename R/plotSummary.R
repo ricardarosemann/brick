@@ -13,11 +13,14 @@
 #' @importFrom dplyr row_number n
 #' @importFrom ggplot2 ggplot geom_col geom_area aes_string scale_x_continuous
 #'   scale_y_continuous ggtitle theme_classic theme aes geom_line facet_wrap
-#'   element_blank element_line scale_fill_manual labs position_stack geom_hline
+#'   element_blank element_line element_text scale_fill_manual labs position_stack geom_hline
 #'   expand_limits ggsave geom_point
 #' @importFrom ggpubr ggarrange
 #' @export
 #'
+#' 
+library(ggplot2)
+
 plotSummary <- function(path, facet = "typ", showHistStock = FALSE, compareGdx = NULL) {
 
   # config <- readConfig(file.path(path, "config", "config.yaml"))
@@ -61,6 +64,22 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE, compareGdx =
                  dihe = "District heating",
                  biom = "Biomass boiler")
   gap <- 0.5
+
+  .niceLabs <- function(x) {
+    sprintf(gsub("CO2", "CO\u2082", x))
+  }
+  niceLabs <- function(df, col = "scenario") {
+    fctr <- is.factor(df[[col]])
+    if (fctr) {
+      lvls <- .niceLabs(levels(df[[col]]))
+      df[[col]] <- as.character(df[[col]])
+    }
+    df[[col]] <- .niceLabs(df[[col]])
+    if (fctr) {
+      df[[col]] <- factor(df[[col]], lvls)
+    }
+    return(df)
+  }
   addTheme <- function(p, title = "", yLabel = "",
                        removeXLabels = FALSE,
                        removeFacetLabels = TRUE) {
@@ -72,7 +91,8 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE, compareGdx =
       theme_classic() +
       theme(strip.background = element_blank(),
             panel.grid.major.y = element_line(colour = "grey", size = .25),
-            axis.title.x = element_blank())
+            axis.title.x = element_blank()) +
+      theme(text = element_text(size = 20))
     if (removeFacetLabels) {
       pOut <- pOut +
         theme(strip.text = element_blank())
@@ -402,6 +422,20 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE, compareGdx =
       }
       pStock <- addTheme(pStock, "Stock", "Floor space in million m2", TRUE, FALSE)
 
+      pStockSgl <- stockDiff %>%
+        filter(showHistStock | !.data[["historic"]],
+        .data[["ttot"]] >= 2020) %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot", "pos")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE),
+                  .groups = "drop") %>%
+        ggplot(aes_string("ttot", "value")) +
+        geom_area(aes(fill = .data[[fillDim]]), alpha = 0.2 * !showHistStock) +
+        geom_col(aes(x = if (showHistStock) .data[["pos"]] else .data[["ttot"]],
+          fill = .data[[fillDim]]),
+          width = width) +
+        facet_wrap(facet)
+      pStockSgl <- addTheme(pStockSgl, "Stock", "Floor space in million m2", TRUE, FALSE)
+
       ## construction ====
       pCon <- constructionDiff %>%
         left_join(t2vin, by = "ttot") %>%
@@ -465,7 +499,33 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE, compareGdx =
       plotFileSingle <- file.path(plotDir, paste0("summary_", fillDim, "DiffSgl",
         name_share, ".png"))
       ggsave(plotFile, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
-      ggsave(plotFileSingle, plot = pStock, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
+
+      dt <- readSymbol(m, "p_dt") %>%
+        select("ttot", dt = "value") %>%
+        filter(.data[["ttot"]] <= endyear, .data[["ttot"]]>=2020)
+
+      # axis limits
+      xLimits <- dt %>%
+        arrange(.data[["ttot"]]) %>%
+        filter(row_number() %in% c(1, n())) %>%
+        mutate(limit = .data[["ttot"]] + .data[["dt"]] * (row_number() - 1.5)) %>%
+        getElement("limit")
+
+      pStockSgl <- stockDiff %>%
+        filter(showHistStock | !.data[["historic"]],
+        .data[["ttot"]] >= 2020) %>%
+        group_by(across(all_of(c(facet, fillDim, "ttot", "pos")))) %>%
+        summarise(value = sum(.data[["value"]], na.rm = TRUE),
+                  .groups = "drop") %>%
+        ggplot(aes_string("ttot", "value")) +
+        geom_area(aes(fill = .data[[fillDim]]), alpha = 0.2 * !showHistStock) +
+        geom_col(aes(x = if (showHistStock) .data[["pos"]] else .data[["ttot"]],
+          fill = .data[[fillDim]]),
+          width = width) +
+        facet_wrap(facet)
+      pStockSgl <- addTheme(pStockSgl, "Stock", "Floor space in million m2", FALSE, TRUE)
+
+      ggsave(plotFileSingle, plot = pStockSgl, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
 
     }
 
