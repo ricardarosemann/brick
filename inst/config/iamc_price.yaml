@@ -1,6 +1,7 @@
 ---
 title: iamc_price
 basedOn: iamc_base.yaml
-#startyear: 2025
+startyear: 2025
+historic: /p/tmp/krekeler/dev/brick/output/iamc_base_2023-07-06_21.52.10
 iamcSwitch: carbonPrice
 ...
