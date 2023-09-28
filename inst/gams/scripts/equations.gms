@@ -325,7 +325,7 @@ q_heatingSystemLifeTime(q,hs,vin,subs,ttot)$(    vinExists(ttot,vin)
                                              and t(ttot))..
   sum(bs,
     sum(ttot2$(    ttot2.val le ttot.val
-               and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
+               !!and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
       p_dt(ttot2)
       * (
@@ -340,7 +340,7 @@ q_heatingSystemLifeTime(q,hs,vin,subs,ttot)$(    vinExists(ttot,vin)
   =g=
   sum(bsr,
     sum(ttot2$(    ttot2.val le ttot.val
-               and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
+               !!and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
       p_shareRenHS(hs,ttot2,ttot)
       * (

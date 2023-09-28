@@ -518,12 +518,12 @@ createInputData <- function(path,
   p_shareRenHS <- m$addParameter( # nolint: object_usage_linter.
     "p_shareRenHS",
     c(hs, ttot2, ttot),
-    shareRen("hs", ttot, 5, 20),
+    shareRen("hs", ttot, 3, 20),
     description = "minimum share of renovation from the heating system reaching end of life")
   p_shareRenHSinit <- m$addParameter( # nolint: object_usage_linter.
     "p_shareRenHSinit",
     c(hs, ttot2, ttot),
-    shareRen("hs", tinit, 5, 20, 6),
+    shareRen("hs", tinit, 3, 20, 6),
     description = "minimum share of renovation from the heating system of initial stock reaching end of life")
 
 
