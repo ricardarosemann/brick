@@ -56,6 +56,8 @@ priceSensHS "price sensitivity of heating system choice" /1E-1/
 variables
 v_totSysCost               "total system cost incl. diversity preference in EUR"
 v_SysCost(reg,loc,typ,inc) "system cost incl. diversity preference in EUR"
+v_HeteroPrefCon(reg,loc,typ,inc,ttot) "diversity preference for construction"
+v_HeteroPrefRen(reg,loc,typ,inc,ttot) "diversity preference for renovation"
 
 $ifthen.matching "%RUNTYPE%" == "matching"
 v_flowVariationTot         "total temporal variation of flows"
@@ -71,8 +73,6 @@ v_RenCost(reg,loc,typ,inc,ttot) "renovation cost cash flow in EUR/yr"
 v_OpeCost(reg,loc,typ,inc,ttot) "operational cost cash flow in EUR/yr"
 v_DemCost(reg,loc,typ,inc,ttot) "demolition cost cash flow in EUR/yr"
 
-v_HeteroPrefCon(reg,loc,typ,inc,ttot) "diversity preference for construction"
-v_HeteroPrefRen(reg,loc,typ,inc,ttot) "diversity preference for renovation"
 
 v_stock(qty,bs,hs,vin,reg,loc,typ,inc,ttot)              "stock of buildings in million m2"
 v_construction(qty,bs,hs,reg,loc,typ,inc,ttot)           "flow of new buildings in million m2/yr"
