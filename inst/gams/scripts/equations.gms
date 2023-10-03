@@ -29,6 +29,8 @@ q_SysCost(subs(reg,loc,typ,inc))..
        + v_DemCost(subs,t)
        + v_HeteroPrefCon(subs,t)
        + v_HeteroPrefRen(subs,t)
+       + v_AdjCostCon(subs,t)
+       + v_AdjCostRen(subs,t)
       )
   )
 ;
@@ -198,6 +200,45 @@ q_HeteroPrefRen(subs,t)..
   ))
 ;
 
+
+*** adjustement cost -----------------------------------------------------------
+
+* penalises changes over time in the renovation and construction decisions
+
+* construction
+q_AdjCostCon(subs,t)..
+  v_AdjCostCon(subs,t)
+  =e=
+  p_adjFacCon
+  * sum(state,
+      power(
+        (
+            v_construction("area",state,subs,t)
+          - v_construction("area",state,subs,t-1)
+        )
+        /
+        ((p_dt(t) + p_dt(t-1)) / 2)
+      , 2)
+    )
+;
+
+
+* renovation
+q_AdjCostRen(subs,t)..
+  v_AdjCostRen(subs,t)
+  =e=
+  p_adjFacRen
+  * sum((renAllowed(ren), vinExists(t,vin)),
+      power(
+        (
+            v_renovation("area",ren,vin,subs,t)
+          - v_renovation("area",ren,vin,subs,t-1)
+        )
+        /
+        ((p_dt(t) + p_dt(t-1)) / 2)
+      , 2)
+    )
+;
 
 *** building stock balance -----------------------------------------------------
 

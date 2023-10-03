@@ -10,6 +10,9 @@ p_specCostRen(cost,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "floor-space specific
 p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot)                  "floor-space specific operation cost in USD/(m2.yr)"
 p_specCostDem                                              "floor-space specific demolition cost in USD/m2"
 
+p_adjFacCon "scaling factor for the adjustment cost for construction" / 0 / 
+p_adjFacRen "scaling factor for the adjustment cost for renovation" / 0 / 
+
 p_population(reg,loc,typ,inc,ttot)          "number of people in million"
 p_floorPerCap(reg,loc,typ,inc,ttot)         "floor space per capita in m2"
 
@@ -73,6 +76,8 @@ v_RenCost(reg,loc,typ,inc,ttot) "renovation cost cash flow in EUR/yr"
 v_OpeCost(reg,loc,typ,inc,ttot) "operational cost cash flow in EUR/yr"
 v_DemCost(reg,loc,typ,inc,ttot) "demolition cost cash flow in EUR/yr"
 
+v_AdjCostCon(reg,loc,typ,inc,ttot) "adjustment cost for construction"
+v_AdjCostRen(reg,loc,typ,inc,ttot) "adjustment cost for renovation"
 
 v_stock(qty,bs,hs,vin,reg,loc,typ,inc,ttot)              "stock of buildings in million m2"
 v_construction(qty,bs,hs,reg,loc,typ,inc,ttot)           "flow of new buildings in million m2/yr"
@@ -105,6 +110,9 @@ q_DemCost(reg,loc,typ,inc,ttot) "demolition cost"
 
 q_HeteroPrefCon(reg,loc,typ,inc,ttot) "diversity preference for construction"
 q_HeteroPrefRen(reg,loc,typ,inc,ttot) "diversity preference for renovation"
+
+q_AdjCostCon(reg,loc,typ,inc,ttot) "adjustment cost for construction"
+q_AdjCostRen(reg,loc,typ,inc,ttot) "adjustment cost for renovation"
 
 q_stockBalNext(qty,bs,hs,vin,reg,loc,typ,inc,ttot)  "building stock balance: flows into next time step"
 q_stockBalPrev(qty,bs,hs,vin,reg,loc,typ,inc,ttot)  "building stock balance: flows from previous time step"
