@@ -410,7 +410,7 @@ createInputData <- function(path,
   carbonPrice <- if ("carbonPrice" %in% config[["iamcSwitch"]]) {
     data.frame(
       period = c(2020, 2030, 2050),
-      value = c(0, 300, 500))
+      value = c(0, 150, 400))
   } else {
     NULL
   }
@@ -564,12 +564,25 @@ createInputData <- function(path,
   }
 
   # allowed renovations
+  renAllowed <- inline.data.frame(
+    "hs;   energyLadder",
+    "biom; 1",
+    "dihe; 1",
+    "ehp1; 1",
+    "gabo; 2",
+    "reel; 2",
+    "libo; 3",
+    "sobo; 4"
+  )
+
   renAllowed <- expandSets(bs, hs, bsr, hsr) %>%
-    filter(!((.data[["hs"]] %in% c("ehp1", "dihe") &
-                .data[["hsr"]] %in% c("reel", "sobo", "libo", "gabo")) |
-               (.data[["bs"]] == "rMedium" &
-                  .data[["bsr"]] == "original")),
-           .data[["bsr"]] == "0") # TODO: temporary deactivation of renovation
+    left_join(renAllowed, by = "hs") %>%
+    left_join(renAllowed, by = c(hsr = "hs")) %>%
+    mutate(improvement = replace_na(.data[["energyLadder.x"]]
+                                    - .data[["energyLadder.y"]], 0)) %>%
+    filter(.data[["improvement"]] >= 0,
+           .data[["bsr"]] == "0") %>% # TODO: temporary deactivation of renovation
+    select("bs", "hs", "bsr", "hsr")
   renAllowed <- m$addSet(
     "renAllowed",
     domain = c(bs, hs, bsr, hsr),
