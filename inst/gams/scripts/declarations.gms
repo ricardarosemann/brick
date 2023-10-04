@@ -10,8 +10,8 @@ p_specCostRen(cost,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "floor-space specific
 p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot)                  "floor-space specific operation cost in USD/(m2.yr)"
 p_specCostDem                                              "floor-space specific demolition cost in USD/m2"
 
-p_adjFacCon "scaling factor for the adjustment cost for construction" / 0 / 
-p_adjFacRen "scaling factor for the adjustment cost for renovation" / 0 / 
+p_adjFacCon "scaling factor for the adjustment cost for construction" / 0.01 / 
+p_adjFacRen "scaling factor for the adjustment cost for renovation" / 0.01 / 
 
 p_population(reg,loc,typ,inc,ttot)          "number of people in million"
 p_floorPerCap(reg,loc,typ,inc,ttot)         "floor space per capita in m2"

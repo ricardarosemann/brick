@@ -38,6 +38,8 @@ model fullSysNLP "full system linear optimisation"
   q_heatingSystemLifeTime
   q_HeteroPrefCon
   q_HeteroPrefRen
+  q_AdjCostCon
+  q_AdjCostRen
 *  q_maxRenRate
   /
 ;
