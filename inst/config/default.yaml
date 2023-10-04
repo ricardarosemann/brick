@@ -7,6 +7,8 @@ startyear: 2005
 endyear: 2100
 regionmapping: NULL # NULL: country-level resolution
 regions: NULL       # NULL: all regions from mapping
+location: [rural, urban]
+type: [SFH, MFH]
 historic: NULL      # run to consider as history before startyear
 # data
 inputRevision: "0.0.1"
@@ -27,6 +29,7 @@ switches:
   PARALLEL:        TRUE     # parallel solving of nlp for each subs
   EARLYDEMOLITION: FALSE    # allow demolition before end of life time
   FILTERSUBS:      FALSE    # off: default setting without filtering, reg.loc.typ.inc:
+  CALIBRATIONTYPE: none     # not given: Not required for a non-calibration run
 # gams parameters
 gamsOptions:
   logoption: 2   # 2: log output to log file

@@ -2,13 +2,13 @@
 
 $gdxin input.gdx
 $load p_dt p_dtVin t0
-$load vinExists
 $load p_specCostCon p_specCostRen p_specCostOpe p_specCostDem
 $load p_discountFac
 $load p_population
-$ifthen.noCalib not "%RUNTYPE%" == "calibration"
 $load p_stockHist
-$endif.noCalib
+$ifthen.calibration "%RUNTYPE%" == "calibration"
+$load conAllowed p_renovationHist p_constructionHist p_alphaL p_diff p_beta p_sigma
+$endif.calibration
 $load p_shareDem p_shareRenBS p_shareRenHS p_shareRenBSinit p_shareRenHSinit
 $load p_floorPerCap
 $gdxin
@@ -19,11 +19,11 @@ $load p_refVals p_refValsMed
 $gdxin
 $endif.matching
 
-$ifthen.calibration "%RUNTYPE%" == "calibration"
-$gdxin calibrationTarget.gdx
-$load p_stockHist p_constructionHist p_renovationHist p_demolitionHist
-$gdxin
-$endif.calibration
+* $ifthen.calibration "%RUNTYPE%" == "calibration"
+* $gdxin calibrationTarget.gdx
+* $load p_stockHist p_constructionHist p_renovationHist p_demolitionHist
+* $gdxin
+* $endif.calibration
 
 
 *** starting point -------------------------------------------------------------

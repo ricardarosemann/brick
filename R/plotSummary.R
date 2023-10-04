@@ -113,7 +113,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE, compareGdx =
     warning("No suitable gdx file found to plot in ", path)
     return(NULL)
   }
-
+  
 
 
   # READ DATA ----

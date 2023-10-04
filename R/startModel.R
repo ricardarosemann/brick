@@ -42,8 +42,8 @@ startModel <- function(config = NULL,
 
   if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
     createMatchingData(path, cfg, references)
-  } else if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
-    aggregateMatching(path, cfg)
+  # } else if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
+  #   aggregateMatching(path, cfg)
   }
 
   runGams(path,
@@ -57,4 +57,6 @@ startModel <- function(config = NULL,
   if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
     plotRefDeviation(path)
   }
+
+  return(path)
 }

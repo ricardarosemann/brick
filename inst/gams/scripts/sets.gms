@@ -9,6 +9,9 @@ hs(hsr) "heating system"
 
 *** vintages
 vin "construction vintage cohort"
+*$ifthen.calibration "%RUNTYPE%" == "calibration"
+vinCalib(vin)  "Dynamic vintages in calibration"
+*$endif.calibration
 
 *** stock subset dimesions
 reg "regions"
@@ -35,6 +38,9 @@ var "mayor variables of the model"
 varFlow(var) "flow variables of the model"
   / construction, renovation, demolition /
 
+*** For calibration: Flows used in calibration
+flow  "flow variables for calibration"
+
 *** model analytics
 solveinfo	"model and solver stats"
   /
@@ -46,6 +52,7 @@ solveinfo	"model and solver stats"
 
 *** calibration iteration
 iteration "calibration iteration" / 1*5 /
+iterA  "Armijo backtracking iteration" / 1*10 /
 
 *** matching reference sources
 qty    "quantity unit to measure stocks and flows in"
@@ -75,13 +82,15 @@ refMap_EuropeanCommissionRenovation(refVar,typ)
 ;
 
 *** aliases
-alias(bsr,bsr2)
-alias(hsr,hsr2)
+alias(bsr,bsr2,bsr3)
+alias(hsr,hsr2,hsr3)
 alias(bs,bs2)
 alias(hs,hs2)
 alias(vin,vin2)
 alias(ttot,ttot2)
 alias(t,t2)
+alias(flow, flow2)
+;
 
 
 *** initialise one-dimensional sets --------------------------------------------
@@ -92,6 +101,9 @@ $load bsr hsr bs hs
 $load reg loc typ inc
 $load tall ttot t thist tinit
 $load vin
+$ifthen.calibration "%RUNTYPE%" == "calibration"
+$load flow
+$endif.calibration
 $gdxin
 
 *** load reference sets
@@ -132,6 +144,7 @@ vinExists(ttot,vin)                "Can this vintage cohort exist i.e. ttot cann
 renAllowed(bs,hs,bsr,hsr)          "Is this renovation transition allowed"
 sameState(bs,hs,bsr,hsr)           "Is the state after the renovation the same as before"
 renEffective(bs,hs,bsr,hsr)        "Renovations without untouched buildings"
+conAllowed(bsr, hsr, vin)  "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
 refVarExists (ref,refVar,reg,ttot) "There is a value for this combination of reference, variable, region and period"
 
 *** control sets (should be empty)
@@ -147,8 +160,8 @@ hsBan(var,reg,ttot,hs) "heating systems are forbidden in the respective variable
 ;
 
 *** aliases
-alias(state,state2);
-alias(stateFull,stateFull2);
+alias(state,state2,state3);
+alias(stateFull,stateFull2,stateFull3);
 alias(renAllowed,renAllowed2);
 
 
@@ -157,6 +170,7 @@ alias(renAllowed,renAllowed2);
 *** load fundamental sets
 $gdxin input.gdx
 $load renAllowed
+$load vinExists
 $load hsBan
 $gdxin
 
@@ -172,6 +186,16 @@ subs(all_subs)            = yes;
 stateFull(bsr,hsr)        = yes;
 state(bs,hs)              = yes;
 ren(state,stateFull)      = yes;
+$ifthen.calibration "%RUNTYPE%" == "calibration"
+*** TODO: Adapt this so that only the vintages relevant for the calibration are taken into account (i.e. vintages that already exist for the calibration years)
+loop(t,
+  vinCalib(vin)$vinExists(t, vin) = yes;
+);
+$endif.calibration
+* sets
+* vinCalib(vin)  "Dynamic vintages in calibration"
+* /1980-1989, 1990-1999, 2000-2010, 2011-2020 /
+* ;
 
 *** TODO: initialise mappings with loaded data
 sameState(bs,hs,bsr,hsr)$(    (sameas(bsr,bs) or sameas(bsr,"0"))

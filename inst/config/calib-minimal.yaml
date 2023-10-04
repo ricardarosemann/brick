@@ -1,0 +1,12 @@
+---
+title: "calibMinimal"
+basedOn: "default.yaml"
+# scope and resolution
+periods: [2000, 2010, 2020, 2030, 2040, 2050]
+startyear: 2010
+regions: DEU
+switches:
+  SOLVEPROBLEM:    nlp
+# data
+# startingPoint: "output/small_2023-04-17_11.04.00/abort.gdx"
+...

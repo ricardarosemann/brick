@@ -1,12 +1,13 @@
 ---
-title: "calibration"
+title: "calibration-red"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010, 2020]
 startyear: 2010
 regions: DEU
+location: urban
+type: MFH
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: flows
 ...

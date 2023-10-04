@@ -84,29 +84,66 @@ option lp  = %solverLP%;
 option nlp = %solverNLP%;
 option qcp = %solverQCP%;
 
+* define macro for solving in parallel mode
+
+* TODO: Maybe I'll need to use a different alias in the macros
+$macro solveParallel subs(all_subs) = no; \
+fullSysNLP.SolveLink = 3; \
+loop(all_subs, \
+  subs(all_subs) = yes; \
+  solve fullSysNLP minimizing v_totSysCost using nlp; \
+  subs(all_subs) = no; \
+  p_handle(all_subs) = fullSysNLP.handle; \
+); \
+repeat \
+  loop(all_subs$handleCollect(p_handle(all_subs)), \
+		p_runtime(all_subs) = fullSysNLP.resusd; \
+    p_repyFullSysNLP(all_subs,'solvestat') = fullSysNLP.solvestat; \
+    p_repyFullSysNLP(all_subs,'modelstat') = fullSysNLP.modelstat; \
+    p_repyFullSysNLP(all_subs,'resusd')    = fullSysNLP.resusd; \
+    p_repyFullSysNLP(all_subs,'objval')    = fullSysNLP.objval; \
+    if(handleStatus(p_handle(all_subs)), \
+      fullSysNLP.handle = p_handle(all_subs); \
+      display$handleDelete(p_handle(all_subs)) 'trouble deleting handles' ; \
+      p_handle(all_subs) = 0; \
+    ); \
+  ); \
+  display$sleep(5) 'sleep some time'; \
+until card(p_handle) = 0; \
+subs(all_subs) = yes;
+
+* $macro minSquare sum((state, t), \
+*   power(p_stockHist("area", state, subs, t) - v_stock.l("area", state, subs, t), 2));
+
+$ifThen.calibTarget "%CALIBRATIONTYPE%" == "flows"
+$macro minSquare sum((state3, t), \
+  power(p_constructionHist("area", state3, subs, t) - v_construction.l("area", state3, subs, t), 2)) \
+  + sum((state3, stateFull3, t), \
+  power(p_renovationHist("area", state3, stateFull3, vinCalib, subs, t) - v_renovation.l("area", state3, stateFull3, vinCalib, subs, t), 2));
+
+$elseIf.calibTarget "%CALIBRATIONTYPE%" == "stocks"
+$macro minSquare sum((state3, t), \
+  power(p_stockHist("area", state3, vinCalib, subs, t) - v_stock.l("area", state3, vinCalib, subs, t), 2));
+$endIf.calibTarget
+
+
+* $macro minSquare 5;
 
 
 *** scenario / calibration run -------------------------------------------------
 
-$ifthenE.fullSys (sameas("%RUNTYPE%","scenario"))or(sameas("%RUNTYPE%","calibration"))
+$ifthen.fullSys "%RUNTYPE%" == "scenario"
 
 * measure stocks and flows in floor area
 q("dwel") = no;
 q("area") = yes;
 
 
-$ifthen.calibration "%RUNTYPE%" == "calibration"
-
-* start iteration loop
-loop(iteration,
-
-$endif.calibration
-
 
 * linear model
-$ifthen.calibration "%RUNTYPE%" == "calibration"
-if(iteration.val eq 1,
-$endif.calibration
+* $ifthen.calibration "%RUNTYPE%" == "calibration"
+* if(iteration.val eq 1,
+* $endif.calibration
 
 $ifthenE.lp (sameas("%SOLVEPROBLEM%","lp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))
 solve fullSysLP minimizing v_totSysCost using lp;
@@ -116,46 +153,13 @@ p_repyFullSysLP('resusd')    = fullSysLP.resusd;
 p_repyFullSysLP('objval')    = fullSysLP.objval;
 $endif.lp
 
-$ifthen.calibration "%RUNTYPE%" == "calibration"
-);
-$endif.calibration
-
 
 * non-linear model
 $ifthenE.nlp (sameas("%SOLVEPROBLEM%","nlp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))or(sameas("%RUNTYPE%","calibration"))
 
 $ifthen.parallel "%PARALLEL%" == "TRUE"
 
-subs(all_subs) = no;
-fullSysNLP.SolveLink = 3;
-
-loop(all_subs,
-  subs(all_subs) = yes;
-  solve fullSysNLP minimizing v_totSysCost using nlp;
-
-  subs(all_subs) = no;
-  p_handle(all_subs) = fullSysNLP.handle;
-);
-
-repeat
-  loop(all_subs$handleCollect(p_handle(all_subs)),
-		p_runtime(all_subs) = fullSysNLP.resusd;
-
-  p_repyFullSysNLP(all_subs,'solvestat') = fullSysNLP.solvestat;
-  p_repyFullSysNLP(all_subs,'modelstat') = fullSysNLP.modelstat;
-  p_repyFullSysNLP(all_subs,'resusd')    = fullSysNLP.resusd;
-  p_repyFullSysNLP(all_subs,'objval')    = fullSysNLP.objval;
-
-    if(handleStatus(p_handle(all_subs)),
-      fullSysNLP.handle = p_handle(all_subs);
-      display$handleDelete(p_handle(all_subs)) 'trouble deleting handles' ;
-      p_handle(all_subs) = 0;
-    );
-  );
-  display$sleep(5) 'sleep some time';
-until card(p_handle) = 0;
-
-subs(all_subs) = yes;
+solveParallel
 
 $else.parallel
 
@@ -173,69 +177,118 @@ $endif.parallel
 $endif.nlp
 
 
-$ifthen.calibration "%RUNTYPE%" == "calibration"
+$elseif.fullSys "%RUNTYPE%" == "calibration"
+* measure stocks and flows in floor area
+q("dwel") = no;
+q("area") = yes;
 
+*** TODO: Still need to check the proper time dimension!
+*** TODO: Fix sets: What do I mean by subs? Where do I need to consider the vintage?
+*** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
+*** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
+p_x(flow, bsr, hsr, vinCalib, subs)$(sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0"))) = 0;
+p_alpha(vinCalib, subs) = p_alphaL;
+p_fPrev(vinCalib, subs) = 0; !! unused initialization to avoid compilation error
+
+p_specCostCon("intangible", bs, hs, subs, t) = p_x("con", bs, hs, "2000-2010", subs);
+p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_x("ren", stateFull, vinCalib, subs);
+* v_stock.l(qty,state,vinCalib,subs,t) = p_stockHist(qty,state,vinCalib,subs,t);
+
+solveParallel
+
+*** Compute the functional value
+p_f(vinCalib, subs) = minSquare
+p_f0(vinCalib, subs) = p_f(vinCalib, subs);
+
+loop(iteration,
+
+*** Save the model statistics of the previous iteration. This means that the iteration counter is off by one in some sense.
 p_repyFullSysNLPIter(iteration,all_subs,'solvestat') = fullSysNLP.solvestat;
 p_repyFullSysNLPIter(iteration,all_subs,'modelstat') = fullSysNLP.modelstat;
 p_repyFullSysNLPIter(iteration,all_subs,'resusd')    = fullSysNLP.resusd;
 p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
 
-*** check calibration deviation
-p_calibDeviationCon(iteration,state,subs,t)$(abs(p_constructionHist(state,subs,t)) > eps) =
-  v_construction.l("area",state,subs,t)
-  / p_constructionHist(state,subs,t)
-;
-p_calibDeviationRen(iteration,ren,vin,subs,t)$(abs(p_renovationHist(ren,vin,subs,t)) > eps) =
-  v_renovation.l("area",ren,vin,subs,t)
-  / p_renovationHist(ren,vin,subs,t)
-;
+*** Compute the gradient
+loop((flow2, bsr3, hsr3),
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+                                      and (not sameas(bsr, bsr3) or not sameas(hsr, hsr3) or not sameas(flow, flow2)))
+                                      = p_x(flow, bsr, hsr, vinCalib, subs);
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+                                    and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2)))
+                                    = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
+  p_xDiffAll(iteration, flow2, bsr3, hsr3, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t) = p_xDiff("con", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_xDiff("ren", stateFull, vinCalib, subs);
 
-*** update intangible cost
+  solveParallel
 
-* finite deviation
-p_specCostCon("intangible",state,subs,t)$(    p_constructionHist(state,subs,t) > eps
-                                          and p_calibDeviationCon(iteration,state,subs,t) > eps) =
-  p_specCostCon("intangible",state,subs,t)
-  +
-  p_calibSpeed("construction")
-  * log(p_calibDeviationCon(iteration,state,subs,t))
-;
+  p_fDiff(flow2, bsr3, hsr3, vinCalib, subs) = minSquare
+);
 
-p_specCostRen("intangible",ren,vin,subs,t)$(    p_renovationHist(ren,vin,subs,t) > eps
-                                            and p_calibDeviationRen(iteration,ren,vin,subs,t) > eps) =
-  p_specCostRen("intangible",ren,vin,subs,t)
-  +
-  p_calibSpeed("renovation")
-  * log(p_calibDeviationRen(iteration,ren,vin,subs,t))
-;
+p_r(flow, stateFull, vinCalib, subs) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(vinCalib, subs)) / p_diff;
+p_d(flow, stateFull, vinCalib, subs) = - p_r(flow, stateFull, vinCalib, subs);
+p_delta(vinCalib, subs) = sum((flow, stateFull),
+  -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
 
-* zero targets or zero acual value-
-p_specCostCon("intangible",state,subs,t)$(    (p_constructionHist(state,subs,t) <= eps)
-                                          xor (v_construction.l("area",state,subs,t) <= eps))
-  =
-  p_specCostCon("intangible",state,subs,t)
-  + sign(p_calibDeviationCon(iteration,state,subs,t) - 1)
-  * (
-      0.5 * abs(p_specCostCon("intangible",state,subs,t))
-      + 0.1 * p_specCostCon("tangible",state,subs,t)$(abs(p_specCostCon("intangible",state,subs,t)) <= eps)
-    )
-;
+*** TODO: Include proper stopping criterion! Handle multi-dimensionality
 
-p_specCostRen("intangible",ren,vin,subs,t)$(    (p_renovationHist(ren,vin,subs,t) <= eps)
-                                            xor (v_renovation.l("area",ren,vin,subs,t) <= eps)) =
-  p_specCostRen("intangible",ren,vin,subs,t)
-  + sign(p_calibDeviationRen(iteration,ren,vin,subs,t) - 1)
-  * (
-      0.5 * abs(p_specCostRen("intangible",ren,vin,subs,t))
-      + 0.1 * p_specCostRen("tangible",ren,vin,subs,t)$(abs(p_specCostRen("intangible",ren,vin,subs,t)) <= eps)
-    )
-;
+*** Armijo backtracking method
+p_alpha(vinCalib, subs)$(iteration.val > 1 and p_delta(vinCalib, subs) > 0.001) = min(abs(0.5 * p_f(vinCalib, subs)),
+  max(p_alphaL,
+    (p_fPrev(vinCalib, subs) - p_f(vinCalib, subs))
+      / p_delta(vinCalib, subs))
+  );
+p_alpha(vinCalib, subs)$(p_delta(vinCalib, subs) le 0.001) = p_alphaL;
 
+loop(iterA,
+*** Solve the model only for the subsets which do not satisfy the Armijo condition yet
+  p_xA(flow, bsr, hsr, vinCalib, subs)$(sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+                                  = p_x(flow, bsr, hsr, vinCalib, subs) + p_alpha(vinCalib, subs) * p_d(flow, bsr, hsr, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t) = p_xA("con", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_xA("ren", stateFull, vinCalib, subs);
+
+  solveParallel
+
+  p_fA(vinCalib, subs) = minSquare
+
+  p_phiDeriv(vinCalib, subs) = sum((flow, stateFull),
+    p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
+
+*** Stopping criterion in all dimensions
+  loop((vin, all_subs),
+    if (p_fA(vin, all_subs) le p_f(vin, all_subs) + p_sigma * p_alpha(vin, all_subs) * p_phiDeriv(vin, all_subs),
+      subs(all_subs) = no;
+      vinCalib(vin) = no;
+      p_iterA(iteration, vin, all_subs) = iterA.val;
+      );
+    p_fAIter(iteration, iterA, vin, all_subs) = p_fA(vin, all_subs);
+    p_fArmijoRHIter(iteration, iterA, vin, all_subs) = p_f(vin, all_subs) + p_sigma * p_alpha(vin, all_subs) * p_phiDeriv(vin, all_subs);
+  );
+  if(card(subs) = 0 and card(vinCalib) = 0,
+    p_alphaIter(iteration, iterA, vin, all_subs) = p_alpha(vin, all_subs);
+    break;
+  );
+*** Update alpha
+  p_alpha(vinCalib, subs) = p_alpha(vinCalib, subs) * p_beta;
+  p_alphaIter(iteration, iterA, vin, all_subs) = p_alpha(vin, all_subs);
+);
+loop(t,
+  vinCalib(vin)$vinExists(t, vin) = yes;
+);
+subs(all_subs) = yes;
+
+p_x(flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))
+                                = p_xA(flow, stateFull, vinCalib, subs);
+p_fPrev(vinCalib, subs) = p_f(vinCalib, subs);
+p_f(vinCalib, subs) = p_fA(vinCalib, subs);
+
+p_xIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_x(flow, stateFull,vinCalib, subs);
+p_fIter(iteration, vinCalib, subs) = p_f(vinCalib, subs);
+p_renovationIter(iteration, "area", state, stateFull, vinCalib, subs, ttot) = v_renovation.l("area", state, stateFull, vinCalib, subs, ttot);
+p_constructionIter(iteration, "area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
 
 *** end iteration loop
 );
-
-$endif.calibration
 
 
 $endif.fullSys

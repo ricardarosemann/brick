@@ -7,6 +7,7 @@ p_floorPerCap(reg,loc,typ,inc,ttot)   "average floor space per capita in stock i
 
 p_specCostCon(cost,bs,hs,reg,loc,typ,inc,ttot)             "floor-space specific construction cost in USD/m2"
 p_specCostRen(cost,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "floor-space specific renovation cost in USD/m2"
+* p_specCostRen(cost,bsr,hsr,vin,reg,loc,typ,inc,ttot) "floor-space specific renovation cost in USD/m2"
 p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot)                  "floor-space specific operation cost in USD/(m2.yr)"
 p_specCostDem                                              "floor-space specific demolition cost in USD/m2"
 
@@ -38,6 +39,39 @@ p_flowVariationWeight     "weight of flow variation in matching objective"
 
 p_refVals(ref,refVar,reg,ttot) "reference values to match"
 p_refValsMed(ref,reg)          "median non-zero reference value to normalise deviations"
+
+$ifThen.calibration "%RUNTYPE%" == "calibration"
+p_diff
+p_x(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_xDiff(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_xA(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_xDiffAll(iteration, flow2, bsr3, hsr3, flow, bsr, hsr, vin, reg, loc, typ, inc)
+
+p_f(vin, reg, loc, typ, inc)
+p_f0(vin, reg, loc, typ, inc)
+p_fPrev(vin, reg, loc, typ, inc)
+p_fDiff(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_fA(vin, reg, loc, typ, inc)
+
+p_r(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_d(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_delta(vin, reg, loc, typ, inc)
+p_alpha(vin, reg, loc, typ, inc)
+p_alphaL
+p_beta
+p_sigma
+p_phiDeriv(vin, reg, loc, typ, inc)
+
+p_xIter(iteration, flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_fIter(iteration, vin, reg, loc, typ, inc)
+p_renovationIter(iteration,qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot)
+p_constructionIter(iteration,qty,bs,hs,reg,loc,typ,inc,ttot)
+
+p_iterA(iteration, vin, reg, loc, typ, inc)
+p_alphaIter(iteration, iterA, vin, reg, loc, typ, inc)
+p_fAIter(iteration, iterA, vin, reg, loc, typ, inc)
+p_fArmijoRHIter(iteration, iterA, vin, reg, loc, typ, inc)
+$endIf.calibration
 
 p_calibSpeed(varFLow)                                                 "Control of the step size in the calibration iteration"
 p_calibDeviationCon(iteration,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"

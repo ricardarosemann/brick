@@ -16,15 +16,16 @@
 #'   revalue.levels calc_addVariable
 #' @importFrom dplyr %>% mutate select group_by summarise filter ungroup arrange
 #'   left_join right_join .data rename lag all_of across sym rename_with
-#'   inner_join everything
-#' @importFrom tidyr complete
+#'   inner_join everything bind_rows relocate
+#' @importFrom tidyr complete crossing
+#' @importFrom readr write_csv2
 #' @importFrom madrat calcOutput readSource
 #' @importFrom magclass collapseDim mselect getYears mbind getItems<- getItems
 #'   add_dimension time_interpolate
 #' @importFrom gdxrrw igdx wgdx
 #' @importFrom gamstransfer Container
 #' @importFrom stats pweibull
-#' @importFrom utils head tail
+#' @importFrom utils head tail write.csv2
 #' @importFrom zoo rollmean
 #' @export
 #'
@@ -35,7 +36,7 @@ createInputData <- function(path,
 
   # FUNCTIONS ------------------------------------------------------------------
 
-  expandSets <- function(...) {
+  setAsVector <- function(...) {
     lst <- list(...)
     setElements <- lapply(lst, function(l) l$getUELs())[]
     setNames <- as.character(lapply(lst, function(l) l$name))
@@ -45,9 +46,28 @@ createInputData <- function(path,
                          names(lst))
     }
 
-    expand.grid(setNames(setElements, setNames))
+    return(setNames(setElements, setNames))
   }
 
+  expandSets <- function(...) {
+    expand.grid(setAsVector(...))
+  }
+
+  computeRenFac <- function(bsVec, bsrVec, hsVec, hsrVec, renImp) {
+    denBs <- length(levels(bsVec)) + 2
+    denHs <- length(levels(hsVec)) + 2
+
+    levels(bsVec) <- c(levels(bsVec), "0")
+    levels(hsVec) <- c(levels(hsVec), "0")
+
+    facBs <- ifelse(renImp, 1 * (bsrVec == 0),
+      (0.5 * (bsrVec == 0) + 0.5 * 3 / denBs * (bsrVec == bsVec)
+      + 0.5 * 1 / (denBs) * (bsrVec != 0 & bsrVec != bsVec)))
+    facHs <- ifelse(renImp, 1 * (hsrVec == 0),
+      (0.5 * (hsrVec == 0) + 0.5 * 3 / denHs * (hsrVec == hsVec)
+      + 0.5 * 1 / denHs * (hsrVec != 0 & hsrVec != hsVec)))
+    return(facBs * facHs)
+  }
 
 
   # PREPARE --------------------------------------------------------------------
@@ -99,6 +119,13 @@ createInputData <- function(path,
     records = c("area", "dwel"),
     description = "quantity unit to measure stocks and flows in")
 
+  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+    flow <- m$addSet(
+      "flow",
+      records = c("con", "ren"),
+      description = "Flows for which intangible costs are adjusted in the calibration"
+    )
+  }
 
   ## temporal ====
 
@@ -168,7 +195,7 @@ createInputData <- function(path,
     records = vinExists,
     description = "Can this vintage cohort exist i.e. ttot cannot be before cohort starts"
   )
-
+  
 
   ## building state alternatives ====
 
@@ -203,11 +230,11 @@ createInputData <- function(path,
     description = "region")
   loc <- m$addSet(
     "loc",
-    records = c("rural", "urban"),
+    records = config[["location"]],
     description = "location of building (rural, urban)")
   typ <- m$addSet(
     "typ",
-    records = c("SFH", "MFH"),
+    records = config[["type"]],
     description = "type of residential building (SFH, MFH)")
   inc <- m$addSet(
     "inc",
@@ -323,16 +350,21 @@ createInputData <- function(path,
              .data[["constCost"]] +
              .data[["hsInstCost"]] / .data[["m2PerUnit"]]) %>%
     select(-"constCost", -"hsInstCost", -"m2PerUnit")
-  p_specCostConIntang <- p_specCostCon %>%
-    filter(.data[["cost"]] == "intangible") %>%
-    addAssump("inst/assump/costIntangCon.csv")
-  p_specCostConMarkup <- p_specCostCon %>%
-    filter(.data[["cost"]] == "markup") %>%
-    left_join(m2PerUnit, by = "typ") %>%
-    mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
-      config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
-    select(-"m2PerUnit")
-  p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang, p_specCostConMarkup)
+  if (config[["switches"]][["RUNTYPE"]] != "calibration") {
+    p_specCostConIntang <- p_specCostCon %>%
+      filter(.data[["cost"]] == "intangible") %>%
+      addAssump("inst/assump/costIntangCon.csv")
+    p_specCostConMarkup <- p_specCostCon %>%
+      filter(.data[["cost"]] == "markup") %>%
+      left_join(m2PerUnit, by = "typ") %>%
+      mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
+        config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
+      select(-"m2PerUnit")
+    p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang, p_specCostConMarkup)
+  } else {
+    p_specCostCon <- p_specCostConTang
+  }
+
   m$addParameter(
     "p_specCostCon",
     c(cost, bs, hs, reg, loc, typ, inc, ttot),
@@ -355,22 +387,26 @@ createInputData <- function(path,
              .data[["renCost"]] +
              .data[["hsInstCost"]] / .data[["m2PerUnit"]]) %>%
     select(-"renCost", -"hsInstCost", -"m2PerUnit")
-  p_specCostRenIntang <- p_specCostRen %>%
-    filter(.data[["cost"]] == "intangible") %>%
-    addAssump("inst/assump/costIntangRen.csv")
-  p_specCostRenMarkup <- p_specCostRen %>%
-    filter(.data[["cost"]] == "markup") %>%
-    left_join(m2PerUnit, by = "typ") %>%
-    mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
-      config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
-    select(-"m2PerUnit")
-  p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang, p_specCostRenMarkup)
+  if (config[["switches"]][["RUNTYPE"]] != "calibration") {
+    p_specCostRenIntang <- p_specCostRen %>%
+      filter(.data[["cost"]] == "intangible") %>%
+      addAssump("inst/assump/costIntangRen.csv")
+    p_specCostRenMarkup <- p_specCostRen %>%
+      filter(.data[["cost"]] == "markup") %>%
+      left_join(m2PerUnit, by = "typ") %>%
+      mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
+        config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
+      select(-"m2PerUnit")
+    p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang, p_specCostRenMarkup)
+  } else {
+    p_specCostRen <- p_specCostRenTang
+  }
+
   p_specCostRen <- m$addParameter(
     "p_specCostRen",
     c(cost, state, stateR, vin, reg, loc, typ, inc, ttot),
     p_specCostRen,
     description = "floor-space specific renovation cost in USD/m2")
-
 
   ### operation ####
 
@@ -590,6 +626,23 @@ createInputData <- function(path,
     description = "Is this renovation transition allowed"
   )
 
+  # allowed construction (only required for calibration)
+  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+    bsVec <- setAsVector(bs)[["bs"]]
+    hsVec <- setAsVector(hs)[["hs"]]
+
+    conAllowed <- expandSets(bsr, hsr, vin) %>%
+      filter(.data[["vin"]] == "2000-2010", .data[["hsr"]] %in% hsVec,
+             .data[["bsr"]] %in% bsVec)
+
+    conAllowed <- m$addSet(
+      name = "conAllowed",
+      domain = c(bsr, hsr, vin),
+      records = conAllowed,
+      description = "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
+    )
+  }
+
 
   ## stock ====
 
@@ -632,6 +685,74 @@ createInputData <- function(path,
       summarise(value = sum(.data[["value"]]), .groups = "drop") %>%
       mutate(loc = "all", typ = "all", .after = "reg") %>%
       ungroup()
+  }
+
+  # flows (for calibration)
+  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+
+    input <- Container$new()
+    input$read("inputHist.gdx", "v_construction")
+
+    p_constructionHist <- input["v_construction"]$records %>%
+      select(-"marginal", -"lower", -"upper", -"scale") %>%
+      rename(value = "level") %>%
+      filter(.data[["ttot"]] %in% setAsVector(t)[["t"]]) %>%
+      mutate(value = .data[["value"]] * (runif(1, 0.95, 1.05)))
+
+    input$read("inputHist.gdx", "v_renovation")
+
+    p_renovationHist <- input["v_renovation"]$records %>%
+      select(-"marginal", -"lower", -"upper", -"scale") %>%
+      rename(value = "level") %>%
+      filter(.data[["ttot"]] %in% setAsVector(t)[["t"]]) %>%
+      mutate(value = .data[["value"]] * runif(1, 0.95, 1.05))
+
+    # p_constructionHist <- p_stockHist %>%
+    #   filter(.data[["vin"]] == "2000-2010", .data[["ttot"]] == 2010) %>%
+    #   dplyr::bind_rows(p_stockHist %>%
+    #   filter(.data[["vin"]] == "2011-2020", .data[["ttot"]] == 2020)) %>%
+    #   ungroup() %>%
+    #   select(-"vin")
+
+    # p_renovationHist <- p_stockHist %>%
+    #   tidyr::crossing(bsr = setAsVector(bsr)[["bsr"]], hsr = setAsVector(hsr)[["hsr"]]) %>%
+    #   mutate(bs = as.factor(.data[["bs"]]),
+    #     bsr = as.factor(.data[["bsr"]]), hsr = as.factor(.data[["hsr"]])) %>%
+    #   dplyr::relocate(any_of(c("bsr", "hsr")), .after = all_of("hs")) %>%
+    #   mutate(renImp = (((.data[["vin"]] == "2000-2010") & (.data[["ttot"]] <= 2010))
+    #     | ((.data[["vin"]] == "2011-2020"))),
+    #   fac = computeRenFac(.data[["bs"]], .data[["bsr"]], .data[["hs"]], .data[["hsr"]], .data[["renImp"]])) %>%
+    #   mutate(value = .data[["fac"]] * .data[["value"]]) %>%
+    #   select(-"fac", -"renImp")
+
+    # Alternative idea to compute renovation. Does not work because p_stockHist and p_renovationHist2 are sorted differently
+    # p_renovationHist2 <- expandSets(qty, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot) %>%
+    #   filter(.data[["vin"]] %in% levels(p_stockHist[["vin"]]),
+    #     .data[["ttot"]] %in% p_stockHist[["ttot"]],
+    #     .data[["qty"]] == "area") %>%
+    #   mutate(ttot = as.numeric(levels(.data[["ttot"]]))[.data[["ttot"]]],
+    #   fac = computeRenFac(.data[["bs"]], .data[["bsr"]], .data[["hs"]], .data[["hsr"]])) %>%
+    #   group_by(bsr, hsr) %>%
+    #   mutate(stockVal = p_stockHist[["value"]]) %>%
+    #   ungroup() %>%
+    #   mutate(value = .data[["fac"]] * .data[["stockVal"]])
+
+    # readr::write_csv2(p_renovationHist, file.path(path, "p_renovationHist.csv"))
+
+    p_constructionHist <- m$addParameter(
+      "p_constructionHist",
+      c(qty, bs, hs, reg, loc, typ, inc, ttot),
+      p_constructionHist,
+      description = "Historic construction flow in million m2"
+    )
+
+    p_renovationHist <- m$addParameter(
+      "p_renovationHist",
+      c(qty, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot),
+      p_renovationHist,
+      description = "Historic renovation flow in million m2"
+    )
+
   }
 
   p_stockHist <- m$addParameter(
@@ -733,6 +854,32 @@ createInputData <- function(path,
     p_floorPerCap,
     description = "floor space per capita in m2"
   )
+
+  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+    p_alphaL <- m$addParameter(
+      "p_alphaL",
+      records = 0.1,
+      description = "Lower bound of alpha before Armijo backtracking in calibration"
+    )
+
+    p_diff <- m$addParameter(
+      "p_diff",
+      records = 0.001,
+      description = "Difference to compute the difference quotient"
+    )
+
+    p_beta <- m$addParameter(
+      "p_beta",
+      records = 0.5,
+      description = "Factor in Armijo backtracking"
+    )
+
+    p_sigma <- m$addParameter(
+      "p_sigma",
+      records = 0.01,
+      description = "Factor in Armijo condition"
+    )
+  }
 
 
 
