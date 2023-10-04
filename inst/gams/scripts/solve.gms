@@ -109,7 +109,11 @@ if(iteration.val eq 1,
 $endif.calibration
 
 $ifthenE.lp (sameas("%SOLVEPROBLEM%","lp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))
+v_HeteroPrefCon.lo(subs,t) = 0;
+v_HeteroPrefRen.lo(subs,t) = 0;
 solve fullSysLP minimizing v_totSysCost using lp;
+v_HeteroPrefCon.lo(subs,t) = -Inf;
+v_HeteroPrefRen.lo(subs,t) = -Inf;
 p_repyFullSysLP('solvestat') = fullSysLP.solvestat;
 p_repyFullSysLP('modelstat') = fullSysLP.modelstat;
 p_repyFullSysLP('resusd')    = fullSysLP.resusd;
