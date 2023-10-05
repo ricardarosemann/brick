@@ -228,11 +228,11 @@ q_AdjCostRen(subs,t)..
   v_AdjCostRen(subs,t)
   =e=
   p_adjFacRen
-  * sum((renAllowed(ren), vinExists(t-1,vin)),
+  * sum(renAllowed(ren),
       power(
         (
-            v_renovation("area",ren,vin,subs,t)
-          - v_renovation("area",ren,vin,subs,t-1)
+            sum(vinExists(t-1,vin), v_renovation("area",ren,vin,subs,t))
+          - sum(vinExists(t-1,vin), v_renovation("area",ren,vin,subs,t-1))
         )
         /
         ((p_dt(t) + p_dt(t-1)) / 2)
