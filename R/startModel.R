@@ -25,6 +25,11 @@ startModel <- function(config = NULL,
   cfg <- readConfig(config)
   title <- cfg[["title"]]
 
+  if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
+    title <- paste0(title, cfg[["parameters"]][["iteration"]], "Iter",
+                    cfg[["parameters"]][["alpha"]], "A")
+  }
+
   if (is.null(path)) {
     stamp <- format(Sys.time(), "_%Y-%m-%d_%H.%M.%S")
     path <- file.path(outputFolder, paste0(title, stamp))

@@ -112,22 +112,53 @@ repeat \
 until card(p_handle) = 0; \
 subs(all_subs) = yes;
 
-* $macro minSquare sum((state, t), \
-*   power(p_stockHist("area", state, subs, t) - v_stock.l("area", state, subs, t), 2));
-
+$ifThen.targetFunc "%TARGETFUNCTION%" == "minsquare"
 $ifThen.calibTarget "%CALIBRATIONTYPE%" == "flows"
-$macro minSquare sum((state3, t), \
+$macro func sum((state3, t), \
   power(p_constructionHist("area", state3, subs, t) - v_construction.l("area", state3, subs, t), 2)) \
   + sum((state3, stateFull3, t), \
   power(p_renovationHist("area", state3, stateFull3, vinCalib, subs, t) - v_renovation.l("area", state3, stateFull3, vinCalib, subs, t), 2));
 
 $elseIf.calibTarget "%CALIBRATIONTYPE%" == "stocks"
-$macro minSquare sum((state3, t), \
+$macro func sum((state3, t), \
   power(p_stockHist("area", state3, vinCalib, subs, t) - v_stock.l("area", state3, vinCalib, subs, t), 2));
 $endIf.calibTarget
 
+$elseIf.targetFunc "%TARGETFUNCTION%" == "maxlikely"
+$ifThen.calibTarget "%CALIBRATIONTYPE%" == "flows"
+$macro func - sum((state3, t), \
+  p_constructionHist("area", state3, subs, t) \
+  * log(v_construction.l("area", state3, subs, t) \
+    / (sum(state4, \
+      v_construction.l("area", state4, subs, t) \
+      ) \
+      + epsilonSmall) \
+    + epsilonSmall) \
+  ) \
+  + sum((state3, stateFull3, t), \
+  p_renovationHist("area", state3, stateFull3, vinCalib, subs, t) \
+  * log(v_renovation.l("area", state3, stateFull3, vinCalib, subs, t) \
+    / (sum((state4, stateFull4), \
+      v_renovation.l("area", state4, stateFull4, vinCalib, subs, t) \
+      ) \
+      + epsilonSmall) \
+    + epsilonSmall) \
+  );
 
-* $macro minSquare 5;
+$elseIf.calibTarget "%CALIBRATIONTYPE%" == "stocks"
+$macro func - sum((state3, t), \
+  p_stockHist("area", state3, vinCalib, subs, t) \
+  * log(v_stock.l("area", state3, vinCalib, subs, t) \
+    / (sum(state4, \
+      v_stock.l("area", state4, vinCalib, subs, t) \
+    ) \
+    + epsilonSmall) \
+  + epsilonSmall) \
+);
+$endIf.calibTarget
+
+$endIf.targetFunc
+
 
 
 *** scenario / calibration run -------------------------------------------------
@@ -186,19 +217,26 @@ q("area") = yes;
 *** TODO: Fix sets: What do I mean by subs? Where do I need to consider the vintage?
 *** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
 *** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
-p_x(flow, bsr, hsr, vinCalib, subs)$(sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0"))) = 0;
+p_x("con", state, "2000-2010", subs) = p_specCostCon("intangible", state, subs, "2000");
+p_x("ren", stateFull, vinCalib, subs) = p_specCostRen("intangible", "original", "biom", stateFull, vinCalib, subs, "2000");
 p_alpha(vinCalib, subs) = p_alphaL;
 p_fPrev(vinCalib, subs) = 0; !! unused initialization to avoid compilation error
 
-p_specCostCon("intangible", bs, hs, subs, t) = p_x("con", bs, hs, "2000-2010", subs);
-p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_x("ren", stateFull, vinCalib, subs);
+* p_specCostCon("intangible", bs, hs, subs, t) = p_x("con", bs, hs, "2000-2010", subs);
+* p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_x("ren", stateFull, vinCalib, subs);
 * v_stock.l(qty,state,vinCalib,subs,t) = p_stockHist(qty,state,vinCalib,subs,t);
 
 solveParallel
 
 *** Compute the functional value
-p_f(vinCalib, subs) = minSquare
+p_f(vinCalib, subs) = func
 p_f0(vinCalib, subs) = p_f(vinCalib, subs);
+p_fIter("0", vinCalib, subs) = p_f0(vinCalib, subs);
+
+*** Store renovation and construction values
+p_constructionIter("0", "area", state, subs, t) = v_construction.l("area", state, subs, t);
+p_renovationIter("0", "area", state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
+p_stockIter("0", "area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
 
 loop(iteration,
 
@@ -222,7 +260,7 @@ loop((flow2, bsr3, hsr3),
 
   solveParallel
 
-  p_fDiff(flow2, bsr3, hsr3, vinCalib, subs) = minSquare
+  p_fDiff(flow2, bsr3, hsr3, vinCalib, subs) = func
 );
 
 p_r(flow, stateFull, vinCalib, subs) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(vinCalib, subs)) / p_diff;
@@ -249,7 +287,7 @@ loop(iterA,
 
   solveParallel
 
-  p_fA(vinCalib, subs) = minSquare
+  p_fA(vinCalib, subs) = func
 
   p_phiDeriv(vinCalib, subs) = sum((flow, stateFull),
     p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
@@ -286,6 +324,7 @@ p_xIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or same
 p_fIter(iteration, vinCalib, subs) = p_f(vinCalib, subs);
 p_renovationIter(iteration, "area", state, stateFull, vinCalib, subs, ttot) = v_renovation.l("area", state, stateFull, vinCalib, subs, ttot);
 p_constructionIter(iteration, "area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
+p_stockIter(iteration, "area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
 
 *** end iteration loop
 );

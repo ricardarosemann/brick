@@ -9,4 +9,9 @@ regions: DEU
 switches:
   RUNTYPE: calibration
   CALIBRATIONTYPE: stocks
+  TARGETFUNCTION: minsquare
+# parameters for calibration
+parameters:
+  alpha: 0.1
+  iteration: 50
 ...

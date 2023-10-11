@@ -51,7 +51,8 @@ solveinfo	"model and solver stats"
   /
 
 *** calibration iteration
-iteration "calibration iteration" / 1*5 /
+iterationAll "calibration iteration including zero"
+iteration(iterationAll) "calibration iteration"
 iterA  "Armijo backtracking iteration" / 1*10 /
 
 *** matching reference sources
@@ -102,7 +103,7 @@ $load reg loc typ inc
 $load tall ttot t thist tinit
 $load vin
 $ifthen.calibration "%RUNTYPE%" == "calibration"
-$load flow
+$load flow iterationAll iteration
 $endif.calibration
 $gdxin
 
@@ -160,8 +161,8 @@ hsBan(var,reg,ttot,hs) "heating systems are forbidden in the respective variable
 ;
 
 *** aliases
-alias(state,state2,state3);
-alias(stateFull,stateFull2,stateFull3);
+alias(state,state2,state3,state4);
+alias(stateFull,stateFull2,stateFull3,stateFull4);
 alias(renAllowed,renAllowed2);
 
 

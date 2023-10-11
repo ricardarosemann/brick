@@ -30,8 +30,14 @@ switches:
   EARLYDEMOLITION: FALSE    # allow demolition before end of life time
   FILTERSUBS:      FALSE    # off: default setting without filtering, reg.loc.typ.inc:
   CALIBRATIONTYPE: none     # not given: Not required for a non-calibration run
+  TARGETFUNCTION: none
 # gams parameters
 gamsOptions:
   logoption: 2   # 2: log output to log file
   pw:        185 # page width of log file
+# calibration parameters
+parameters:
+  alpha: NULL
+  iteration: NULL
+  diff: NULL
 ...

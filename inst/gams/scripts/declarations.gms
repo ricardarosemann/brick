@@ -32,7 +32,7 @@ p_runtime(reg,loc,typ,inc)                  "model runtime"
 p_handle(reg,loc,typ,inc)                   "parallel model handle parameter"
 p_repyFullSysLP(solveinfo)                  "model and solver summary: fullSysLP"
 p_repyFullSysNLP(reg,loc,typ,inc,solveinfo) "model and solver summary: fullSysNLP"
-p_repyFullSysNLPIter(iteration,reg,loc,typ,inc,solveinfo) "model and solver summary in every iteration: fullSysNLP"
+p_repyFullSysNLPIter(iterationAll,reg,loc,typ,inc,solveinfo) "model and solver summary in every iteration: fullSysNLP"
 
 p_refWeight(ref,reg,ttot) "weight of reference source in input matching"
 p_flowVariationWeight     "weight of flow variation in matching objective"
@@ -40,12 +40,11 @@ p_flowVariationWeight     "weight of flow variation in matching objective"
 p_refVals(ref,refVar,reg,ttot) "reference values to match"
 p_refValsMed(ref,reg)          "median non-zero reference value to normalise deviations"
 
-$ifThen.calibration "%RUNTYPE%" == "calibration"
 p_diff
 p_x(flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_xDiff(flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_xA(flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_xDiffAll(iteration, flow2, bsr3, hsr3, flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_xDiffAll(iterationAll, flow2, bsr3, hsr3, flow, bsr, hsr, vin, reg, loc, typ, inc)
 
 p_f(vin, reg, loc, typ, inc)
 p_f0(vin, reg, loc, typ, inc)
@@ -62,26 +61,27 @@ p_beta
 p_sigma
 p_phiDeriv(vin, reg, loc, typ, inc)
 
-p_xIter(iteration, flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_fIter(iteration, vin, reg, loc, typ, inc)
-p_renovationIter(iteration,qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot)
-p_constructionIter(iteration,qty,bs,hs,reg,loc,typ,inc,ttot)
+p_xIter(iterationAll, flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_fIter(iterationAll, vin, reg, loc, typ, inc)
+p_renovationIter(iterationAll,qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot)
+p_constructionIter(iterationAll,qty,bs,hs,reg,loc,typ,inc,ttot)
+p_stockIter(iterationAll, qty, bs, hs, vin, reg, loc, typ, inc, ttot)
 
-p_iterA(iteration, vin, reg, loc, typ, inc)
-p_alphaIter(iteration, iterA, vin, reg, loc, typ, inc)
-p_fAIter(iteration, iterA, vin, reg, loc, typ, inc)
-p_fArmijoRHIter(iteration, iterA, vin, reg, loc, typ, inc)
-$endIf.calibration
+p_iterA(iterationAll, vin, reg, loc, typ, inc)
+p_alphaIter(iterationAll, iterA, vin, reg, loc, typ, inc)
+p_fAIter(iterationAll, iterA, vin, reg, loc, typ, inc)
+p_fArmijoRHIter(iterationAll, iterA, vin, reg, loc, typ, inc)
 
 p_calibSpeed(varFLow)                                                 "Control of the step size in the calibration iteration"
-p_calibDeviationCon(iteration,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
-p_calibDeviationRen(iteration,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
+p_calibDeviationCon(iterationAll,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
+p_calibDeviationRen(iterationAll,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
 ;
 
 scalars
 t0 "reference year for discounting"
 
-epsilon "offset to avoid log(0)" /1E-4/
+epsilon "offset to avoid log(0)" /1E-5/
+epsilonSmall "Smaller offset for calibration" /1E-9/
 
 priceSensBS "price sensitivity of building shell choice" /8.0E-2/
 priceSensHS "price sensitivity of heating system choice" /1E-1/

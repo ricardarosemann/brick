@@ -1,5 +1,5 @@
 ---
-title: "calibration"
+title: "calibration-stocks-random"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010, 2020]
@@ -8,10 +8,9 @@ regions: DEU
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: flows
+  CALIBRATIONTYPE: stocks
   TARGETFUNCTION: minsquare
-# parameters for calibration
 parameters:
-  alpha: 0.01
-  iteration: 50
+  alpha: 0.1
+  iteration: 10
 ...

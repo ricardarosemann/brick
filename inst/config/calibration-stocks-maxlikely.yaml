@@ -1,5 +1,5 @@
 ---
-title: "calibration"
+title: "calibration-stocks-maxlikely"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010, 2020]
@@ -8,10 +8,10 @@ regions: DEU
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: flows
-  TARGETFUNCTION: minsquare
+  CALIBRATIONTYPE: stocks
+  TARGETFUNCTION: maxlikely
 # parameters for calibration
 parameters:
-  alpha: 0.01
-  iteration: 50
+  alpha: 0.1
+  iteration: 3
 ...
