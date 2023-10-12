@@ -8,7 +8,7 @@
 #' @importFrom tidyr pivot_longer replace_na
 #' @export
 
-prepareFuelPrices <- function(carbonPrice = NULL, regions, periods, result = "fuelPrices") {
+prepareFuelPrices <- function(carbonPrice = NULL, regions, periods, brickDir, result = "fuelPrices") {
 
 
 
@@ -19,7 +19,7 @@ prepareFuelPrices <- function(carbonPrice = NULL, regions, periods, result = "fu
 
   # Read Excel file from ECEMF
   ecemf <- read.xlsx(
-    file.path("inst", "assump", "FE Prices_2022-04-14_v2.xlsx"),
+    file.path(brickDir, "inst", "assump", "FE Prices_2022-04-14_v2.xlsx"),
     "Price markups",
     fillMergedCells = TRUE)
 
@@ -101,7 +101,7 @@ prepareFuelPrices <- function(carbonPrice = NULL, regions, periods, result = "fu
 
   # https://www.eea.europa.eu/ims/greenhouse-gas-emission-intensity-of-1
   emissionIntensityElec <- read.csv(
-    file.path("inst", "assump", "co2-emission-intensity-13.csv")) %>%
+    file.path(brickDir, "inst", "assump", "co2-emission-intensity-13.csv")) %>%
     rename(period = 1, region = 2, value = 3, low = 4, high = 5) %>%
     mutate(value = ifelse(is.na(.data[["value"]]),
                           rowMeans(cbind(.data[["low"]], .data[["high"]]), na.rm = TRUE),

@@ -3,9 +3,9 @@
 #' From hotmaps in kWh/(m2.yr)
 #' @export
 
-prepareUEHeatingDemand <- function(regions) {
+prepareUEHeatingDemand <- function(regions, brickDir) {
 
-  hotmaps <- read.csv("inst/assump/building_stock.csv", sep = "|")
+  hotmaps <- read.csv(file.path(brickDir, "inst", "assump", "building_stock.csv"), sep = "|")
 
   typMap <- c(`Single family- Terraced houses` = "SFH",
               `Multifamily houses`             = "MFH",

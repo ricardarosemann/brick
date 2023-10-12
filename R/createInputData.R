@@ -9,6 +9,7 @@
 #'
 #' @param path character vector with folders to write input data into
 #' @param config named list with run configuration
+#' @param brickDir Directory where brick is placed
 #' @param aggregateProblem boolean, should the problem be agregated?
 #' @param overwrite boolean, should existing input.gdx be overwritten?
 #'
@@ -30,6 +31,7 @@
 #'
 createInputData <- function(path,
                             config,
+                            brickDir
                             aggregateProblem = FALSE,
                             overwrite = FALSE) {
 
@@ -324,7 +326,7 @@ createInputData <- function(path,
     select(-"constCost", -"hsInstCost", -"m2PerUnit")
   p_specCostConIntang <- p_specCostCon %>%
     filter(.data[["cost"]] == "intangible") %>%
-    addAssump("inst/assump/costIntangCon.csv")
+    addAssump(file.path(brickDir, "inst", "assump", "costIntangCon.csv"))
   p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang)
   m$addParameter(
     "p_specCostCon",
@@ -350,7 +352,7 @@ createInputData <- function(path,
     select(-"renCost", -"hsInstCost", -"m2PerUnit")
   p_specCostRenIntang <- p_specCostRen %>%
     filter(.data[["cost"]] == "intangible") %>%
-    addAssump("inst/assump/costIntangRen.csv")
+    addAssump(file.path(brickDir, "inst", "assump", "costIntangRen.csv"))
   p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang)
   p_specCostRen <- m$addParameter(
     "p_specCostRen",
@@ -390,7 +392,7 @@ createInputData <- function(path,
     "2091-2100;    Post 2010",
     "after 2100;   Post 2010"
   )
-  ueDem <- prepareUEHeatingDemand(reg$getUELs()) %>%
+  ueDem <- prepareUEHeatingDemand(reg$getUELs(), brickDir) %>%
     rename(vinHotmaps = "vin", reg = "region", ueDem = "value") %>%
     right_join(vinMap, by = "vinHotmaps", relationship = "many-to-many") %>%
     select(-"vinHotmaps")
@@ -425,7 +427,7 @@ createInputData <- function(path,
     "dihe;  Heat",
     "biom;  Solids - Biomass"
   )
-  fuelPrices <- prepareFuelPrices(carbonPrice, reg$getUELs(), ttotNum) %>%
+  fuelPrices <- prepareFuelPrices(carbonPrice, reg$getUELs(), ttotNum, brickDir) %>%
     right_join(heatingCarrierMap, by = "carrier", relationship = "many-to-many") %>%
     select(-"carrier") %>%
     mutate(value = .data[["value"]] / 1E3) %>%# EUR/MWh -> EUR/kWh
