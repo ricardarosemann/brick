@@ -46,7 +46,7 @@ initModel <- function(config = NULL,
   if (!sendToSlurm) {
     startModel(config, path, brickDir)
   } else {
-    slurmScriptPath <- file.path("inst", "startScriptSlurm.R")
+    slurmScriptPath <- file.path("R", "startScriptSlurm.R")
     file.copy(slurmScriptPath, path)
 
     on.exit(setwd(brickDir))

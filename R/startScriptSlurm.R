@@ -8,13 +8,13 @@
 #' @author Ricarda Rosemann
 #'
 
-# To be replaced by library(brick) or brick::startModel below
-library(devtools)
-load_all()
-
 # Only if this file is run directly via Rscript startOutside.R, but not if this file
 # is sourced, actually run
 if (sys.nframe() == 0L) {
+  # To be replaced by library(brick) or brick::startModel below
+  library(devtools)
+  load_all()
+
   # We assume here that our working directory is the correct output directory
   config <- file.path("config", "config.yaml")
   path <- getwd()

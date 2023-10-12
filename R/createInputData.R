@@ -31,7 +31,7 @@
 #'
 createInputData <- function(path,
                             config,
-                            brickDir
+                            brickDir,
                             aggregateProblem = FALSE,
                             overwrite = FALSE) {
 
