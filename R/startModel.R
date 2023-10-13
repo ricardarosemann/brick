@@ -16,7 +16,7 @@ startModel <- function(config,
                        path,
                        brickDir) {
 
-  cfg <- readConfig(config)
+  cfg <- readConfig(config, readDirect = TRUE)
 
   createInputData(path, cfg, brickDir)
 

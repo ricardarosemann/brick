@@ -12,13 +12,14 @@
 # is sourced, actually run
 if (sys.nframe() == 0L) {
   # To be replaced by library(brick) or brick::startModel below
+  # NEVER move this out of the if-clause to avoid recursive loading of brick. Or move the file outside the R folder.
   library(devtools)
   load_all()
 
   # We assume here that our working directory is the correct output directory
   config <- file.path("config", "config.yaml")
   path <- getwd()
-  brickDir <- file.path("..", "..", path)
+  brickDir <- dirname(dirname(path))
   # Could also shift this to start model if adapted accordingly for the non-SLURM run
 
   brick::startModel(config = config, path = path, brickDir = brickDir)

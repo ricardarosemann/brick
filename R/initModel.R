@@ -44,6 +44,7 @@ initModel <- function(config = NULL,
   brickDir <- getwd()
 
   if (!sendToSlurm) {
+    config <- file.path(path, "config", "config.yaml")
     startModel(config, path, brickDir)
   } else {
     slurmScriptPath <- file.path("R", "startScriptSlurm.R")

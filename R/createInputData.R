@@ -219,7 +219,7 @@ createInputData <- function(path,
 
   ## boiler ban ====
   hsBan <- expandSets(var, reg, ttot, hs) %>%
-    mutate(across(everything(), as.character)) %>%
+        mutate(across(everything(), as.character)) %>%
         mutate(ttot = as.numeric(.data[["ttot"]]))
   if ("boilerBan" %in% config[["iamcSwitch"]]) {
     hsBanConfig <- inline.data.frame(
