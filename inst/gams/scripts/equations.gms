@@ -29,6 +29,8 @@ q_SysCost(subs(reg,loc,typ,inc))..
        + v_DemCost(subs,t)
        + v_HeteroPrefCon(subs,t)
        + v_HeteroPrefRen(subs,t)
+       + v_AdjCostCon(subs,t)
+       + v_AdjCostRen(subs,t)
       )
   )
 ;
@@ -199,6 +201,45 @@ q_HeteroPrefRen(subs,t)..
 ;
 
 
+*** adjustement cost -----------------------------------------------------------
+
+* penalises changes over time in the renovation and construction decisions
+
+* construction
+q_AdjCostCon(subs,t)..
+  v_AdjCostCon(subs,t)
+  =e=
+  p_adjFacCon
+  * sum(state,
+      power(
+        (
+            v_construction("area",state,subs,t)
+          - v_construction("area",state,subs,t-1)
+        )
+        /
+        ((p_dt(t) + p_dt(t-1)) / 2)
+      , 2)
+    )
+;
+
+
+* renovation
+q_AdjCostRen(subs,t)..
+  v_AdjCostRen(subs,t)
+  =e=
+  p_adjFacRen
+  * sum(renAllowed(ren),
+      power(
+        (
+            sum(vinExists(t-1,vin), v_renovation("area",ren,vin,subs,t))
+          - sum(vinExists(t-1,vin), v_renovation("area",ren,vin,subs,t-1))
+        )
+        /
+        ((p_dt(t) + p_dt(t-1)) / 2)
+      , 2)
+    )
+;
+
 *** building stock balance -----------------------------------------------------
 
 * relation between stocks and flows of floor area:
@@ -325,7 +366,7 @@ q_heatingSystemLifeTime(q,hs,vin,subs,ttot)$(    vinExists(ttot,vin)
                                              and t(ttot))..
   sum(bs,
     sum(ttot2$(    ttot2.val le ttot.val
-               and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
+               !!and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
       p_dt(ttot2)
       * (
@@ -340,7 +381,7 @@ q_heatingSystemLifeTime(q,hs,vin,subs,ttot)$(    vinExists(ttot,vin)
   =g=
   sum(bsr,
     sum(ttot2$(    ttot2.val le ttot.val
-               and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
+               !!and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
       p_shareRenHS(hs,ttot2,ttot)
       * (

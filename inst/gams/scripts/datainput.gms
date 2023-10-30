@@ -30,17 +30,20 @@ $endif.calibration
 
 v_stock.l(qty,state,vin,subs,ttot)$vinExists(ttot,vin) =
   p_stockHist(qty,state,vin,subs,ttot);
-$if exist "start.gdx" execute_loadpoint "start";
+$ifthen.start exist "start.gdx" 
+execute_loadpoint "start";
+v_renovation.l(qty,state,stateFull,vin,subs,ttot)$(not renAllowed(state,stateFull)) = 0;
+$endif.start
 
 
 
 *** history --------------------------------------------------------------------
 
 $ifthen.history exist "history.gdx"
-execute_load "history", p_stockHist =        v_stock.l
+execute_load "history", p_stockHist        =  v_stock.l
                         p_constructionHist = v_construction.l
-                        p_renovationHist =   v_renovation.l
-                        p_demolitionHist =   v_demolition.l
+                        p_renovationHist   = v_renovation.l
+                        p_demolitionHist   = v_demolition.l
 ;
 $endif.history
 
