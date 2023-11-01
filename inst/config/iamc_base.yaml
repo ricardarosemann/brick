@@ -9,7 +9,7 @@ regions: [AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV,
           HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD, POL, PRT, ROU, SVK, SVN, SWE]
 #regions: [DEU, ESP, FRA, GBR, ITA, NLD, POL]
 #regions: HRV
-startingPoint: /p/tmp/krekeler/dev/brick/output/iamc_base_2023-07-06_21.52.10
+#startingPoint: /p/tmp/krekeler/dev/brick/output/iamc_base_2023-07-06_21.52.10
 switches:
   SOLVEPROBLEM: lpnlp
 ...

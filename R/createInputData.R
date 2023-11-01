@@ -49,6 +49,18 @@ createInputData <- function(path,
   }
 
 
+  computeStatQuoBias <- function(c, priceSensHs, p, index, data) {
+    P_new <- (exp(-priceSensHs * c[index])
+              / sum(exp(-priceSensHs * c))
+              * (1 + p))
+    a <- exp(-priceSensHs * c)
+
+    a_j <- P_new * sum(a[-index]) / (1 - P_new)
+
+    c[index] <- - log(a_j) / priceSensHs
+    return(c)
+  }
+
 
   # PREPARE --------------------------------------------------------------------
 
@@ -358,19 +370,34 @@ createInputData <- function(path,
   p_specCostRenIntang <- p_specCostRen %>%
     filter(.data[["cost"]] == "intangible") %>%
     addAssump("inst/assump/costIntangRen.csv")
-  p_specCostRenMarkup <- p_specCostRen %>%
-    filter(.data[["cost"]] == "markup") %>%
-    left_join(m2PerUnit, by = "typ") %>%
-    mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
-      config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
-    select(-"m2PerUnit")
-  p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang, p_specCostRenMarkup)
+  p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang)
+  if (config[["iamcSwitch"]] == "statusquo") { #TODO: Add meaningful condition
+    p_specCostRenMarkup <- p_specCostRen %>%
+      group_by(across(-all_of(c("cost", "value"))))
+    p_specCostRenMarkup <- p_specCostRenMarkup %>%
+      summarise(total = sum(.data[["value"]]), .groups = "keep") %>%
+      ungroup(all_of(c("bs", "hs"))) %>%
+      filter(.data[["hsr"]] != 0)
+    p_specCostRenMarkup <- p_specCostRenMarkup %>%
+      mutate(value = computeStatQuoBias(.data[["total"]], 0.1, 0.5,
+                                        which(.data[["hs"]] == .data[["hsr"]]), .data[["ttot"]]) - .data[["total"]],
+             cost = "markup",
+             total = NULL) %>%
+      ungroup()
+  } else {
+    p_specCostRenMarkup <- p_specCostRen %>%
+      filter(.data[["cost"]] == "markup") %>%
+      left_join(m2PerUnit, by = "typ") %>%
+      mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
+        config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
+      select(-"m2PerUnit")
+  }
+  p_specCostRen <- rbind(p_specCostRen, p_specCostRenMarkup)
   p_specCostRen <- m$addParameter(
     "p_specCostRen",
     c(cost, state, stateR, vin, reg, loc, typ, inc, ttot),
     p_specCostRen,
     description = "floor-space specific renovation cost in USD/m2")
-
 
   ### operation ####
 

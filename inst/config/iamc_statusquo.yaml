@@ -1,10 +1,10 @@
 ---
-title: iamc_friendly
+title: iamc_statusquo
 basedOn: iamc_base.yaml
 regions: [AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV,
           HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD, POL, PRT, ROU, SVK, SVN, SWE]
 startyear: 2025
-iamcSwitch: ["sobo", "libo", "gabo"]
+iamcSwitch: "statusquo"
 markupPct: 0.3
 compareGdx: "output/iamc_base_2023-07-06_16.43.59/output.gdx"
 historic: "output/iamc_base_2023-07-06_16.43.59"
