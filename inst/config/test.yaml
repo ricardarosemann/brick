@@ -4,8 +4,8 @@ basedOn: default.yaml
 periods: [2000, 2005, 2010, 2015, 2020, 2030, 2040]
 regionmapping: "inst/input/regionmappingEUplus.csv"
 regions: [DEU]
-iamcSwitch: ["sobo", "libo", "gabo"]
-markupPct: 0.3
-forceDownload: TRUE
+iamcSwitch: "statusquo"
+# markupPct: 0.3
+forceDownload: FALSE
 ignoreShell: TRUE
 ...

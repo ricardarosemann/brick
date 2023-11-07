@@ -13,11 +13,15 @@
 #' @param overwrite logical, should existing input.gdx be overwritten?
 #'
 #' @importFrom quitte calc_addVariable
-#' @importFrom tidyr complete pivot_wider replace_na
+#' @importFrom tidyr complete pivot_wider replace_na crossing pivot_longer
 #' @importFrom stats pweibull
 #' @importFrom utils head
 #' @importFrom dplyr %>% mutate select group_by filter ungroup arrange left_join
-#'   .data rename lag all_of across inner_join everything cross_join
+#'   .data rename lag all_of across inner_join everything cross_join bind_cols
+#'   first
+#' 
+
+# TODO: As soon as all imports are reflected properly: Delete dplyr::(bind_cols|first), tidyr::(crossing|pivot_longer)
 
 createInputData <- function(path,
                             config,
@@ -337,69 +341,6 @@ createInputData <- function(path,
 
   ## specific cost ====
 
-  m2PerUnit <- quitte::inline.data.frame(
-    "typ;  m2PerUnit",
-    "SFH;  100",
-    "MFH;  200"
-  )
-  hsUnitGaBo <- 5100 # From earlier version of brick
-
-  ### construction ####
-  p_specCostConTang <- readInput("f_costConstruction.cs4r",
-                                 c("ttot", "reg", "bs", "hs", "typ"),
-                                 inputDir) %>%
-    toModelResolution(m)
-  p_specCostCon <- expandSets(cost, bs, hs, reg, loc, typ, inc, ttot)
-  p_specCostConTang <- p_specCostCon %>%
-    filter(.data[["cost"]] == "tangible") %>%
-    left_join(p_specCostConTang,
-              by = c("bs", "hs", "reg", "typ", "ttot"))
-  p_specCostConIntang <- p_specCostCon %>%
-    filter(.data[["cost"]] == "intangible") %>%
-    addAssump("inst/assump/costIntangCon.csv")
-  p_specCostConMarkup <- p_specCostCon %>%
-    filter(.data[["cost"]] == "markup") %>%
-    left_join(m2PerUnit, by = "typ") %>%
-    mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
-      config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
-    select(-"m2PerUnit")
-  p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang, p_specCostConMarkup)
-  m$addParameter(
-    "p_specCostCon",
-    c(cost, bs, hs, reg, loc, typ, inc, ttot),
-    p_specCostCon,
-    description = "floor-space specific construction cost in USD/m2"
-  )
-
-  ### renovation ####
-  p_specCostRenTang <- readInput("f_costRenovation.cs4r",
-                                 c("ttot", "reg", "bs", "hs", "bsr", "hsr",
-                                   "typ", "vin"),
-                                 inputDir) %>%
-    toModelResolution(m)
-  p_specCostRen <- expandSets(cost, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
-  p_specCostRenTang <- p_specCostRen %>%
-    filter(.data[["cost"]] == "tangible") %>%
-    left_join(p_specCostRenTang,
-              by = c("ttot", "reg", "bs", "hs", "bsr", "hsr", "typ", "vin"))
-  p_specCostRenIntang <- p_specCostRen %>%
-    filter(.data[["cost"]] == "intangible") %>%
-    addAssump("inst/assump/costIntangRen.csv")
-  p_specCostRenMarkup <- p_specCostRenTang %>%
-    filter(.data[["cost"]] == "markup") %>%
-    left_join(m2PerUnit, by = "typ") %>%
-    mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
-      config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
-    select(-"m2PerUnit")
-  p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang, p_specCostRenMarkup)
-  p_specCostRen <- m$addParameter(
-    "p_specCostRen",
-    c(cost, state, stateR, vin, reg, loc, typ, inc, ttot),
-    p_specCostRen,
-    description = "floor-space specific renovation cost in USD/m2"
-  )
-
-
   ### operation ####
 
   # scenario assumptions
@@ -416,6 +357,7 @@ createInputData <- function(path,
       guessColnames() %>%
       toModelResolution(m)
   }
+
   carbonPrice <- rename(carbonPrice, carbonPrice = "value")
 
   # energy carrier prices and emission intensities
@@ -481,21 +423,214 @@ createInputData <- function(path,
              .data[["ueDem"]] / .data[["eff"]]) %>%
     select(-"price", -"carbonPrice", -"emi", -"ueDem", -"eff")
 
+  ### demolition ####
+
+  p_specCostDem <- 15
+
+  # Relict for old behavior implementation to be updated
+
+  m2PerUnit <- quitte::inline.data.frame(
+    "typ;  m2PerUnit",
+    "SFH;  100",
+    "MFH;  200"
+  )
+  hsUnitGaBo <- 5100 # From earlier version of brick
+
+  ### construction ####
+  p_specCostConTang <- readInput("f_costConstruction.cs4r",
+                                 c("ttot", "reg", "bs", "hs", "typ"),
+                                 inputDir) %>%
+    toModelResolution(m)
+  p_specCostCon <- expandSets(cost, bs, hs, reg, loc, typ, inc, ttot)
+  p_specCostConTang <- p_specCostCon %>%
+    filter(.data[["cost"]] == "tangible") %>%
+    left_join(p_specCostConTang,
+              by = c("bs", "hs", "reg", "typ", "ttot"))
+  p_specCostConIntang <- p_specCostCon %>%
+    filter(.data[["cost"]] == "intangible") %>%
+    addAssump("inst/assump/costIntangCon.csv")
+  p_specCostConMarkup <- p_specCostCon %>%
+    filter(.data[["cost"]] == "markup") %>%
+    left_join(m2PerUnit, by = "typ") %>%
+    mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
+      config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
+    select(-"m2PerUnit")
+  p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang, p_specCostConMarkup)
+
+  ### renovation ####
+  p_specCostRenTang <- readInput("f_costRenovation.cs4r",
+                                 c("ttot", "reg", "bs", "hs", "bsr", "hsr",
+                                   "typ", "vin"),
+                                 inputDir) %>%
+    toModelResolution(m)
+  p_specCostRen <- expandSets(cost, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot) %>%
+    right_join(renAllowed$records,
+               by = c("bs", "hs", "bsr", "hsr")) %>%
+    select(-"element_text")
+  p_specCostRenTang <- p_specCostRen %>%
+    filter(.data[["cost"]] == "tangible") %>%
+    left_join(p_specCostRenTang,
+              by = c("ttot", "reg", "bs", "hs", "bsr", "hsr", "typ", "vin"))
+  p_specCostRenIntang <- p_specCostRen %>%
+    filter(.data[["cost"]] == "intangible") %>%
+    addAssump(file.path("inst", "assump", "costIntangRen.csv"))
+  p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang)
+
+  if ("statusquo" %in% config[["iamcSwitch"]]) {
+
+    lccOperation <- function(ltProb, years, costOpe, typGiven) {
+      ltProb <- ltProb %>%
+        filter(.data[["typ"]] == typGiven,
+        .data[["ttot"]] %in% years)
+      names(costOpe) <- as.character(years)
+      costOpeData <- vector(mode = "numeric", nrow(ltProb))
+      for (i in seq_len(nrow(ltProb))) {
+        if (ltProb$ttot2[i] %in% years) {
+          costOpeData[i] <- costOpe[[as.character(ltProb[["ttot2"]][i])]]
+        } else {
+          costOpeData[i] <- costOpe[[length(costOpe)]]
+        }
+      }
+      ltProb <- dplyr::bind_cols(ltProb, data.frame(costOpe = costOpeData)) %>%
+        group_by(ttot) %>%
+        mutate(cumCostOpe = cumsum(.data[["costOpe"]] * .data[["discount"]] * .data[["dt"]]))
+      ltProb <- ltProb %>%
+        summarise(lccOpe = sum(.data[["prob"]] * .data[["cumCostOpe"]]))
+      return(ltProb[["lccOpe"]])
+    }
+
+    lccDemolition <- function(ltProb, costDem, typGiven) {
+      ltProb <- ltProb %>%
+        filter(typ == typGiven) %>%
+        group_by(all_of("ttot")) %>%
+        summarise(lccDem = sum(.data[["prob"]] * .data[["discount"]]))
+      return(ltProb[["lccDem"]] * costDem)
+    }
+
+    levelOffFunc <- function(x, startPoint = 0.99, absMax = 1 - 1e-6) {
+      k <- 1 / (absMax - startPoint)
+      c <- -(absMax - startPoint) * log(absMax - startPoint) - startPoint
+
+      return(ifelse(x <= startPoint, x, absMax - exp(-k * (x + c))))
+    }
+
+    # Diagnostic function for debugging, to be deleted
+    computePOld <- function(c, priceSensHs, p, index, data) {
+      P_old <- (exp(-priceSensHs * c[index])
+                / sum(exp(-priceSensHs * c)))
+      return(P_old)
+    }
+
+    computeStatQuoBias <- function(c, priceSensHs, p, index, data) {
+
+      P_new <- levelOffFunc((exp(-priceSensHs * c[index])
+                             / sum(exp(-priceSensHs * c))
+                             * (1 + p)))
+      a <- exp(-priceSensHs * c)
+
+      a_j <- P_new * sum(a[-index]) / (1 - P_new)
+
+      c[index] <- - log(a_j) / priceSensHs
+      return(c)
+    }
+
+    dtNum <- dt[["value"]]
+    ttotExt <- c(ttotNum, seq(from = ttotNum[length(ttotNum)] + dtNum[length(dtNum)],
+                              by = dtNum[length(dtNum)], length.out = 6))
+    dtExt <- c(dtNum, rep_len(dtNum[length(dtNum)], 6))
+
+    ltProb <- data.frame(ttot = t$getUELs()) %>%
+      tidyr::crossing(ttot2 = ttotExt, typ = typ$getUELs()) %>%
+      mutate(r = ifelse(typ == "SFH", 0.21, 0.25)) %>%
+      filter(ttot2 >= ttot) %>%
+      group_by(across(all_of(c("ttot", "typ")))) %>%
+      mutate(index = seq(n()),
+             dt = c(as.numeric(.data[["ttot"]][1]) - as.numeric(ttotNum[which(ttotNum == .data[["ttot"]][1]) - 1]),
+                    diff(.data[["ttot2"]])),
+             lt = as.numeric(.data[["ttot2"]]) - as.numeric(.data[["ttot"]]),
+             t1 = .data[["lt"]],
+             t2 = .data[["lt"]] + .data[["dt"]],
+             prob = pweibull(.data[["t2"]], 3, 20) - pweibull(.data[["t1"]], 3, 20),
+             discount = 1 / (1 + .data[["r"]])^(.data[["lt"]])) %>%
+      ungroup()
+
+    specCostAll <- left_join(p_specCostRen %>%
+                               filter(.data[["hsr"]] != "0", .data[["ttot"]] %in% t$getUELs()) %>%
+                               rename(costRen = "value"),
+                             p_specCostOpe %>%
+                               rename(tangible = "value") %>%
+                               mutate(intangible = 0) %>%
+                               tidyr::pivot_longer(cols = all_of(c("tangible", "intangible")), names_to = "cost",
+                                            values_to = "costOpe") %>%
+                               rename(hsr = "hs") %>%
+                               tidyr::crossing(bsr = p_specCostRen[["bsr"]], hs = p_specCostRen[["hs"]]),
+                             by = c("cost", "bs", "hs", "bsr", "hsr", "vin", "reg", "loc", "typ", "ttot")) %>%
+      # mutate(costOpe = ifelse(is.na(.data[["costOpe"]]) & !(.data[["ttot"]] %in% t$getUELs()), 0, .data[["costOpe"]]),
+        mutate(costDem = ifelse(cost == "tangible", p_specCostDem, 0))
+    
+    specCostAll <- specCostAll %>%
+      group_by(across(-all_of(c("cost", "costRen", "costOpe", "costDem")))) %>%
+      summarise(totalRen = sum(.data[["costRen"]]), totalOpe = sum(.data[["costOpe"]]),
+                totalDem = sum(.data[["costDem"]]), .groups = "drop") %>%
+      group_by(across(-all_of(c("ttot", "totalRen", "totalOpe", "totalDem")))) %>%
+      mutate(lccOpe = lccOperation(ltProb, .data[["ttot"]], .data[["totalOpe"]],
+                                   typ = dplyr::first(.data[["typ"]])),
+             lccDem = lccDemolition(ltProb, .data[["totalDem"]],
+                                   typ = dplyr::first(.data[["typ"]])),
+             lcc = .data[["totalRen"]] + .data[["lccOpe"]] + .data[["lccDem"]])
+
+    lccData <- specCostAll %>%
+      select(-"totalOpe", -"totalDem") %>%
+      group_by(across(-all_of(c("hsr", "lcc", "totalRen", "lccOpe", "lccDem"))))
+    lccData <- lccData %>%
+      mutate(lccBias = computeStatQuoBias(.data[["lcc"]], 0.1, 0.5, which(.data[["hsr"]] == dplyr::first(.data[["hs"]])))) %>%
+      ungroup() %>%
+      mutate(costBias = .data[["lccBias"]] - .data[["lccOpe"]] - .data[["lccDem"]] - .data[["totalRen"]])
+
+    p_specCostRenMarkup <- lccData %>%
+      mutate(value = .data[["costBias"]],
+             cost = "markup") %>%
+      select(-"totalRen", -"lccOpe", -"lccDem", -"lcc", -"lccBias", -"costBias")
+
+    
+  } else {
+    p_specCostRenMarkup <- p_specCostRen %>%
+      filter(.data[["cost"]] == "markup") %>%
+      left_join(m2PerUnit, by = "typ") %>%
+      mutate(value = ifelse(hs %in% config[["iamcSwitch"]],
+        config[["markupPct"]] * hsUnitGaBo / .data[["m2PerUnit"]], 0)) %>%
+      select(-"m2PerUnit")
+  }
+  p_specCostRen <- rbind(p_specCostRen, p_specCostRenMarkup)
+
+  ### Write specific costs to constainer ####
+
   p_specCostOpe <- m$addParameter(
     "p_specCostOpe",
     c(state, vin, reg, loc, typ, ttot),
     p_specCostOpe,
     description = "floor-space specific operation cost in EUR/(m2.yr)"
-  )
-
-
-  ### demolition ####
+  )  
+  
   invisible(m$addParameter(
     "p_specCostDem",
-    records = 15,
+    records = p_specCostDem,
     description = "floor-space specific demolition cost in USD/m2"
   ))
 
+  m$addParameter(
+    "p_specCostCon",
+    c(cost, bs, hs, reg, loc, typ, inc, ttot),
+    p_specCostCon,
+    description = "floor-space specific construction cost in USD/m2"
+  )
+
+  p_specCostRen <- m$addParameter(
+    "p_specCostRen",
+    c(cost, state, stateR, vin, reg, loc, typ, inc, ttot),
+    p_specCostRen,
+    description = "floor-space specific renovation cost in USD/m2"
+  )
 
   ## lifetime ====
 
