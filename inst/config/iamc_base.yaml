@@ -1,0 +1,15 @@
+---
+title: iamc_base
+# scope and resolution
+periods: [2000, 2005, 2010, 2015, 2020, 2022, 2025, 2030, 2035, 2040, 2045,
+          2050, 2060, 2070]
+startyear: 2005
+endyear: 2050
+regionmapping: "inst/input/regionmappingEUplus.csv"
+regions: [DEU, FIN, POL]
+forceDownload: FALSE
+ignoreShell: TRUE
+#regions: [DEU, ESP, FRA, GBR, ITA, NLD, POL]
+#regions: HRV
+# startingPoint: /p/tmp/krekeler/dev/brick/output/iamc_base_2023-07-06_21.52.10
+...
