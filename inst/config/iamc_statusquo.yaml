@@ -1,10 +1,11 @@
 ---
-title: iamc_statusquo
+title: iamc_statusquo_0_2
 basedOn: iamc_base.yaml
 # regions: DEU
 regions: [DEU, FIN, POL]
-startyear: 2025
+# startyear: 2025
 iamcSwitch: "statusquo"
+markupPct: 0.2
 # compareGdx: "output/iamc_base_2023-07-06_16.43.59/output.gdx"
-historic: "output/iamc_base_2023-11-06_16.45.35"
+# historic: "output/iamc_base_2023-11-06_16.45.35"
 ...

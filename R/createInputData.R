@@ -579,11 +579,13 @@ createInputData <- function(path,
                                    typ = dplyr::first(.data[["typ"]])),
              lcc = .data[["totalRen"]] + .data[["lccOpe"]] + .data[["lccDem"]])
 
+    biasProb <- config[["markupPct"]]
+
     lccData <- specCostAll %>%
       select(-"totalOpe", -"totalDem") %>%
       group_by(across(-all_of(c("hsr", "lcc", "totalRen", "lccOpe", "lccDem"))))
     lccData <- lccData %>%
-      mutate(lccBias = computeStatQuoBias(.data[["lcc"]], 0.1, 0.5, which(.data[["hsr"]] == dplyr::first(.data[["hs"]])))) %>%
+      mutate(lccBias = computeStatQuoBias(.data[["lcc"]], 0.1, biasProb, which(.data[["hsr"]] == dplyr::first(.data[["hs"]])))) %>%
       ungroup() %>%
       mutate(costBias = .data[["lccBias"]] - .data[["lccOpe"]] - .data[["lccDem"]] - .data[["totalRen"]])
 
