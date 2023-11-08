@@ -523,14 +523,25 @@ createInputData <- function(path,
 
     computeStatQuoBias <- function(c, priceSensHs, p, index, data) {
 
-      P_new <- levelOffFunc((exp(-priceSensHs * c[index])
-                             / sum(exp(-priceSensHs * c))
-                             * (1 + p)))
+      # P_new <- levelOffFunc((exp(-priceSensHs * c[index])
+                            #  / sum(exp(-priceSensHs * c))
+                            #  * (1 + p)))
       a <- exp(-priceSensHs * c)
 
-      a_j <- P_new * sum(a[-index]) / (1 - P_new)
+      a_j <- a[index] * (1 + p)
+      fac <- 1 - levelOffFunc(p * a[index] / (sum(a[-index])))
 
-      c[index] <- - log(a_j) / priceSensHs
+      a_new <- a * fac
+      a_new[index] <- a_j
+
+      c <- - log(a_new) / priceSensHs
+      # P_old <- a[index] / (1 - sum(a))
+      # P_new <- a_new[index] / (1 - sum(a_new))
+      # P_ren_old <- sum(a) / (sum(a) + 1)
+      # P_ren_new <- sum(a_new) / (sum(a_new) + 1)
+      # if (NaN %in% c) {
+      #   browser()
+      # }
       return(c)
     }
 
