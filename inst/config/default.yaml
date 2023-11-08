@@ -71,6 +71,7 @@ matchingRun: NULL
 
 # solvers ----------------------------------------------------------------------
 
+# solvers
 gamsCall:  gams
 solverLP:  cplex
 solverNLP: conopt4
@@ -122,6 +123,9 @@ carrierPrices: central
   # high:    emission intensities remain at current levels
 carrierEmi: high
 
+iamcSwitch: NULL    # temporary switch for IAMC contribution
+markupPct: NULL     # temporary value for IAMC contribution with preference markups
+compareGdx: NULL    # temporary value for providing a GDX for comparison
 
 ## model switches ====
 # passed to gams
