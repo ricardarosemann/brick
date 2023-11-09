@@ -5,6 +5,8 @@
 #' @param path character, path to the run
 #' @param facet character, dimension to resolve as facets
 #' @param showHistStock logical, show given historic next to the modeled stock
+#' @param showHistStock logical, plot renovation with identical replacement
+#'   transparent
 #'
 #' @author Robin Hasse
 #'
@@ -16,10 +18,11 @@
 #' @importFrom ggplot2 ggplot geom_col geom_area aes_string scale_x_continuous
 #'   scale_y_continuous ggtitle theme_classic theme aes geom_line facet_wrap
 #'   element_blank element_line scale_fill_manual labs position_stack geom_hline
-#'   expand_limits ggsave geom_point facet_grid margin unit
+#'   expand_limits ggsave geom_point facet_grid margin unit scale_alpha_manual
 #' @export
 
-plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
+plotSummary <- function(path, facet = "typ", showHistStock = FALSE,
+                        splitRen = FALSE) {
 
   config <- readConfig(file.path(path, "config", "config.yaml"))
   endyear <- config[["endyear"]]
@@ -76,6 +79,18 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
     }
 
     if (all(c("bsr", "hsr") %in% colnames(var))) {
+
+      # mark identical replacement of heating systems and building shell
+      var <- var %>%
+        mutate(transparent = paste0(
+                 ifelse(as.character(.data[["hs"]]) == as.character(.data[["hsr"]]),
+                        "hs", ""),
+                 ifelse(as.character(.data[["bs"]]) == as.character(.data[["bsr"]]),
+                        "bs", "")))
+      if (!splitRen) {
+        var[["tranparent"]] <- ""
+      }
+
       var <- rbind(
         var %>%
           filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
@@ -146,6 +161,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
     pOut <- pOut +
       scale_fill_manual(values = fillColours[[fillDim]],
                         labels = fillLabels[[fillDim]]) +
+      scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.2), guide = "none") +
       labs(fill = fillTitle[[fillDim]])
 
     return(pOut)
@@ -165,14 +181,22 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
         d <- left_join(d, t2vin, by = "ttot")
       }
 
+      if ("transparent" %in% colnames(d)) {
+        d[["transparent"]] <- grepl(fillDim, d[["transparent"]])
+      }
+
       d <- d %>%
-        group_by(across(any_of(c("facet", fillDim, "ttot", "renovation")))) %>%
+        group_by(across(any_of(c("facet", fillDim, "ttot", "renovation",
+                                 "transparent")))) %>%
         summarise(value = sum(.data[["value"]], na.rm = TRUE),
                   .groups = "drop")  %>%
         mutate(quantity = v)
 
       return(d)
     }))
+
+    pData[["transparent"]] <- factor(replace_na(pData[["transparent"]], FALSE), c(TRUE, FALSE))
+
     pData <- pData %>%
       left_join(dt, by = "ttot") %>%
       mutate(width = ifelse(.data[["quantity"]] == "Stock",
@@ -211,6 +235,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
       ggplot() +
       suppressWarnings(geom_col(aes(.data[["pos"]], .data[["value"]],
                                     width = .data[["width"]],
+                                    alpha = .data[["transparent"]],
                                     fill = .data[[fillDim]]))) +
       facet_grid(.data[["quantity"]] ~ .data[["facet"]], scales = "free") +
       geom_hline(yintercept = 0) +
