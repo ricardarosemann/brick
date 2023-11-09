@@ -45,7 +45,7 @@ $endif.shell
   q_heatingSystemLifeTime
   q_HeteroPrefCon
   q_HeteroPrefRen
-*  q_maxRenRate
+  q_maxRenRate
   /
 ;
 

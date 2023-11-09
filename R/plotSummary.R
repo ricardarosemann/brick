@@ -5,6 +5,8 @@
 #' @param path character, path to the run
 #' @param facet character, dimension to resolve as facets
 #' @param showHistStock logical, show given historic next to the modeled stock
+#' @param regions vector of region names to plot individually or TRUE to plot
+#'   all individually
 #'
 #' @author Robin Hasse
 #'
@@ -19,7 +21,8 @@
 #'   expand_limits ggsave geom_point facet_grid margin unit
 #' @export
 
-plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
+plotSummary <- function(path, facet = "typ", showHistStock = FALSE,
+                        regions = NULL) {
 
   config <- readConfig(file.path(path, "config", "config.yaml"))
   endyear <- config[["endyear"]]
@@ -60,7 +63,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
     select("ttot", "vin")
 
   vars <- c(
-    Stock = "v_stock",
+    Stock = c("v_stock"),
     Construction = "v_construction",
     Demolition = "v_demolition",
     Renovation = "v_renovation"
@@ -68,6 +71,13 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
 
   data <- lapply(vars, function(v) {
     var <- readSymbol(m, v)
+
+    if (showHistStock && v == "v_stock") {
+      var[["historic"]] <- FALSE
+      var <- readSymbol(m, "p_stockHist") %>%
+        mutate(historic = TRUE) %>%
+        rbind(var)
+    }
 
     if (is.null(facet)) {
       var[["facet"]] <- "all"
@@ -155,82 +165,99 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
 
   # PLOT -----------------------------------------------------------------------
 
+  if (isTRUE(regions)) {
+    regions <- config[["regions"]]
+  }
+  if (isFALSE(regions)) {
+    regions <- NULL
+  }
+
   for (fillDim in c("hs", "vin")) {
+    for (reg in regions) {
 
-    pData <- do.call(bind_rows, lapply(names(data), function(v) {
-      d <- data[[v]] %>%
-        filter(.data[["ttot"]] <= endyear)
+      pData <- do.call(bind_rows, lapply(names(data), function(v) {
+        d <- data[[v]] %>%
+          filter(.data[["ttot"]] <= endyear)
 
-      if (!"vin" %in% colnames(d)) {
-        d <- left_join(d, t2vin, by = "ttot")
+        if (!is.null(regions)) {
+          d <- d[d[["reg"]] == reg, ]
+        }
+
+        if (!"vin" %in% colnames(d)) {
+          d <- left_join(d, t2vin, by = "ttot")
+        }
+
+        d <- d %>%
+          group_by(across(any_of(c("facet", fillDim, "ttot", "renovation", "historic")))) %>%
+          summarise(value = sum(.data[["value"]], na.rm = TRUE),
+                    .groups = "drop")  %>%
+          mutate(quantity = v)
+
+        return(d)
+      }))
+      pData <- pData %>%
+        left_join(dt, by = "ttot") %>%
+        mutate(width = ifelse(.data[["quantity"]] == "Stock",
+                              if (showHistStock) 0.75 else 1.5,
+                              0.9 * .data[["dt"]]),
+              pos = .data[["ttot"]] - ifelse(.data[["quantity"]] == "Stock",
+                                             if (showHistStock) ifelse(.data[["historic"]], -0.4, 0.4) else 0,
+                                             0.5 * .data[["dt"]]),
+              quantity = factor(.data[["quantity"]], names(vars)),
+              value = .data[["value"]] / 1000) # million to billion
+
+      # remove negative renovation values unless relevant dims are chosen for fill
+      if (!fillDim %in% c("bs", "hs")) {
+        pData <- pData %>%
+          filter(replace_na(.data[["renovation"]], "") != "from")
       }
 
-      d <- d %>%
-        group_by(across(any_of(c("facet", fillDim, "ttot", "renovation")))) %>%
-        summarise(value = sum(.data[["value"]], na.rm = TRUE),
-                  .groups = "drop")  %>%
-        mutate(quantity = v)
+      # remove irrelevant fill  entries from legend
+      if (is.factor(pData[[fillDim]])) {
+        pData <- revalue.levels(pData, fillDim)
+      }
 
-      return(d)
-    }))
-    pData <- pData %>%
-      left_join(dt, by = "ttot") %>%
-      mutate(width = ifelse(.data[["quantity"]] == "Stock",
-                            1.5, 0.9 * .data[["dt"]]),
-             pos = .data[["ttot"]] - ifelse(.data[["quantity"]] == "Stock",
-                                            0, 0.5 * .data[["dt"]]),
-             quantity = factor(.data[["quantity"]], names(vars)),
-             value = .data[["value"]] / 1000) # million to billion
 
-    # remove negative renovation values unless relevant dims are chosen for fill
-    if (!fillDim %in% c("bs", "hs")) {
-      pData <- pData %>%
-        filter(replace_na(.data[["renovation"]], "") != "from")
+      # position of flow unit
+      flowUnit <- pData %>%
+        filter(.data[["quantity"]] != "Stock") %>%
+        group_by(across(all_of(c("facet", "ttot", "quantity", "renovation")))) %>%
+        summarise(value = sum(.data[["value"]]), .groups = "drop") %>%
+        group_by(across(all_of(c("quantity")))) %>%
+        summarise(value = max(.data[["value"]]), .groups = "drop") %>%
+        mutate(pos = min(pData[["ttot"]]) - dt[1, "dt"] / 2,
+              facet = head(pData[["facet"]], 1))
+
+
+      ## plot ====
+
+      p <- pData %>%
+        ggplot() +
+        suppressWarnings(geom_col(aes(.data[["pos"]], .data[["value"]],
+                                      width = .data[["width"]],
+                                      fill = .data[[fillDim]]))) +
+        facet_grid(.data[["quantity"]] ~ .data[["facet"]], scales = "free") +
+        geom_hline(yintercept = 0) +
+        geom_text(aes(.data[["pos"]], .data[["value"]]),
+                  flowUnit,
+                  label = "/yr", vjust = 1, hjust = .2, size = 3)
+
+      p <- addTheme(p, expression(paste("Floor space in billion ", m^2)), fillDim) +
+        theme(panel.spacing = unit(4, "mm"))
+
+      if (!is.null(regions)) {
+        p <- p + ggtitle(reg)
+      }
+
+      ## save plot ====
+
+      plotDir <- file.path(path, "plots")
+      if (!dir.exists(plotDir)) {
+        dir.create(plotDir)
+      }
+      plotFile <- file.path(plotDir, paste0(paste("summary", paste(facet, collapse = "_"), fillDim, reg, sep = "_"), ".png"))
+      ggsave(plotFile, p, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
     }
-
-    # remove irrelevant fill  entries from legend
-    if (is.factor(pData[[fillDim]])) {
-      pData <- revalue.levels(pData, fillDim)
-    }
-
-
-    # position of flow unit
-    flowUnit <- pData %>%
-      filter(.data[["quantity"]] != "Stock") %>%
-      group_by(across(all_of(c("facet", "ttot", "quantity", "renovation")))) %>%
-      summarise(value = sum(.data[["value"]]), .groups = "drop") %>%
-      group_by(across(all_of(c("quantity")))) %>%
-      summarise(value = max(.data[["value"]]), .groups = "drop") %>%
-      mutate(pos = min(pData[["ttot"]]) - dt[1, "dt"] / 2,
-             facet = head(pData[["facet"]], 1))
-
-
-    ## plot ====
-
-    p <- pData %>%
-      ggplot() +
-      suppressWarnings(geom_col(aes(.data[["pos"]], .data[["value"]],
-                                    width = .data[["width"]],
-                                    fill = .data[[fillDim]]))) +
-      facet_grid(.data[["quantity"]] ~ .data[["facet"]], scales = "free") +
-      geom_hline(yintercept = 0) +
-      geom_text(aes(.data[["pos"]], .data[["value"]]),
-                flowUnit,
-                label = "/yr", vjust = 1, hjust = .2, size = 3)
-
-    p <- addTheme(p, expression(paste("Floor space in billion ", m^2)), fillDim) +
-      theme(panel.spacing = unit(4, "mm"))
-
-
-    ## save plot ====
-
-    plotDir <- file.path(path, "plots")
-    if (!dir.exists(plotDir)) {
-      dir.create(plotDir)
-    }
-    plotFile <- file.path(plotDir, paste0(paste("summary", paste(facet, collapse = "_"), fillDim, sep = "_"), ".png"))
-    ggsave(plotFile, p, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
-
   }
 
 }

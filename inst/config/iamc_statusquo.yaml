@@ -6,6 +6,7 @@ regions: [DEU, FIN, POL]
 # startyear: 2025
 iamcSwitch: "statusquo"
 markupPct: 0.3
+startingPoint: output/iamc_statusquo_2023-11-08_16.31.33
 # compareGdx: "output/iamc_base_2023-07-06_16.43.59/output.gdx"
 # historic: "output/iamc_base_2023-11-06_16.45.35"
 ...
