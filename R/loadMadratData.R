@@ -5,7 +5,7 @@
 #' @param config named list with run configuration
 #' @returns directory of input folder
 #'
-#' @importFrom madrat toolGetMapping regionscode
+#' @importFrom madrat toolGetMapping regionscode getConfig
 #' @importFrom gms download_distribute
 
 loadMadratData <- function(config) {
@@ -75,7 +75,7 @@ loadMadratData <- function(config) {
 
     # directory to look for the madrat tgz file
     repositories <- list(NULL)
-    names(repositories) <- "/p/projects/rd3mod/inputdata/output"
+    names(repositories) <- getConfig("outputfolder")
 
     # load tgz file and unpack it in input folder
     download_distribute(madratNew, repositories, brick.file())

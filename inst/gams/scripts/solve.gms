@@ -12,7 +12,9 @@ model fullSysLP "full system linear optimisation"
   q_stockBalPrev
   q_housingDemand
   q_buildingLifeTime
-*  q_buildingShellLifeTime  !! rule out building shell dimension
+$ifthenE.shell (not(sameas("%ignoreShell%","TRUE")))
+  q_buildingShellLifeTime
+$endif.shell
   q_heatingSystemLifeTime
   q_zeroHeteroPrefCon
   q_zeroHeteroPrefRen
@@ -36,11 +38,14 @@ model fullSysNLP "full system linear optimisation"
   q_stockBalPrev
   q_housingDemand
   q_buildingLifeTime
+$ifthenE.shell (not(sameas("%ignoreShell%","TRUE")))
+  q_buildingShellLifeTime
+$endif.shell
 *  q_buildingShellLifeTime  !! rule out building shell dimension
   q_heatingSystemLifeTime
   q_HeteroPrefCon
   q_HeteroPrefRen
-*  q_maxRenRate
+  q_maxRenRate
   /
 ;
 

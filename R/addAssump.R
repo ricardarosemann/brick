@@ -12,7 +12,8 @@
 
 addAssump <- function(df, assumpFile) {
 
-  assump <- read.csv2(assumpFile, stringsAsFactors = TRUE)
+  assump <- read.csv2(assumpFile, stringsAsFactors = TRUE, comment.char = "#",
+                      na.strings = "")
   nos <- sort(unique(assump$.chunk))
 
   df[["value"]] <- 0

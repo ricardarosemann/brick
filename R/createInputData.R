@@ -879,7 +879,8 @@ createInputData <- function(path,
     inner_join(readSymbol(vinExists, stringAsFactor = FALSE),
                by = c("vin", "ttot")) %>%
     left_join(p_stockHist,
-              by = c("qty", "bs", "hs", "vin", "reg", "loc", "typ", "ttot"))
+              by = c("qty", "bs", "hs", "vin", "reg", "loc", "typ", "ttot")) %>%
+    mutate(value = replace_na(.data[["value"]], 0))
 
   p_stockHist <- m$addParameter(
     "p_stockHist",

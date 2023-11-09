@@ -423,22 +423,22 @@ q_minDivRenHS(state,bsr,hsr,vin,subs,t)$vinExists(t,vin)..
 
 * limit renovation rate (increasing over time)
 
-q_maxRenRate(reg,t)..
+q_maxRenRate(subs,t)..
   sum(state,
-    sum(stateFull(bsr,hsr)$(not(sameas(bsr,"0") and sameas(hsr,"0"))),
+    sum(renAllowed(state,bsr,hsr)$(not(sameas(bsr,"0") and sameas(hsr,"0"))),
       sum(vin$vinExists(t,vin),
         sum(loc, sum(typ, sum(inc,
-          v_renovation("area",state,stateFull,vin,reg,loc,typ,inc,t)
+          v_renovation("area",state,bsr,hsr,vin,subs,t)
         )))
       )
     )
   )
   =l=
-  (0.01 + 0.01 * (t.val - 2020) / (2100 - 2020))
+  0.15
   * sum(state,
       sum(vinExists(t,vin),
         sum(loc, sum(typ, sum(inc,
-          v_stock("area",state,vin,reg,loc,typ,inc,t)
+          v_stock("area",state,vin,subs,t)
         )))
       )
     )

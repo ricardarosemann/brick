@@ -130,7 +130,7 @@ q_minDivConHS(bs,hsr,reg,loc,typ,inc,t)             "minimum heating system dive
 q_minDivRenBS(bs,hsr,bsr,hsr,vin,reg,loc,typ,inc,t) "minimum building shell diversity in renovation"
 q_minDivRenHS(bs,hsr,bsr,hsr,vin,reg,loc,typ,inc,t) "minimum heating system diversity in renovation"
 
-q_maxRenRate(reg,ttot) "Maximum renovation rate"
+q_maxRenRate(reg,loc,typ,inc,ttot) "Maximum renovation rate"
 
 q_flowVariationTot                                   "total temporal variation of flows"
 q_flowVariation(varFLow,qty,reg,loc,typ,inc,ttot) "temporal variation of flows"

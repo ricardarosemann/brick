@@ -90,7 +90,8 @@ restartModel <- function(path = NULL,
 
   runGams(path,
           cfg[["gamsOptions"]],
-          c(cfg[["switches"]], cfg[c("solverLP", "solverNLP", "solverQCP")]),
+          c(cfg[["switches"]], cfg[c("solverLP", "solverNLP", "solverQCP",
+                                     "ignoreShell")]),
           gamsCall = cfg[["gamsCall"]])
 
   plotSummary(path, NULL, showHistStock = cfg[["switches"]][["RUNTYPE"]] %in% c("calibration", "matching") ||
