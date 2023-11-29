@@ -26,9 +26,6 @@ createRunFolder(
 \description{
 Create a folder for the model to run in and copy required gams files there.
 }
-\details{
-Create either one or multiple
-}
 \author{
 Robin Hasse
 }

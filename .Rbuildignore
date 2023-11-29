@@ -10,3 +10,4 @@
 ^tests/.lintr$
 ^.*CITATION.cff$
 ^codecov\.yml$
+^inst/input$

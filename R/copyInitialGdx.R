@@ -1,3 +1,11 @@
+#' Copy initial gdx to output folder
+#'
+#' @param path character vector with folders to write input data into
+#' @param config named list with run configuration
+#' @param overwrite logical, should existing input.gdx be overwritten?
+#'
+#' @author Robin Hasse
+
 copyInitialGdx <- function(path, config, overwrite = FALSE) {
   # recognised file names for inital gdx (in order of priority)
   initialGdxNames <- c("output.gdx")
@@ -31,7 +39,7 @@ copyInitialGdx <- function(path, config, overwrite = FALSE) {
   if (!is.null(initialGdxFile)) {
     file.copy(initialGdxFile, file.path(path, "start.gdx"),
               overwrite = overwrite)
-    cat("Using", initialGdxFile, "as start.gdx")
+    message("Using ", initialGdxFile, " as start.gdx")
   }
 
 }

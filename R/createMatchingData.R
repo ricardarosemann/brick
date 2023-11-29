@@ -7,8 +7,7 @@
 #' @param refs named list of matching references
 #' @param overwrite logical, should existing data be overwritten?
 #'
-#' @importFrom gamstransfer Container
-#' @importFrom madrat readSource toolGetMapping
+#' @importFrom madrat calcOutput toolGetMapping
 #' @importFrom quitte as.quitte
 #' @importFrom tidyr matches
 #' @importFrom dplyr select
@@ -32,7 +31,7 @@ createMatchingData <- function(path, config, refs, overwrite = FALSE) {
   regions <- config[["regions"]]
   periods <- config[["periods"]]
 
-  m <- Container$new()
+  m <- gamstransfer::Container$new()
 
 
 
@@ -96,14 +95,14 @@ createMatchingData <- function(path, config, refs, overwrite = FALSE) {
     `names<-`(references)
 
   for (ref in references) {
-    refMap <- m$addSet( # nolint: object_usage_linter.
+    invisible(m$addSet(
       name = paste0("refMap_", ref),
       records = refMaps[[ref]],
       domain = colnames(refMaps[[ref]]),
       domainForwarding = TRUE,
       description = paste("Mapping of brick variables to reference variables:",
                           ref)
-    )
+    ))
 
     refVar <- m$addSet(
       name = paste0("refVar_", ref),
@@ -112,19 +111,21 @@ createMatchingData <- function(path, config, refs, overwrite = FALSE) {
     )
   }
 
-  p_refVals <- m$addParameter( # nolint: object_usage_linter.
+  invisible(m$addParameter(
     name = "p_refVals",
     domain = c("ref", "refVar", "reg", "ttot"),
     records = refVals,
     domainForwarding = TRUE,
-    description = "Reference values to match")
+    description = "Reference values to match"
+  ))
 
-  p_refValsMed <- m$addParameter( # nolint: object_usage_linter.
+  invisible(m$addParameter(
     name = "p_refValsMed",
     domain = c("ref", "reg"),
     records = refValsMed,
     domainForwarding = TRUE,
-    description = "Reference values to match")
+    description = "Reference values to match"
+  ))
 
   refVar <- m$addSet(
     name = "refVar",
@@ -138,26 +139,26 @@ createMatchingData <- function(path, config, refs, overwrite = FALSE) {
     description = "reference sources that historic quantities can be calibrated to"
   )
 
-  r <- m$addSet( # nolint: object_usage_linter.
+  invisible(m$addSet(
     name = "r",
     records = refs,
     description = "reference sources that historic quantities are calibrated to"
-  )
+  ))
 
-  refVarRef <- refVar <- m$addSet( # nolint: object_usage_linter.
+  invisible(m$addSet(
     name = "refVarRef",
     domain = c(ref, refVar),
     records = unique(refVals[, c("ref", "refVar")]),
     description = "mapping references to reference variables"
-  )
+  ))
 
-  refVarExists <- refVar <- m$addSet( # nolint: object_usage_linter.
+  invisible(m$addSet(
     name = "refVarExists",
     domain = c("ref", "refVar", "reg", "ttot"),
     records = unique(refVals[!is.na(refVals$value),
                              c("ref", "refVar", "reg", "ttot")]),
     description = "There is a value for this combination of reference, variable, region and period"
-  )
+  ))
 
   m$write(refFilePath, compress = TRUE)
 

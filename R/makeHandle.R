@@ -6,16 +6,15 @@
 #' Gams parameters are lower case flags and follow one minus `-`. Model switches
 #' are upper case flags and follow two minuses `--`.
 #'
-#' @author Robin Hasse
-#'
 #' @param lst named list of flags
 #' @param type character, type of flags (either `"gams"` or `"model`)
 #' @returns character of flags
 #'
-#' @importFrom purrr pmap
-#' @export
+#' @author Robin Hasse
 #'
-toolMakeHandle <- function(lst, type = c("gams", "model")) {
+#' @importFrom purrr pmap
+
+makeHandle <- function(lst, type = c("gams", "model")) {
 
   type <- match.arg(type)
 

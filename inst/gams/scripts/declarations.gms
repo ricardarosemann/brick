@@ -7,9 +7,13 @@ p_floorPerCap(reg,loc,typ,inc,ttot)   "average floor space per capita in stock i
 
 p_specCostCon(cost,bs,hs,reg,loc,typ,inc,ttot)             "floor-space specific construction cost in USD/m2"
 p_specCostRen(cost,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "floor-space specific renovation cost in USD/m2"
-* p_specCostRen(cost,bsr,hsr,vin,reg,loc,typ,inc,ttot) "floor-space specific renovation cost in USD/m2"
 p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot)                  "floor-space specific operation cost in USD/(m2.yr)"
 p_specCostDem                                              "floor-space specific demolition cost in USD/m2"
+
+p_lccCon(cost,var,bs,hs,reg,loc,typ,inc,ttot) "Estimate of life cycle cost of constructed housing in USD/m2"
+p_probDem(reg,typ,ttot2,ttot)                 "probability of a building having reached its end of life"
+p_LifeTimeBS(reg)                             "life time of building shell system in yr"
+p_LifeTimeHS(hs,reg,typ)                      "life time of heating system in yr"
 
 p_population(reg,loc,typ,inc,ttot)          "number of people in million"
 p_floorPerCap(reg,loc,typ,inc,ttot)         "floor space per capita in m2"
@@ -19,11 +23,11 @@ p_constructionHist(qty,bs,hs,reg,loc,typ,inc,ttot)           "historic flow of n
 p_renovationHist(qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings in million m2/yr"
 p_demolitionHist(qty,bs,hs,vin,reg,loc,typ,inc,ttot)         "historic flow of demolished buildings in million m2/yr"
 
-p_shareDem(vin,ttot)           "minimum share of demolition at end of life"
-p_shareRenBS(bs,ttot,ttot)     "minimum share of renovation from the building shell reaching end of life"
-p_shareRenHS(hs,ttot,ttot)     "minimum share of renovation from the heating system reaching end of life"
-p_shareRenBSinit(bs,ttot,ttot) "minimum share of renovation from the building shell of initial stock reaching end of life"
-p_shareRenHSinit(hs,ttot,ttot) "minimum share of renovation from the heating system of initial stock reaching end of life"
+p_shareDem(vin,reg,typ,ttot)           "minimum share of demolition at end of life"
+p_shareRenBS(reg,ttot,ttot)            "minimum share of renovation from the building shell reaching end of life"
+p_shareRenHS(hs,reg,typ,ttot,ttot)     "minimum share of renovation from the heating system reaching end of life"
+p_shareRenBSinit(reg,ttot,ttot)        "minimum share of renovation from the building shell of initial stock reaching end of life"
+p_shareRenHSinit(hs,reg,typ,ttot,ttot) "minimum share of renovation from the heating system of initial stock reaching end of life"
 
 p_discountFac(typ,ttot)         "discount factor w.r.t. t0"
 p_renAllowed(bs,hs,bsr,hsr) "1 if renovation is allowed else 0"
@@ -83,8 +87,8 @@ t0 "reference year for discounting"
 epsilon "offset to avoid log(0)" /1E-5/
 epsilonSmall "Smaller offset for calibration" /1E-9/
 
-priceSensBS "price sensitivity of building shell choice" /8.0E-2/
-priceSensHS "price sensitivity of heating system choice" /1E-1/
+priceSensBS "price sensitivity of building shell choice" /1E-1/
+priceSensHS "price sensitivity of heating system choice" /2E-1/
 ;
 
 variables
@@ -139,6 +143,8 @@ q_DemCost(reg,loc,typ,inc,ttot) "demolition cost"
 
 q_HeteroPrefCon(reg,loc,typ,inc,ttot) "diversity preference for construction"
 q_HeteroPrefRen(reg,loc,typ,inc,ttot) "diversity preference for renovation"
+q_zeroHeteroPrefCon(reg,loc,typ,inc,ttot) "zero diversity preference for construction (lp)"
+q_zeroHeteroPrefRen(reg,loc,typ,inc,ttot) "zero diversity preference for renovation (lp)"
 
 q_stockBalNext(qty,bs,hs,vin,reg,loc,typ,inc,ttot)  "building stock balance: flows into next time step"
 q_stockBalPrev(qty,bs,hs,vin,reg,loc,typ,inc,ttot)  "building stock balance: flows from previous time step"

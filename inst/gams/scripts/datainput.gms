@@ -11,6 +11,7 @@ $load conAllowed p_renovationHist p_constructionHist p_alphaL p_diff p_beta p_si
 $endif.calibration
 $load p_shareDem p_shareRenBS p_shareRenHS p_shareRenBSinit p_shareRenHSinit
 $load p_floorPerCap
+$load p_probDem p_LifeTimeBS p_LifeTimeHS
 $gdxin
 
 $ifthen.matching "%RUNTYPE%" == "matching"
@@ -43,6 +44,45 @@ execute_load "history", p_stockHist =        v_stock.l
                         p_demolitionHist =   v_demolition.l
 ;
 $endif.history
+
+
+
+*** derived parameters ---------------------------------------------------------
+
+* LCC of housing related to a construction decision under various assumptions:
+* - discounted to time of construction
+* - expectation value considering distributed lifetime of the building
+* - future renovation is driven by technology life time
+* - future renovation only maintains the constructed state
+* - individual renovations for building shell and heating system respectively
+* - average across relevant vintages
+
+p_lccCon(cost,var,bs,hs,reg,loc,typ,inc,ttot) =
+  sum(ttot2$(ttot2.val ge ttot.val),
+    p_discountFac(typ,ttot2) / p_discountFac(typ,ttot)
+    *
+    (
+      p_specCostCon(cost,bs,hs,reg,loc,typ,inc,ttot2)$(    sameas(var,"construction")
+                                                       and sameas(ttot,ttot2))
+      + sum(vin$vinExists(ttot2,vin),
+          p_dtVin(ttot,vin)
+          / p_dt(ttot)
+          * (
+              p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot)$(    sameas(var,"stock")
+                                                         and sameas(cost,"tangible"))
+            + p_specCostRen(cost,bs,hs,bs,"0",vin,reg,loc,typ,inc,ttot)$sameas(var,"renovation")
+              / p_LifeTimeBS(reg)
+            + p_specCostRen(cost,bs,hs,"0",hs,vin,reg,loc,typ,inc,ttot)$sameas(var,"renovation")
+              / p_LifeTimeHS(hs,reg,typ)
+          )
+          * (1 - p_probDem(reg,typ,ttot2,ttot))
+      ) * p_dt(ttot2)
+      + p_specCostDem$(    sameas(var,"demolition") 
+                       and sameas(cost,"tangible"))
+        * (p_probDem(reg,typ,ttot2,ttot) - p_probDem(reg,typ,ttot2-1,ttot))
+    )
+  )
+;
 
 
 

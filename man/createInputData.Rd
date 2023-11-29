@@ -4,23 +4,22 @@
 \alias{createInputData}
 \title{Create input data}
 \usage{
-createInputData(path, config, aggregateProblem = FALSE, overwrite = FALSE)
+createInputData(path, config, overwrite = FALSE)
 }
 \arguments{
 \item{path}{character vector with folders to write input data into}
 
 \item{config}{named list with run configuration}
 
-\item{aggregateProblem}{boolean, should the problem be agregated?}
-
-\item{overwrite}{boolean, should existing input.gdx be overwritten?}
+\item{overwrite}{logical, should existing input.gdx be overwritten?}
 }
 \description{
 Create a complete set of input data for the gams optimisation.
 }
 \details{
-This is still mostly test data created with ugly code that will be replaced
-by proper input data preparation bit by bit.
+This function reads static input data according to the input data revision in
+the config and creates all required sets and parameters for the gams
+optimisation depending on the switches in the config.
 }
 \author{
 Robin Hasse
