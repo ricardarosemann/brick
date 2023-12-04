@@ -38,9 +38,9 @@ createInputData <- function(path,
     return(setNames(setElements, setNames))
   }
 
-  expandSets <- function(...) {
-    expand.grid(setAsVector(...))
-  }
+  # expandSets <- function(...) {
+  #   expand.grid(setAsVector(...))
+  # }
 
   computeRenFac <- function(bsVec, bsrVec, hsVec, hsrVec, renImp) {
     denBs <- length(levels(bsVec)) + 2
@@ -351,42 +351,22 @@ createInputData <- function(path,
     description = "Is this renovation transition allowed"
   )
 
+  # allowed construction (only required for calibration)
+  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+    bsVec <- setAsVector(bs)[["bs"]]
+    hsVec <- setAsVector(hs)[["hs"]]
 
-  ## boiler ban ====
-  hsBan <- expandSets(var, reg, ttot, hs) %>%
-    mutate(across(everything(), as.character)) %>%
-        mutate(ttot = as.numeric(.data[["ttot"]]))
-  if ("boilerBan" %in% config[["iamcSwitch"]]) {
-    hsBanConfig <- inline.data.frame(
-      "var;           tout;  hs",
-      "renovation;    2025;  sobo",
-      "renovation;    2025;  libo",
-      "renovation;    2030;  gabo",
-      "construction;  2025;  sobo",
-      "construction;  2025;  libo",
-      "construction;  2030;  gabo"
-    ) %>%
-      group_by(across(everything())) %>%
-      mutate(ttot = head(ttotNum, 1)) %>%
-      complete(ttot = ttotNum) %>%
-      ungroup() %>%
-      filter(.data[["ttot"]] > .data[["tout"]]) %>%
-      select(-"tout")
+    conAllowed <- expandSets(bsr, hsr, vin) %>%
+      filter(.data[["vin"]] == "2000-2010", .data[["hsr"]] %in% hsVec,
+             .data[["bsr"]] %in% bsVec)
 
-    hsBan <- hsBan %>%
-      inner_join(hsBanConfig, by = intersect(colnames(hsBan),
-                                             colnames(hsBanConfig))) %>%
-      select("var", "reg", "ttot", "hs")
-  } else {
-    hsBan <- NULL
+    conAllowed <- m$addSet(
+      name = "conAllowed",
+      domain = c(bsr, hsr, vin),
+      records = conAllowed,
+      description = "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
+    )
   }
-  hsBan <- m$addSet(
-    "hsBan",
-    records = hsBan,
-    domain = c(var, reg, ttot, hs),
-    description = "heating systems are forbidden in the respective variable after given period"
-  )
-
 
 
   # PARAMETERS -----------------------------------------------------------------
@@ -754,38 +734,6 @@ createInputData <- function(path,
     description = "number of people in million"
   )
 
-  # allowed renovations
-  renAllowed <- expandSets(bs, hs, bsr, hsr) %>%
-    filter(!((.data[["hs"]] %in% c("ehp1", "dihe") &
-                .data[["hsr"]] %in% c("reel", "sobo", "libo", "gabo")) |
-               (.data[["bs"]] == "rMedium" &
-                  .data[["bsr"]] == "original")),
-           .data[["bsr"]] == "0") # TODO: temporary deactivation of renovation
-  renAllowed <- m$addSet(
-    "renAllowed",
-    domain = c(bs, hs, bsr, hsr),
-    records = renAllowed,
-    description = "Is this renovation transition allowed"
-  )
-
-  # allowed construction (only required for calibration)
-  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
-    bsVec <- setAsVector(bs)[["bs"]]
-    hsVec <- setAsVector(hs)[["hs"]]
-
-    conAllowed <- expandSets(bsr, hsr, vin) %>%
-      filter(.data[["vin"]] == "2000-2010", .data[["hsr"]] %in% hsVec,
-             .data[["bsr"]] %in% bsVec)
-
-    conAllowed <- m$addSet(
-      name = "conAllowed",
-      domain = c(bsr, hsr, vin),
-      records = conAllowed,
-      description = "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
-    )
-  }
-
-
 
   ### floor space per capita ####
 
@@ -831,7 +779,7 @@ createInputData <- function(path,
       select(-"variable") %>%
       mutate(bs  = "low",
             qty = "area")
-    p_stockHist <- expandSets(qty, bs, hs, vin, reg, loc, typ, inc, ttot = thist) %>%
+    p_stockHist <- expandSets(qty, bs, hs, vin, reg, loc, typ, inc, ttot) %>%
       inner_join(readSymbol(vinExists, stringAsFactor = FALSE),
                 by = c("vin", "ttot")) %>%
       left_join(p_stockHist,

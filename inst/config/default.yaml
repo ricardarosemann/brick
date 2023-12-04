@@ -50,7 +50,7 @@ historic: NULL
 # data -------------------------------------------------------------------------
 
 ### input data revision ###
-inputRevision: "0.4"
+inputRevision: "0.5"
 
 ### force download ###
 # force the model to download new input data even though it seems unchanged
@@ -160,6 +160,18 @@ switches:
     # e.g.: DEU.urban.MFH.all
   FILTERSUBS: FALSE
 
+  ### Calibration type
+  # Calibration on which quantity?
+    # stocks
+    # flows
+  CALIBRATIONTYPE: NULL
+
+  ### Target function
+  # Target function of the calibration
+    # minsquare
+    # maxlikely
+  TARGETFUNCTION: NULL
+
 
 # gams parameters --------------------------------------------------------------
 # passed to gams
@@ -173,4 +185,8 @@ gamsOptions:
   ### page width ###
     # page width of log file (max number of characters in one line)
   pw: 185
+
+# additional parameters e.g. for calibration -----------------------------------
+
+parameters: []
 ...

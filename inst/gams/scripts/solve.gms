@@ -225,7 +225,7 @@ q("area") = yes;
 *** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
 *** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
 p_x("con", state, "2000-2010", subs) = p_specCostCon("intangible", state, subs, "2000");
-p_x("ren", stateFull, vinCalib, subs) = p_specCostRen("intangible", "original", "biom", stateFull, vinCalib, subs, "2000");
+p_x("ren", stateFull, vinCalib, subs) = p_specCostRen("intangible", "low", "biom", stateFull, vinCalib, subs, "2000");
 p_alpha(vinCalib, subs) = p_alphaL;
 p_fPrev(vinCalib, subs) = 0; !! unused initialization to avoid compilation error
 
