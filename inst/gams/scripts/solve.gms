@@ -123,12 +123,12 @@ $ifThen.targetFunc "%TARGETFUNCTION%" == "minsquare"
 $ifThen.calibTarget "%CALIBRATIONTYPE%" == "flows"
 $macro func sum((state3, t), \
   power(p_constructionHist("area", state3, subs, t) - v_construction.l("area", state3, subs, t), 2)) \
-  + sum((state3, stateFull3, t), \
-  power(p_renovationHist("area", state3, stateFull3, vinCalib, subs, t) - v_renovation.l("area", state3, stateFull3, vinCalib, subs, t), 2));
+  + sum((vin3, state3, stateFull3, t), \
+  power(p_renovationHist("area", state3, stateFull3, vin3, subs, t) - v_renovation.l("area", state3, stateFull3, vin3, subs, t), 2));
 
 $elseIf.calibTarget "%CALIBRATIONTYPE%" == "stocks"
-$macro func sum((state3, t), \
-  power(p_stockHist("area", state3, vinCalib, subs, t) - v_stock.l("area", state3, vinCalib, subs, t), 2));
+$macro func sum((vin3, state3, t), \
+  power(p_stockHist("area", state3, vin3, subs, t) - v_stock.l("area", state3, vin3, subs, t), 2));
 $endIf.calibTarget
 
 $elseIf.targetFunc "%TARGETFUNCTION%" == "maxlikely"
@@ -142,22 +142,22 @@ $macro func - sum((state3, t), \
       + epsilonSmall) \
     + epsilonSmall) \
   ) \
-  + sum((state3, stateFull3, t), \
-  p_renovationHist("area", state3, stateFull3, vinCalib, subs, t) \
-  * log(v_renovation.l("area", state3, stateFull3, vinCalib, subs, t) \
+  + sum((vin3, state3, stateFull3, t), \
+  p_renovationHist("area", state3, stateFull3, vin3, subs, t) \
+  * log(v_renovation.l("area", state3, stateFull3, vin3, subs, t) \
     / (sum((state4, stateFull4), \
-      v_renovation.l("area", state4, stateFull4, vinCalib, subs, t) \
+      v_renovation.l("area", state4, stateFull4, vin3, subs, t) \
       ) \
       + epsilonSmall) \
     + epsilonSmall) \
   );
 
 $elseIf.calibTarget "%CALIBRATIONTYPE%" == "stocks"
-$macro func - sum((state3, t), \
-  p_stockHist("area", state3, vinCalib, subs, t) \
-  * log(v_stock.l("area", state3, vinCalib, subs, t) \
-    / (sum(state4, \
-      v_stock.l("area", state4, vinCalib, subs, t) \
+$macro func - sum((vin3, state3, t), \
+  p_stockHist("area", state3, vin3, subs, t) \
+  * log(v_stock.l("area", state3, vin3, subs, t) \
+    / (sum((state4), \
+      v_stock.l("area", state4, vin3, subs, t) \
     ) \
     + epsilonSmall) \
   + epsilonSmall) \
@@ -226,8 +226,8 @@ q("area") = yes;
 *** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
 p_x("con", state, "2000-2010", subs) = p_specCostCon("intangible", state, subs, "2000");
 p_x("ren", stateFull, vinCalib, subs) = p_specCostRen("intangible", "low", "biom", stateFull, vinCalib, subs, "2000");
-p_alpha(vinCalib, subs) = p_alphaL;
-p_fPrev(vinCalib, subs) = 0; !! unused initialization to avoid compilation error
+p_alpha(subs) = p_alphaL;
+p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
 
 * p_specCostCon("intangible", bs, hs, subs, t) = p_x("con", bs, hs, "2000-2010", subs);
 * p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_x("ren", stateFull, vinCalib, subs);
@@ -236,9 +236,9 @@ p_fPrev(vinCalib, subs) = 0; !! unused initialization to avoid compilation error
 solveParallel
 
 *** Compute the functional value
-p_f(vinCalib, subs) = func
-p_f0(vinCalib, subs) = p_f(vinCalib, subs);
-p_fIter("0", vinCalib, subs) = p_f0(vinCalib, subs);
+p_f(subs) = func
+p_f0(subs) = p_f(subs);
+p_fIter("0", subs) = p_f0(subs);
 
 *** Store renovation and construction values
 p_constructionIter("0", "area", state, subs, t) = v_construction.l("area", state, subs, t);
@@ -254,12 +254,12 @@ p_repyFullSysNLPIter(iteration,all_subs,'resusd')    = fullSysNLP.resusd;
 p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
 
 *** Compute the gradient
-loop((flow2, bsr3, hsr3),
+loop((flow2, bsr3, hsr3, vin2),
   p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
-                                      and (not sameas(bsr, bsr3) or not sameas(hsr, hsr3) or not sameas(flow, flow2)))
+                                      and (not sameas(bsr, bsr3) or not sameas(hsr, hsr3) or not sameas(flow, flow2) or not sameas(vinCalib, vin2)))
                                       = p_x(flow, bsr, hsr, vinCalib, subs);
   p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
-                                    and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2)))
+                                    and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
   p_xDiffAll(iteration, flow2, bsr3, hsr3, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
   p_specCostCon("intangible", state, subs, t) = p_xDiff("con", state, "2000-2010", subs);
@@ -267,68 +267,64 @@ loop((flow2, bsr3, hsr3),
 
   solveParallel
 
-  p_fDiff(flow2, bsr3, hsr3, vinCalib, subs) = func
+  p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
 );
 
-p_r(flow, stateFull, vinCalib, subs) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(vinCalib, subs)) / p_diff;
+p_r(flow, stateFull, vinCalib, subs) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
 p_d(flow, stateFull, vinCalib, subs) = - p_r(flow, stateFull, vinCalib, subs);
-p_delta(vinCalib, subs) = sum((flow, stateFull),
+p_delta(subs) = sum((flow, stateFull, vinCalib),
   -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
 
 *** TODO: Include proper stopping criterion! Handle multi-dimensionality
 
 *** Armijo backtracking method
-p_alpha(vinCalib, subs)$(iteration.val > 1 and p_delta(vinCalib, subs) > 0.001) = min(abs(0.5 * p_f(vinCalib, subs)),
+p_alpha(subs)$(iteration.val > 1 and p_delta(subs) > 0.001) = min(abs(0.5 * p_f(subs)),
   max(p_alphaL,
-    (p_fPrev(vinCalib, subs) - p_f(vinCalib, subs))
-      / p_delta(vinCalib, subs))
+    (p_fPrev(subs) - p_f(subs))
+      / p_delta(subs))
   );
-p_alpha(vinCalib, subs)$(p_delta(vinCalib, subs) le 0.001) = p_alphaL;
+p_alpha(subs)$(p_delta(subs) le 0.001) = p_alphaL;
 
 loop(iterA,
 *** Solve the model only for the subsets which do not satisfy the Armijo condition yet
   p_xA(flow, bsr, hsr, vinCalib, subs)$(sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
-                                  = p_x(flow, bsr, hsr, vinCalib, subs) + p_alpha(vinCalib, subs) * p_d(flow, bsr, hsr, vinCalib, subs);
+                                  = p_x(flow, bsr, hsr, vinCalib, subs) + p_alpha(subs) * p_d(flow, bsr, hsr, vinCalib, subs);
   p_specCostCon("intangible", state, subs, t) = p_xA("con", state, "2000-2010", subs);
   p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_xA("ren", stateFull, vinCalib, subs);
 
   solveParallel
 
-  p_fA(vinCalib, subs) = func
+  p_fA(subs) = func
 
-  p_phiDeriv(vinCalib, subs) = sum((flow, stateFull),
+  p_phiDeriv(subs) = sum((flow, stateFull, vinCalib),
     p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
 
 *** Stopping criterion in all dimensions
-  loop((vin, all_subs),
-    if (p_fA(vin, all_subs) le p_f(vin, all_subs) + p_sigma * p_alpha(vin, all_subs) * p_phiDeriv(vin, all_subs),
+  loop((all_subs),
+    if (p_fA(all_subs) le p_f(all_subs) + p_sigma * p_alpha(all_subs) * p_phiDeriv(all_subs),
       subs(all_subs) = no;
-      vinCalib(vin) = no;
-      p_iterA(iteration, vin, all_subs) = iterA.val;
+      p_iterA(iteration, all_subs) = iterA.val;
       );
-    p_fAIter(iteration, iterA, vin, all_subs) = p_fA(vin, all_subs);
-    p_fArmijoRHIter(iteration, iterA, vin, all_subs) = p_f(vin, all_subs) + p_sigma * p_alpha(vin, all_subs) * p_phiDeriv(vin, all_subs);
+    p_fAIter(iteration, iterA, all_subs) = p_fA(all_subs);
+    p_fArmijoRHIter(iteration, iterA, all_subs) = p_f(all_subs) + p_sigma * p_alpha(all_subs) * p_phiDeriv(all_subs);
   );
-  if(card(subs) = 0 and card(vinCalib) = 0,
-    p_alphaIter(iteration, iterA, vin, all_subs) = p_alpha(vin, all_subs);
+  if(card(subs) = 0,
+    p_alphaIter(iteration, iterA, all_subs) = p_alpha(all_subs);
     break;
   );
 *** Update alpha
-  p_alpha(vinCalib, subs) = p_alpha(vinCalib, subs) * p_beta;
-  p_alphaIter(iteration, iterA, vin, all_subs) = p_alpha(vin, all_subs);
-);
-loop(t,
-  vinCalib(vin)$vinExists(t, vin) = yes;
+  p_alpha(subs) = p_alpha(subs) * p_beta;
+  p_alphaIter(iteration, iterA, all_subs) = p_alpha(all_subs);
 );
 subs(all_subs) = yes;
 
 p_x(flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))
                                 = p_xA(flow, stateFull, vinCalib, subs);
-p_fPrev(vinCalib, subs) = p_f(vinCalib, subs);
-p_f(vinCalib, subs) = p_fA(vinCalib, subs);
+p_fPrev(subs) = p_f(subs);
+p_f(subs) = p_fA(subs);
 
 p_xIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_x(flow, stateFull,vinCalib, subs);
-p_fIter(iteration, vinCalib, subs) = p_f(vinCalib, subs);
+p_fIter(iteration, subs) = p_f(subs);
 p_renovationIter(iteration, "area", state, stateFull, vinCalib, subs, ttot) = v_renovation.l("area", state, stateFull, vinCalib, subs, ttot);
 p_constructionIter(iteration, "area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
 p_stockIter(iteration, "area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
