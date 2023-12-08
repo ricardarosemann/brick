@@ -27,6 +27,8 @@ restartModel(
 
 \item{recreateInputData}{boolean, recreate input data}
 
+\item{copyHistory}{boolean, copy history gdx}
+
 \item{recreateMatchingData}{boolean, recreate matching data}
 
 \item{reaggregateMatching}{boolean, reaggregate matching results}

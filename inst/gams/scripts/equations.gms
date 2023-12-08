@@ -29,8 +29,6 @@ q_SysCost(subs(reg,loc,typ,inc))..
        + v_DemCost(subs,t)
        + v_HeteroPrefCon(subs,t)
        + v_HeteroPrefRen(subs,t)
-       + v_AdjCostCon(subs,t)
-       + v_AdjCostRen(subs,t)
       )
   )
 ;
@@ -50,6 +48,7 @@ q_ConCost(subs,t)..
       )
   )
 ;
+
 
 *** renovation cost ------------------------------------------------------------
 
@@ -201,44 +200,20 @@ q_HeteroPrefRen(subs,t)..
 ;
 
 
-*** adjustement cost -----------------------------------------------------------
-
-* penalises changes over time in the renovation and construction decisions
-
-* construction
-q_AdjCostCon(subs,t)..
-  v_AdjCostCon(subs,t)
+* fix heterogeneity to zero for linear problem (lp)
+q_zeroHeteroPrefCon(subs,t)..
+  v_HeteroPrefCon(subs,t)
   =e=
-  p_adjFacCon
-  * sum(state,
-      power(
-        (
-            v_construction("area",state,subs,t)
-          - v_construction("area",state,subs,t-1)
-        )
-        /
-        ((p_dt(t) + p_dt(t-1)) / 2)
-      , 2)
-    )
+  0
+;
+
+q_zeroHeteroPrefRen(subs,t)..
+  v_HeteroPrefRen(subs,t)
+  =e=
+  0
 ;
 
 
-* renovation
-q_AdjCostRen(subs,t)..
-  v_AdjCostRen(subs,t)
-  =e=
-  p_adjFacRen
-  * sum(renAllowed(ren),
-      power(
-        (
-            sum(vinExists(t-1,vin), v_renovation("area",ren,vin,subs,t))
-          - sum(vinExists(t-1,vin), v_renovation("area",ren,vin,subs,t-1))
-        )
-        /
-        ((p_dt(t) + p_dt(t-1)) / 2)
-      , 2)
-    )
-;
 
 *** building stock balance -----------------------------------------------------
 
@@ -297,21 +272,21 @@ q_housingDemand(subs,t)..
 
 *** building life time ---------------------------------------------------------
 
-* A share of the previous stock has to be demolished. This share is calculated
-* from a Weibull distribution of the building life time. If the switch
-* EARLYDEMOLITION is TRUE, the model is free to demolish more than the share
-* requires.
+* A share of the previous stock has to be demolished as it reaches its end of
+* life. This share is calculated from a Weibull distribution of the building
+* life time. If the switch EARLYDEMOLITION is TRUE, the model is free to
+* demolish more than the share requires.
 
-q_buildingLifeTime(q,state,vin,subs,ttot)$(    vinExists(ttot,vin)
-                                           and t(ttot))..
+q_buildingLifeTime(q,state,vin,subs(reg,loc,typ,inc),ttot)$(    vinExists(ttot,vin)
+                                                            and t(ttot))..
   v_demolition(q,state,vin,subs,ttot)
-$ifthen.earlydemolition  %EARLYDEMOLITION% == 1
+$ifthen.earlydemolition  "%EARLYDEMOLITION%" == "TRUE"
   =g=
 $else.earlydemolition
   =e=
 $endif.earlydemolition
   v_stock(q,state,vin,subs,ttot-1)$vinExists(ttot-1,vin)
-  * p_shareDem(vin,ttot)
+  * p_shareDem(vin,reg,typ,ttot)
 ;
 
 
@@ -325,11 +300,11 @@ $endif.earlydemolition
 * renovation) until t requires.
 
 * building shell
-q_buildingShellLifeTime(q,bs,vin,subs,ttot)$(    vinExists(ttot,vin)
-                                             and t(ttot))..
+q_buildingShellLifeTime(q,bs,vin,subs(reg,loc,typ,inc),ttot)$(    vinExists(ttot,vin)
+                                                              and t(ttot))..
   sum(hs,
     sum(ttot2$(    ttot2.val le ttot.val
-               and p_shareRenBS(bs,ttot2 + 1,ttot) < 1
+               !!and p_shareRenBS(reg,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
       p_dt(ttot2)
       * (
@@ -344,9 +319,9 @@ q_buildingShellLifeTime(q,bs,vin,subs,ttot)$(    vinExists(ttot,vin)
   =g=
   sum(hsr,
     sum(ttot2$(    ttot2.val le ttot.val
-               and p_shareRenBS(bs,ttot2 + 1,ttot) < 1
+               !!and p_shareRenBS(reg,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
-      p_shareRenBS(bs,ttot2,ttot)
+      p_shareRenBS(reg,ttot2,ttot)
       * (
         sum(hs(hsr), v_construction(q,bs,hs,subs,ttot2)) * p_dtVin(ttot2,vin)
         + sum(state$renAllowed(state,bs,hsr),
@@ -354,7 +329,7 @@ q_buildingShellLifeTime(q,bs,vin,subs,ttot)$(    vinExists(ttot,vin)
           )
         )
       +
-      p_shareRenBSinit(bs,ttot2,ttot)
+      p_shareRenBSinit(reg,ttot2,ttot)
       * sum(hs(hsr), v_stock(q,bs,hs,vin,subs,ttot2)$(tinit(ttot2)))
     )
   )
@@ -362,11 +337,11 @@ q_buildingShellLifeTime(q,bs,vin,subs,ttot)$(    vinExists(ttot,vin)
 
 
 * heating system
-q_heatingSystemLifeTime(q,hs,vin,subs,ttot)$(    vinExists(ttot,vin)
-                                             and t(ttot))..
+q_heatingSystemLifeTime(q,hs,vin,subs(reg,loc,typ,inc),ttot)$(    vinExists(ttot,vin)
+                                                              and t(ttot))..
   sum(bs,
     sum(ttot2$(    ttot2.val le ttot.val
-               !!and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
+               !!and p_shareRenHS(hs,reg,typ,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
       p_dt(ttot2)
       * (
@@ -381,9 +356,9 @@ q_heatingSystemLifeTime(q,hs,vin,subs,ttot)$(    vinExists(ttot,vin)
   =g=
   sum(bsr,
     sum(ttot2$(    ttot2.val le ttot.val
-               !!and p_shareRenHS(hs,ttot2 + 1,ttot) < 1
+               !!and p_shareRenHS(hs,reg,typ,ttot2 + 1,ttot) < 1
                and vinExists(ttot2,vin)),
-      p_shareRenHS(hs,ttot2,ttot)
+      p_shareRenHS(hs,reg,typ,ttot2,ttot)
       * (
         sum(bs(bsr), v_construction(q,bs,hs,subs,ttot2)) * p_dtVin(ttot2,vin)
         + sum(state$renAllowed(state,bsr,hs),
@@ -391,7 +366,7 @@ q_heatingSystemLifeTime(q,hs,vin,subs,ttot)$(    vinExists(ttot,vin)
           )
         )
       +
-      p_shareRenHSinit(hs,ttot2,ttot)
+      p_shareRenHSinit(hs,reg,typ,ttot2,ttot)
       * sum(bs(bsr), v_stock(q,bs,hs,vin,subs,ttot2)$(tinit(ttot2)))
     )
   )

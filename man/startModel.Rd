@@ -4,12 +4,7 @@
 \alias{startModel}
 \title{Start the model}
 \usage{
-startModel(
-  config = NULL,
-  path = NULL,
-  outputFolder = "output",
-  references = NULL
-)
+startModel(config = NULL, path = NULL, outputFolder = NULL, references = NULL)
 }
 \arguments{
 \item{config}{run configurations}

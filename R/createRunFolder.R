@@ -2,29 +2,21 @@
 #'
 #' Create a folder for the model to run in and copy required gams files there.
 #'
-#' Create either one or multiple
-#'
-#' @author Robin Hasse
-#'
 #' @param path character vector, containing
 #' @param config list with run configuration
 #' @param overwrite logical; Should exiting folders be overwritten?
 #' @param recursive logical; Should exiting folders be overwritten?
 #' @param showWarnings logical; Should exiting folders be overwritten?
 #'
-#' @importFrom yaml write_yaml
-#' @export
+#' @author Robin Hasse
 #'
+#' @importFrom yaml write_yaml
+
 createRunFolder <- function(path,
                             config = NULL,
                             overwrite = FALSE,
                             recursive = FALSE,
                             showWarnings = TRUE) {
-
-  # find files -----------------------------------------------------------------
-
-
-
 
   # create new run folders -----------------------------------------------------
 
@@ -43,6 +35,7 @@ createRunFolder <- function(path,
 
 
   ## config ====
+
   configFile <- attr(config, "file", exact = TRUE)
   configFolder <- file.path(newPaths, "config")
   if (!dir.exists(configFolder)) {

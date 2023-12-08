@@ -3,6 +3,4 @@
 .RData
 .Ruserdata
 output/*
-input/*
-*.out
-Rplots.pdf
+inst/input/*

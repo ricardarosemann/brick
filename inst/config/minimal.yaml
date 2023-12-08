@@ -3,6 +3,7 @@ title: "fastTestRun"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2005, 2010, 2015, 2020, 2030, 2040]
+regionmapping: "inst/input/regionmappingEUplus.csv"
 regions: DEU
 # data
 # startingPoint: "output/iamc_base_2023-09-28_11.13.04"

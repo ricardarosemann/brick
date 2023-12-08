@@ -21,14 +21,15 @@ startModel <- function(config,
   createInputData(path, cfg, brickDir)
 
   if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
-    # createMatchingData(path, cfg, references)
+    createMatchingData(path, cfg, references)
   } else if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
     aggregateMatching(path, cfg)
   }
 
   runGams(path,
           cfg[["gamsOptions"]],
-          c(cfg[["switches"]], cfg[c("solverLP", "solverNLP", "solverQCP")]),
+          c(cfg[["switches"]], cfg[c("solverLP", "solverNLP", "solverQCP",
+                                     "ignoreShell")]),
           gamsCall = cfg[["gamsCall"]])
 
   plotSummary(path, NULL, showHistStock = cfg[["switches"]][["RUNTYPE"]] %in% c("calibration", "matching") ||

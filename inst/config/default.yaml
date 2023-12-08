@@ -1,32 +1,176 @@
 ---
 title: "default"
-# scope and resolution
+
+
+# scope and resolution ---------------------------------------------------------
+
+### time steps ###
+# stocks are given at the timestep, flows in the period until the timestep
 periods: [2000, 2005, 2010, 2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050,
           2055, 2060, 2070, 2080, 2090, 2100, 2110, 2130, 2150]
+
+### start year ###
+# first free time step
+# there has to be at least one time step before to start from known stock
 startyear: 2005
+
+### end year ###
+# later time steps are not shown in plots
+# no impact on results
 endyear: 2100
-regionmapping: NULL # NULL: country-level resolution
-regions: NULL       # NULL: all regions from mapping
-historic: NULL      # run to consider as history before startyear
-# data
-inputRevision: "0.0.1"
-iamcSwitch: NULL    # temporary switch for IAMC contribution
-startingPoint: NULL # previous model run to use as initial starting point
-matchingRun: NULL   # matching run, only for calibration (TODO: to be removed when migrating to mredgebuidlings)
-# solvers
+
+### region mapping ###
+# file that maps countries to modelled regions
+  # []: country-level resolution
+  # [name, where]: regionmapping via toolGetMapping
+regionmapping: []
+
+### regions ###
+# list of region codes
+# used only select specific regions from a mapping
+  # NULL: all regions from mapping
+regions: NULL
+
+### ignore building shell ###
+# ignore differences in building shells and only differentiate heating systems
+# Building shell efficiency is still different depending on region, vintage,
+#  location, etc. but cannot be changed through renovation. There is just one
+#  building shell efficiency for new construction.
+# reduced problem
+  # TRUE
+  # FALSE
+ignoreShell: FALSE
+
+### historic run ###
+# path to run to consider as history before startyear
+  # NULL: no history before this run
+historic: NULL
+
+
+# data -------------------------------------------------------------------------
+
+### input data revision ###
+inputRevision: "0.4"
+
+### force download ###
+# force the model to download new input data even though it seems unchanged
+  # TRUE
+  # FALSE
+forceDownload: TRUE
+
+### starting point ###
+# path to previous model run to use as initial starting point
+startingPoint: NULL
+
+### mathcing run ###
+# path to matching run
+# only for calibration
+# TODO: to be removed when migrating to mredgebuidlings
+matchingRun: NULL
+
+
+# solvers ----------------------------------------------------------------------
+
 gamsCall:  gams
 solverLP:  cplex
 solverNLP: conopt4
 solverQCP: conopt4
-# model switches
+
+
+# switches ---------------------------------------------------------------------
+
+## input switches ====
+
+### population scenario ###
+  # SSP1 - SSP5
+  # SSP2EU
+  # SDP_EI, SDP_MC, SDP_RC
+popScenario: SSP2EU
+
+### floor space scenario ###
+# scenario for the floor space per capita
+# currently taken from EDGE-B
+  # SSP1 - SSP5
+  # SSP2EU
+  # SDP_EI, SDP_MC, SDP_RC
+fsScenario: SSP2EU
+
+### ban heating systems ###
+# named list with last period of allowed installation
+  # e.g. {renovation: {sobo: 2025, libo: 2030}, construction: {libo: 2035}}
+boilerBan: []
+
+### carbon price ###
+# named list with carbon price in USD/t_CO2
+  # e.g. {2022: 0, 2030: 300, 2050: 500}
+carbonPrice: []
+
+### carrier prices ###
+# scenario of future energy carrier prices
+  # low:     low estimates
+  # central: central estimates
+  # high:    high estimates
+carrierPrices: central
+
+### carrier emission intensity ###
+# scenario of future energy carrier emission intensity
+# all combustion fuels assumed constant
+# TODO: parameterise supply decarbonisation in config
+  # low:     decarbonised electricity after 2035, district heat after 2045
+  # central: decarbonise electricity to 10% and district heat to 20% of todays
+  #          intensity until 2050
+  # high:    emission intensities remain at current levels
+carrierEmi: high
+
+
+## model switches ====
+# passed to gams
+
 switches:
-  RUNTYPE:         scenario # scenario: run of future scenario, calibartion: calibrateion to historic stock, matching: matching historic stocks and flows to sources
-  SOLVEPROBLEM:    lpnlp    # lp: linear problem, nlp: non-linear problem, lpnlp: first lp then start nlp from there
-  PARALLEL:        TRUE     # parallel solving of nlp for each subs
-  EARLYDEMOLITION: FALSE    # allow demolition before end of life time
-  FILTERSUBS:      FALSE    # off: default setting without filtering, reg.loc.typ.inc:
-# gams parameters
+
+  ### type of model run ###
+    # scenario:    run of future scenario
+    # calibration: calibration to historic stock
+    # matching:    matching historic stocks and flows to sources
+  RUNTYPE: scenario
+
+  ### optimisation problems to solve ###
+  # solving an LP first can help to start from a good initial point
+    # lp:    linear problem (incomplete)
+    # nlp:   non-linear problem
+    # lpnlp: first lp then start nlp from there
+  SOLVEPROBLEM: lpnlp
+
+  ### Parallel solving ###
+  # parallel solving of nlp for each subs
+    # TRUE
+    # FALSE
+  PARALLEL: TRUE
+
+  ### Early demolition ###
+  # allow demolition of buildings before end of life time
+    # TRUE
+    # FALSE
+  EARLYDEMOLITION: FALSE
+
+  ### Filter Stock subsets ###
+  # select specific stock subset
+  # reduced problem
+    # FALSE: no filtering, consider all subsets
+    # e.g.: DEU.urban.MFH.all
+  FILTERSUBS: FALSE
+
+
+# gams parameters --------------------------------------------------------------
+# passed to gams
+
 gamsOptions:
-  logoption: 2   # 2: log output to log file
-  pw:        185 # page width of log file
+
+  ### log file option ###
+    # 2: log output to log file
+  logoption: 2
+
+  ### page width ###
+    # page width of log file (max number of characters in one line)
+  pw: 185
 ...

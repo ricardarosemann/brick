@@ -15,11 +15,12 @@
 #' @param tasks32 boolean whether or not the SLURM run should be with 32 tasks
 #' @export
 initModel <- function(config = NULL,
-                       path = NULL,
-                       outputFolder = "output",
-                       references = NULL,
-                       sendToSlurm = TRUE,
-                       tasks32 = FALSE) {
+                      path = NULL,
+                      outputFolder = "output",
+                      references = NULL,
+                      sendToSlurm = TRUE,
+                      slurmQOS = "default",
+                      tasks32 = FALSE) {
 
   if (!dir.exists(outputFolder)) {
     dir.create(outputFolder)
@@ -53,12 +54,7 @@ initModel <- function(config = NULL,
     on.exit(setwd(brickDir))
     setwd(path)
 
-    if (tasks32) {
-      slurmConfig <- paste("--qos=short --nodes=1 --tasks-per-node=32",
-                          "--constraint=broadwell --time=01:00:00")
-    } else {
-      slurmConfig <- "--qos=priority --nodes=1 --tasks-per-node=16"
-    }
+    slurmConfig <- setSlurmConfig(slurmQOS = slurmQOS, tasks32 = tasks32)
 
     exitCode <- system(paste0("sbatch --job-name=",
                                 title,

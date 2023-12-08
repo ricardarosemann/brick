@@ -4,18 +4,17 @@
 #'
 #' The file `input.gdx` has to exist in the given directory.
 #'
-#' @author Robin Hasse
-#'
 #' @param path character vector with folders to run gams in
 #' @param gamsOptions named list of GAMS options
 #' @param switches named list of model switches
 #' @param fileName character vector with gams file names
 #' @param gamsCall system command to call gams
 #'
+#' @author Robin Hasse
+#'
 #' @importFrom purrr pmap
 #' @importFrom withr with_dir
-#' @export
-#'
+
 runGams <- function(path,
                     gamsOptions = NULL,
                     switches = NULL,
@@ -48,8 +47,8 @@ runGams <- function(path,
     }
 
     # helpers
-    flagString <- paste(toolMakeHandle(gamsOptions),
-                        toolMakeHandle(switches, "model"))
+    flagString <- paste(makeHandle(gamsOptions),
+                        makeHandle(switches, "model"))
 
     # check if input.gdx exists
     if (!file.exists(file.path(path, "input.gdx"))) {
@@ -57,8 +56,12 @@ runGams <- function(path,
     }
 
     # run gams
+    message("Start Gams: ", file.path(path, fileName))
+    tic <- Sys.time()
     with_dir(path, system(paste(gamsCall, fileName, flagString)))
+    toc <- Sys.time()
+    message("Gams finished after ",
+            round(as.numeric(difftime(toc, tic, units = "s")), 0), " sec.")
 
-    cat("GAMS started:", file.path(path, fileName))
   }
 }

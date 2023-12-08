@@ -1,8 +1,14 @@
+#' Plot heat map of reference deviation
+#'
+#' @param path character; directory of output folder
+#'
+#' @author Robin Hasse
+#'
 #' @importFrom dplyr mutate left_join case_when full_join
 #' @importFrom ggplot2 ggplot geom_tile facet_wrap aes theme_minimal theme
 #'   element_blank geom_text scale_x_discrete scale_y_discrete scale_fill_manual
 #'   scale_fill_brewer
-#'
+#' @export
 
 plotRefDeviation <- function(path) {
 
@@ -21,7 +27,7 @@ plotRefDeviation <- function(path) {
     return(NULL)
   }
 
-  m <- Container$new(gdx)
+  m <- gamstransfer::Container$new(gdx)
 
   refs <- readSymbol(m, "r") %>%
     getElement("ref") %>%
@@ -56,10 +62,10 @@ plotRefDeviation <- function(path) {
     dir.create(plotDir)
   }
 
-  p <- ggplot(refDeviationVarRel, aes(.data[["ttot"]],
-                                 interaction(.data[["ref"]],
-                                             .data[["refVar"]],
-                                             sep = "  |  "))) +
+  p <- ggplot(refDeviationVarRel,
+              aes(.data[["ttot"]], interaction(.data[["ref"]],
+                                               .data[["refVar"]],
+                                               sep = "  |  "))) +
     geom_tile(aes(fill = .data[["valueDiscrete"]]),
               colour = "white") +
     geom_text(aes(label = paste(ifelse(abs(.data[["value"]]) < 0.0001,

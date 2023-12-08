@@ -1,7 +1,6 @@
-# Building sector model with heterogeuous renovation and construction of
-    the stock
+# Building sector model with heterogeuous renovation and construction of the stock
 
-R package **brick**, version **0.0.2.9002**
+R package **brick**, version **0.1.3**
 
 [![CRAN status](https://www.r-pkg.org/badges/version/brick)](https://cran.r-project.org/package=brick)  [![R build status](https://github.com/pik-piam/brick/workflows/check/badge.svg)](https://github.com/pik-piam/brick/actions) [![codecov](https://codecov.io/gh/pik-piam/brick/branch/master/graph/badge.svg)](https://app.codecov.io/gh/pik-piam/brick) 
 
@@ -9,14 +8,14 @@ R package **brick**, version **0.0.2.9002**
 
 This building stock model represents residential and commercial
     buildings at customisable regional and temporal resolution. The building
-    stock is quantified in floor area and distinuished by building type
+    stock is quantified in floor area and distinguished by building type 
     (SFH/MFH) and location (rural/urban). In each building category,
     construction cohorts are tracked explicitly. This allows to characterise
     buildings specifically for each of subset of buildings. The evolution of the
     building stock follows from the flows of constructed, renovated and
     demolished buildings and is optimised under cost minimisation with a benefit
     for heterogeneity in the choice of construction and renovation alternatives.
-    This benefit captures heterogeneity in the preferences of the aganets and
+    This benefit captures heterogeneity in the preferences of the agents and
     the building structure.
 
 
@@ -49,7 +48,7 @@ In case of questions / problems please contact Robin Hasse <robin.hasse@pik-pots
 
 To cite package **brick** in publications use:
 
-Hasse R (2023). _brick: Building sector model with heterogeuous renovation and construction of the stock_. R package version 0.0.2.9002, <https://github.com/pik-piam/brick>.
+Hasse R (2023). _brick: Building sector model with heterogeuous renovation and construction of the stock_. R package version 0.1.3, <https://github.com/pik-piam/brick>.
 
 A BibTeX entry for LaTeX users is
 
@@ -59,7 +58,7 @@ A BibTeX entry for LaTeX users is
 the stock},
   author = {Robin Hasse},
   year = {2023},
-  note = {R package version 0.0.2.9002},
+  note = {R package version 0.1.3},
   url = {https://github.com/pik-piam/brick},
 }
 ```

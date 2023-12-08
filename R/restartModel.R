@@ -5,16 +5,19 @@
 #' This function creates a run folder with necessary gams files if missing. It
 #' then computes the input data and finally runs the optimisation.
 #'
-#' @author Robin Hasse
-#'
 #' @param path character vector with folders to run the model in
 #' @param outputFolder directory of output folder
 #' @param copyScripts boolean, copy gams scripts from source
 #' @param copyStartPoint boolean, copy initial gdx
 #' @param recreateInputData boolean, recreate input data
+#' @param copyHistory boolean, copy history gdx
 #' @param recreateMatchingData boolean, recreate matching data
 #' @param reaggregateMatching boolean, reaggregate matching results
 #' @param references named list, not implemented yet
+#'
+#' @author Robin Hasse
+#'
+#' @importFrom utils tail
 #' @export
 #'
 restartModel <- function(path = NULL,
@@ -48,7 +51,7 @@ restartModel <- function(path = NULL,
            outputFolder)
     }
 
-    cat("Restarting most recent run:", path)
+    message("Restarting most recent run: ", path)
   } else {
     if (!dir.exists(path)) {
       stop("There is no folder with the given path: ", path)
@@ -87,7 +90,8 @@ restartModel <- function(path = NULL,
 
   runGams(path,
           cfg[["gamsOptions"]],
-          c(cfg[["switches"]], cfg[c("solverLP", "solverNLP", "solverQCP")]),
+          c(cfg[["switches"]], cfg[c("solverLP", "solverNLP", "solverQCP",
+                                     "ignoreShell")]),
           gamsCall = cfg[["gamsCall"]])
 
   plotSummary(path, NULL, showHistStock = cfg[["switches"]][["RUNTYPE"]] %in% c("calibration", "matching") ||
