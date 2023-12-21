@@ -7,8 +7,11 @@ $load p_discountFac
 $load p_population
 $load p_stockHist
 $ifthen.calibration "%RUNTYPE%" == "calibration"
-$load conAllowed p_renovationHist p_constructionHist p_alphaL p_diff p_beta p_sigma
+$load conAllowed p_alphaL p_diff p_beta p_sigma
 $endif.calibration
+$ifthen.calibrationFlows "%CALIBRATIONTYPE%" == "flows"
+$load p_renovationHist p_constructionHist
+$endIf.calibrationFlows
 $load p_shareDem p_shareRenBS p_shareRenHS p_shareRenBSinit p_shareRenHSinit
 $load p_floorPerCap
 $load p_probDem p_LifeTimeBS p_LifeTimeHS
@@ -28,9 +31,10 @@ $endif.matching
 
 
 *** starting point -------------------------------------------------------------
-
+$ifThen.noRandomCost not "%CALIBRATIONINPUT%" == "randomCost"
 v_stock.l(qty,state,vin,subs,ttot)$vinExists(ttot,vin) =
   p_stockHist(qty,state,vin,subs,ttot);
+$endif.noRandomCost
 $if exist "start.gdx" execute_loadpoint "start";
 
 

@@ -48,7 +48,7 @@ p_diff
 p_x(flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_xDiff(flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_xA(flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_xDiffAll(iterationAll, flow2, bsr3, hsr3, flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_xDiffAll(iterationAll, flow2, bsr3, hsr3, vin, flow, bsr, hsr, vin, reg, loc, typ, inc)
 
 p_f(reg, loc, typ, inc)
 p_f0(reg, loc, typ, inc)
@@ -66,7 +66,9 @@ p_sigma
 p_phiDeriv(reg, loc, typ, inc)
 
 p_xIter(iterationAll, flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_dIter(iterationAll, flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_fIter(iterationAll, reg, loc, typ, inc)
+p_fDiffIter(iterationAll, flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_renovationIter(iterationAll,qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot)
 p_constructionIter(iterationAll,qty,bs,hs,reg,loc,typ,inc,ttot)
 p_stockIter(iterationAll, qty, bs, hs, vin, reg, loc, typ, inc, ttot)
@@ -75,6 +77,14 @@ p_iterA(iterationAll, reg, loc, typ, inc)
 p_alphaIter(iterationAll, iterA, reg, loc, typ, inc)
 p_fAIter(iterationAll, iterA, reg, loc, typ, inc)
 p_fArmijoRHIter(iterationAll, iterA, reg, loc, typ, inc)
+
+p_constructionDiffIter(iteration, flow, bsr, hsr, vin, bs, hs, reg, loc, typ, inc, ttot)
+p_renovationDiffIter(iteration, flow, bsr, hsr, vin, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+
+* p_xDiffGabo(iteration, flow, bsr, hsr, vin, reg, loc, typ, inc)
+* p_stockGabo(iteration, bs, hs, vin, reg, loc, typ, inc, ttot)
+* p_constructionGabo(iteration, bs, hs, reg, loc, typ, inc, ttot)
+* p_renovationGabo(iteration, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
 
 p_calibSpeed(varFLow)                                                 "Control of the step size in the calibration iteration"
 p_calibDeviationCon(iterationAll,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"

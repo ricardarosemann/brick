@@ -1,8 +1,8 @@
 ---
-title: "calibration-stocks-maxlikely"
+title: "calibration-stocks-maxlikely-2010"
 basedOn: "default.yaml"
 # scope and resolution
-periods: [2000, 2010, 2020]
+periods: [2000, 2010]
 startyear: 2010
 regionmapping: "inst/input/regionmappingEUplus.csv"
 regions: DEU
@@ -11,9 +11,10 @@ ignoreShell: TRUE
 switches:
   RUNTYPE: calibration
   CALIBRATIONTYPE: stocks
+  CALIBRATIONINPUT: data
   TARGETFUNCTION: maxlikely
 # parameters for calibration
 parameters:
   alpha: 0.1
-  iteration: 15
+  iteration: 30
 ...

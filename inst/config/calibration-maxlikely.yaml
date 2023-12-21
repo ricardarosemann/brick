@@ -4,11 +4,14 @@ basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010, 2020]
 startyear: 2010
+regionmapping: "inst/input/regionmappingEUplus.csv"
 regions: DEU
+ignoreShell: TRUE
 # switches
 switches:
   RUNTYPE: calibration
   CALIBRATIONTYPE: flows
+  CALIBRATIONINPUT: randomTarget
   TARGETFUNCTION: maxlikely
 # parameters for calibration
 parameters:

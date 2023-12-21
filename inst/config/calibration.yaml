@@ -1,17 +1,20 @@
 ---
-title: "calibration"
+title: "calibration-2010"
 basedOn: "default.yaml"
 # scope and resolution
-periods: [2000, 2010, 2020]
+periods: [2000, 2010]
 startyear: 2010
+regionmapping: "inst/input/regionmappingEUplus.csv"
 regions: DEU
+ignoreShell: TRUE
 # switches
 switches:
   RUNTYPE: calibration
   CALIBRATIONTYPE: flows
+  CALIBRATIONINPUT: randomTarget
   TARGETFUNCTION: minsquare
 # parameters for calibration
 parameters:
-  alpha: 0.01
-  iteration: 50
+  alpha: 0.1
+  iteration: 1
 ...

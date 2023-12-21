@@ -53,7 +53,7 @@ solveinfo	"model and solver stats"
 *** calibration iteration
 iterationAll "calibration iteration including zero"
 iteration(iterationAll) "calibration iteration"
-iterA  "Armijo backtracking iteration" / 1*10 /
+iterA  "Armijo backtracking iteration" / 1*50 /
 
 *** matching reference sources
 qty    "quantity unit to measure stocks and flows in"

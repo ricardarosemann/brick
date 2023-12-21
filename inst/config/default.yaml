@@ -160,13 +160,21 @@ switches:
     # e.g.: DEU.urban.MFH.all
   FILTERSUBS: FALSE
 
-  ### Calibration type
+  ### Calibration type ###
   # Calibration on which quantity?
     # stocks
     # flows
   CALIBRATIONTYPE: NULL
 
-  ### Target function
+  ### Calibration input ###
+  # Input source for the calibration target; probably deleted in the future
+    # data: Data computed from cs4r files
+    # file: Data from a given gdx input file
+    # randomCost: costs are randomized
+    # randomTarget: target is randomized
+  CALIBRATIONINPUT: data
+
+  ### Target function ###
   # Target function of the calibration
     # minsquare
     # maxlikely
