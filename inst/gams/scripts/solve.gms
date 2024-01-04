@@ -246,13 +246,11 @@ p_constructionIter("0", "area", state, subs, t) = v_construction.l("area", state
 p_renovationIter("0", "area", state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
 p_stockIter("0", "area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
 
-loop(iteration,
-
 *** Save the model statistics of the previous iteration. This means that the iteration counter is off by one in some sense.
-p_repyFullSysNLPIter(iteration,all_subs,'solvestat') = fullSysNLP.solvestat;
-p_repyFullSysNLPIter(iteration,all_subs,'modelstat') = fullSysNLP.modelstat;
-p_repyFullSysNLPIter(iteration,all_subs,'resusd')    = fullSysNLP.resusd;
-p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
+p_repyFullSysNLPIter("0",all_subs,'solvestat') = fullSysNLP.solvestat;
+p_repyFullSysNLPIter("0",all_subs,'modelstat') = fullSysNLP.modelstat;
+p_repyFullSysNLPIter("0",all_subs,'resusd')    = fullSysNLP.resusd;
+p_repyFullSysNLPIter("0",all_subs,'objval')    = fullSysNLP.objval;
 
 *** Compute the gradient
 loop((flow2, bsr3, hsr3, vin2),
@@ -262,14 +260,14 @@ loop((flow2, bsr3, hsr3, vin2),
   p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
-  p_xDiffAll(iteration, flow2, bsr3, hsr3, vin2, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
+  p_xDiffAll("0", flow2, bsr3, hsr3, vin2, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
   p_specCostCon("intangible", state, subs, t) = p_xDiff("con", state, "2000-2010", subs);
   p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_xDiff("ren", stateFull, vinCalib, subs);
 
   solveParallel
 
-  p_constructionDiffIter(iteration, flow2, bsr3, hsr3, vin2, state, subs, t) = v_construction.l("area", state, subs, t);
-  p_renovationDiffIter(iteration, flow2, bsr3, hsr3, vin2, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
+  p_constructionDiffIter("0", flow2, bsr3, hsr3, vin2, state, subs, t) = v_construction.l("area", state, subs, t);
+  p_renovationDiffIter("0", flow2, bsr3, hsr3, vin2, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
 * if (sameas(flow2, "ren") and sameas(bsr3, "low") and sameas(hsr3, "gabo") and sameas(vin2, "1990-1999"),
 *   p_xDiffGabo(iteration, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
 *   p_stockGabo(iteration, state, vinCalib, subs, t) = v_stock.l("area", state, vinCalib, subs, t);
@@ -281,7 +279,7 @@ loop((flow2, bsr3, hsr3, vin2),
   p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
 );
 
-p_fDiffIter(iteration, flow, bsr, hsr, vinCalib, subs) = p_fDiff(flow, bsr, hsr, vinCalib, subs);
+p_fDiffIter("0", flow, bsr, hsr, vinCalib, subs) = p_fDiff(flow, bsr, hsr, vinCalib, subs);
 
 p_r(flow, stateFull, vinCalib, subs) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
 p_d(flow, stateFull, vinCalib, subs) = - p_r(flow, stateFull, vinCalib, subs);
@@ -289,6 +287,8 @@ p_delta(subs) = sum((flow, stateFull, vinCalib),
   -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
 
 p_dIter("0", flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_d(flow, stateFull, vinCalib, subs);
+
+loop(iteration,
 
 *** TODO: Include proper stopping criterion! Handle multi-dimensionality
 
@@ -339,11 +339,52 @@ p_fPrev(subs) = p_f(subs);
 p_f(subs) = p_fA(subs);
 
 p_xIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_x(flow, stateFull,vinCalib, subs);
-p_dIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_d(flow, stateFull,vinCalib, subs);
 p_fIter(iteration, subs) = p_f(subs);
 p_renovationIter(iteration, "area", state, stateFull, vinCalib, subs, ttot) = v_renovation.l("area", state, stateFull, vinCalib, subs, ttot);
 p_constructionIter(iteration, "area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
 p_stockIter(iteration, "area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
+
+*** Save the model statistics of the previous iteration. This means that the iteration counter is off by one in some sense.
+p_repyFullSysNLPIter(iteration,all_subs,'solvestat') = fullSysNLP.solvestat;
+p_repyFullSysNLPIter(iteration,all_subs,'modelstat') = fullSysNLP.modelstat;
+p_repyFullSysNLPIter(iteration,all_subs,'resusd')    = fullSysNLP.resusd;
+p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
+
+*** Compute the gradient
+loop((flow2, bsr3, hsr3, vin2),
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+                                      and (not sameas(bsr, bsr3) or not sameas(hsr, hsr3) or not sameas(flow, flow2) or not sameas(vinCalib, vin2)))
+                                      = p_x(flow, bsr, hsr, vinCalib, subs);
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+                                    and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
+                                    = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
+  p_xDiffAll(iteration, flow2, bsr3, hsr3, vin2, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t) = p_xDiff("con", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_xDiff("ren", stateFull, vinCalib, subs);
+
+  solveParallel
+
+  p_constructionDiffIter(iteration, flow2, bsr3, hsr3, vin2, state, subs, t) = v_construction.l("area", state, subs, t);
+  p_renovationDiffIter(iteration, flow2, bsr3, hsr3, vin2, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
+* if (sameas(flow2, "ren") and sameas(bsr3, "low") and sameas(hsr3, "gabo") and sameas(vin2, "1990-1999"),
+*   p_xDiffGabo(iteration, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
+*   p_stockGabo(iteration, state, vinCalib, subs, t) = v_stock.l("area", state, vinCalib, subs, t);
+*   p_constructionGabo(iteration, state, subs, t) = v_construction.l("area", state, subs, t);
+*   p_renovationGabo(iteration, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
+* )
+* ;
+
+  p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
+);
+
+p_fDiffIter(iteration, flow, bsr, hsr, vinCalib, subs) = p_fDiff(flow, bsr, hsr, vinCalib, subs);
+
+p_r(flow, stateFull, vinCalib, subs) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
+p_d(flow, stateFull, vinCalib, subs) = - p_r(flow, stateFull, vinCalib, subs);
+p_delta(subs) = sum((flow, stateFull, vinCalib),
+  -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
+
+p_dIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_d(flow, stateFull, vinCalib, subs);
 
 *** end iteration loop
 );
