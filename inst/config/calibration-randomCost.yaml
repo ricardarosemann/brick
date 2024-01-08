@@ -16,5 +16,6 @@ switches:
 # parameters for calibration
 parameters:
   alpha: 0.1
-  iteration: 3
+  iteration: 30
+  randDev: 50
 ...

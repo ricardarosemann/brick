@@ -264,6 +264,10 @@ loop((flow2, bsr3, hsr3, vin2),
   p_specCostCon("intangible", state, subs, t) = p_xDiff("con", state, "2000-2010", subs);
   p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_xDiff("ren", stateFull, vinCalib, subs);
 
+  v_stock.l("area", state, vinCalib, subs, ttot) = 0;
+  v_construction.l("area", state, subs, ttot) = 0;
+  v_renovation.l("area", state, stateFull, vinCalib, subs, ttot) = 0;
+
   solveParallel
 
   p_constructionDiffIter("0", flow2, bsr3, hsr3, vin2, state, subs, t) = v_construction.l("area", state, subs, t);
@@ -306,6 +310,10 @@ loop(iterA,
                                   = p_x(flow, bsr, hsr, vinCalib, subs) + p_alpha(subs) * p_d(flow, bsr, hsr, vinCalib, subs);
   p_specCostCon("intangible", state, subs, t) = p_xA("con", state, "2000-2010", subs);
   p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_xA("ren", stateFull, vinCalib, subs);
+
+  v_stock.l("area", state, vinCalib, subs, ttot) = 0;
+  v_construction.l("area", state, subs, ttot) = 0;
+  v_renovation.l("area", state, stateFull, vinCalib, subs, ttot) = 0;
 
   solveParallel
 
@@ -361,6 +369,10 @@ loop((flow2, bsr3, hsr3, vin2),
   p_xDiffAll(iteration, flow2, bsr3, hsr3, vin2, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
   p_specCostCon("intangible", state, subs, t) = p_xDiff("con", state, "2000-2010", subs);
   p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_xDiff("ren", stateFull, vinCalib, subs);
+
+  v_stock.l("area", state, vinCalib, subs, ttot) = 0;
+  v_construction.l("area", state, subs, ttot) = 0;
+  v_renovation.l("area", state, stateFull, vinCalib, subs, ttot) = 0;
 
   solveParallel
 

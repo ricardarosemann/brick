@@ -421,20 +421,22 @@ createInputData <- function(path,
               by = c("bs", "hs", "reg", "typ", "ttot"))
   if (config[["switches"]][["CALIBRATIONINPUT"]] == "randomCost") {
     needNewFile <- TRUE
-    if (file.exists("inputRandCost.gdx")) {
-      input <- gamstransfer::Container$new("inputRandCost.gdx")
+    randDev <- config[["parameters"]][["randDev"]]
+    fileNameRandCost <- paste0("inputRandCost", randDev, ".gdx")
+    if (file.exists(fileNameRandCost)) {
+      input <- gamstransfer::Container$new(fileNameRandCost)
       # input$read("inputRandCost.gdx", "p_specCostCon")
       p_specCostConTang <- readSymbol(input, symbol = "p_specCostCon") %>%
         filter(.data[["cost"]] == "tangible") %>%
         filter(.data[["ttot"]] %in% ttotNum)
       if (all(ttotNum %in% p_specCostConTang[["ttot"]])) {
         needNewFile <- FALSE
-        message("Randomized costs read from inputRandCost.gdx")
+        message(paste("Randomized costs read from", fileNameRandCost, "."))
       }
     }
     if (needNewFile) {
       p_specCostConTang <- p_specCostConTang %>%
-        mutate(value = .data[["value"]] * (runif(1, 0.90, 1.1)))
+        mutate(value = .data[["value"]] * max(0, (runif(1, 1 - randDev / 100, 1 + randDev / 100))))
       message("Costs are randomized.")
     }
   }
@@ -469,7 +471,8 @@ createInputData <- function(path,
     } else {
       p_specCostRenTang <- p_specCostRenTang %>%
         group_by(across(all_of(c("bsr", "hsr", "vin")))) %>%
-        mutate(value = .data[["value"]] + dplyr::first(.data[["value"]]) * (runif(1, -0.1, 0.1))) %>%
+        mutate(value = .data[["value"]] + max(0, dplyr::first(.data[["value"]])
+                                              * (runif(1, -randDev / 100, randDev / 100)))) %>%
         ungroup()
     }
   }
@@ -485,8 +488,8 @@ createInputData <- function(path,
   )
 
   if (config[["switches"]][["CALIBRATIONINPUT"]] == "randomCost" && needNewFile) {
-    m$write("inputRandCost.gdx", symbols = c("p_specCostCon", "p_specCostRen"))
-    message(paste("New file inputRandCost containing the time periods",
+    m$write(fileNameRandCost, symbols = c("p_specCostCon", "p_specCostRen"))
+    message(paste("New file", fileNameRandCost, "containing the time periods",
                   paste(ttotNum, collapse = ", "), "written. \n"))
   }
 
