@@ -223,9 +223,10 @@ q("area") = yes;
 *** TODO: Still need to check the proper time dimension!
 *** TODO: Fix sets: What do I mean by subs? Where do I need to consider the vintage?
 *** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
+*** TODO: IMPORTANT! The implementation below relies on having constant intangible renovation costs for bs and hs, and assumes that the calibration is solely carried out for 2010!!!
 *** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
-p_x("con", state, "2000-2010", subs) = p_specCostCon("intangible", state, subs, "2000");
-p_x("ren", stateFull, vinCalib, subs) = p_specCostRen("intangible", "low", "biom", stateFull, vinCalib, subs, "2000");
+p_x("con", state, "2000-2010", subs) = p_specCostCon("intangible", state, subs, "2010");
+p_x("ren", stateFull, vinCalib, subs) = p_specCostRen("intangible", "low", "biom", stateFull, vinCalib, subs, "2010");
 p_alpha(subs) = p_alphaL;
 p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
 
