@@ -17,7 +17,7 @@ readSymbol <- function(x, symbol = NULL, selectArea = TRUE,
     if (length(symbol) != 1) {
       stop("Only a single string is allowed as symbol.")
     }
-    obj <- x$getSymbols(symbol)[[1]]
+    obj <- x$getSymbols(symbol)
   } else if (class(x)[1] %in% c("Parameter", "Variable", "Set")) {
     if (!is.null(symbol)) {
       warning("symbol is ignored as x is a ", tolower(class(x)[1]), " already.")

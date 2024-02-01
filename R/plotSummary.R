@@ -2,11 +2,29 @@
 #'
 #' Plot an overview of the stock and flows
 #'
-#' @param path character, path to the run
+#' @param path character or character vector, path(s) to the run(s)
 #' @param facet character, dimension to resolve as facets
+#' @param filtering list of named character vectors in the
+#'    format c(var = , val =), for each list entry a plot is produced, where the
+#'    variable 'var' is filtered for the value 'val'.
+#' @param endyear numeric, last time period to be plotted
 #' @param showHistStock logical, show given historic next to the modeled stock
-#' @param showHistStock logical, plot renovation with identical replacement
+#' @param compareGdx character or character vector, path(s) to gdx(s) that
+#'    should be compared with gdx(s) in 'path'
+#' @param compRelTo numeric, if set: compute the difference relative to either
+#'    the original gdx (if set to 1) or the gdx provided in compareGdx (if set to 2).
+#'    Can only be used in combination with compareGdx.
+#'    Restricts the plot to the stock only and adjusts appearance of the plot.
+#' @param computeRenState logical, display the renovation flow in two separate
+#'    panels for original and final state
+#' @param scenNames character vector, when passing more than one gdx, provide
+#'    names for the given inputs and use these to facet by, if no facet is given
+#' @param scenNamesShort character vector, when scenNames is specified, provide
+#'    shorter scenario names for the file name
+#' @param splitRen logical, plot renovation with identical replacement
 #'   transparent
+#' @param tMin numeric, first time period to be plotted
+#' @param nameAdd character, string to be added to the output file name
 #'
 #' @author Robin Hasse
 #'
@@ -21,93 +39,208 @@
 #'   expand_limits ggsave geom_point facet_grid margin unit scale_alpha_manual
 #' @export
 
-plotSummary <- function(path, facet = "typ", showHistStock = FALSE,
-                        splitRen = FALSE) {
+plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = NULL,
+                        showHistStock = FALSE, compareGdx = NULL, compRelTo = NULL,
+                        computeRenState = FALSE,
+                        scenNames = NULL, scenNamesShort = NULL, splitRen = FALSE, tMin = NULL,
+                        nameAdd = "") {
 
-  config <- readConfig(file.path(path, "config", "config.yaml"))
-  endyear <- config[["endyear"]]
+  configPath <- file.path(path[1], "config", "config.yaml")
+
+  if (is.null(endyear)) {
+    if (file.exists(configPath)) {
+      config <- readConfig(configPath)
+      endyear <- config[["endyear"]]
+    } else {
+      warning("No endyear given and no config available. Aborting.")
+      return(NULL)
+    }
+  }
 
 
 
   # CHECK INPUT ----------------------------------------------------------------
+  gdxOut <- lapply(path, function(pa) {
+    if (!dir.exists(pa)) {
+      stop("Path does not exist: ", pa)
+    }
 
-  if (!dir.exists(path)) {
-    stop("Path does not exist: ", path)
-  }
-
-  # find gdx file in given path
-  gdxNames <- c("output.gdx",
-                "abort.gdx")
-  gdxFiles <- file.path(path, gdxNames)
-  gdx <- head(gdxFiles[which(file.exists(gdxFiles))], 1)
-  if (length(gdx) == 0) {
-    warning("No suitable gdx file found to plot in ", path)
-    return(NULL)
-  }
+    # find gdx file in given path
+    gdxNames <- c("output.gdx",
+                  "abort.gdx")
+    gdxFiles <- file.path(pa, gdxNames)
+    gdx <- head(gdxFiles[which(file.exists(gdxFiles))], 1)
+    if (length(gdx) == 0) {
+      warning("No suitable gdx file found to plot in ", pa)
+      return(NULL)
+    }
+    return(gdx)
+  })
 
 
 
   # READ DATA ------------------------------------------------------------------
+  contL <- list()
+  for (i in seq_along(gdxOut)) {
+    m <- gamstransfer::Container$new(gdxOut[[i]])
+    contL <- c(contL, list(m))
 
-  m <- gamstransfer::Container$new(gdx)
+    if (!is.null(compareGdx)) {
+      if (length(compareGdx) >= i) {
+        n <- gamstransfer::Container$new(compareGdx[i])
+      } else {
+        n <- gamstransfer::Container$new(compareGdx[1])
+      }
+      contL <- c(contL, list(n))
+    }
+  }
 
-
+  m <- contL[[1]]
   dt <- readSymbol(m, "p_dt") %>%
     select("ttot", dt = "value")
 
   dtVin <- readSymbol(m, "p_dtVin")
+  allVin <- readSymbol(m, "vin")
   t2vin <- dtVin %>%
     group_by(.data[["ttot"]]) %>%
     arrange(-.data[["value"]]) %>%
     filter(row_number() == 1) %>%
-    select("ttot", "vin")
+    select("ttot", "vin") %>%
+    mutate(vin = factor(.data[["vin"]], levels(allVin[["vin"]])))
 
-  vars <- c(
-    Stock = "v_stock",
-    Construction = "v_construction",
-    Demolition = "v_demolition",
-    Renovation = "v_renovation"
-  )
+  if (!is.null(compRelTo)) {
+    vars <- c(Stock = "v_stock")
+  } else {
+    vars <- c(
+      Stock = "v_stock",
+      # Construction = "v_construction",
+      # Demolition = "v_demolition",
+      Renovation = "v_renovation"
+    )
+  }
 
-  data <- lapply(vars, function(v) {
-    var <- readSymbol(m, v)
+  data <- list()
 
-    if (is.null(facet)) {
-      var[["facet"]] <- "all"
-    } else {
-      var <- unite(var, "facet", all_of(facet), sep = " | ")
-    }
+  for (co in contL) {
+    dataCurr <- lapply(vars, function(v) {
+      var <- readSymbol(co, v)
 
-    if (all(c("bsr", "hsr") %in% colnames(var))) {
-
-      # mark identical replacement of heating systems and building shell
-      var <- var %>%
-        mutate(transparent = paste0(
-                 ifelse(as.character(.data[["hs"]]) == as.character(.data[["hsr"]]),
-                        "hs", ""),
-                 ifelse(as.character(.data[["bs"]]) == as.character(.data[["bsr"]]),
-                        "bs", "")))
-      if (!splitRen) {
-        var[["tranparent"]] <- ""
+      if (!is.null(tMin)) {
+        var <- var %>%
+          filter(.data[["ttot"]] >= tMin)
       }
 
-      var <- rbind(
-        var %>%
-          filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
-          select(-"hs", -"bs") %>%
-          rename(hs = "hsr", bs = "bsr") %>%
-          mutate(renovation = "to"),
-        var %>%
-          filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
-          select(-"hsr", -"bsr") %>%
-          mutate(value = -.data[["value"]],
-                 renovation = "from")
-      )
+      if (is.null(facet)) {
+        var[["facet"]] <- "all"
+      } else {
+        var <- unite(var, "facet", all_of(facet), sep = " | ")
+      }
+
+      var <- var %>%
+        mutate(bs = factor(.data[["bs"]], c("0", levels(.data[["bs"]]))),
+               hs = factor(.data[["hs"]], c("0", levels(.data[["hs"]]))))
+
+      if (all(c("bsr", "hsr") %in% colnames(var))) {
+        # mark identical replacement of heating systems and building shell
+        var <- var %>%
+          mutate(transparent = paste0(
+                  ifelse(as.character(.data[["hs"]]) == as.character(.data[["hsr"]]),
+                          "hs", "")))
+        if (!splitRen && !computeRenState) {
+          var[["transparent"]] <- ""
+        }
+
+        if (!computeRenState) {
+          var <- rbind(
+            var %>%
+              filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
+              select(-"hs", -"bs") %>%
+              rename(hs = "hsr", bs = "bsr") %>%
+              mutate(renovation = "to"),
+            var %>%
+              filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
+              select(-"hsr", -"bsr") %>%
+              mutate(value = -.data[["value"]],
+                    renovation = "from")
+          )
+        }
+      }
+
+      return(var)
+    })
+    if ("Renovation" %in% names(dataCurr)) {
+      if (!is.null(compareGdx) & !computeRenState) {
+        dataCurr[["Renovation: Initial"]] <- dataCurr[["Renovation"]] %>%
+          filter(.data[["renovation"]] == "from") %>%
+          mutate(value = -.data[["value"]])
+        dataCurr[["Renovation: Final"]] <- dataCurr[["Renovation"]] %>%
+          filter(.data[["renovation"]] == "to")
+        dataCurr[["Renovation"]] <- NULL
+        allNames <- c(names(vars)[-length(vars)], "Renovation: Initial", "Renovation: Final")
+      } else {
+        if (computeRenState) {
+          dataCurr[["Renovation: Identical"]] <- dataCurr[["Renovation"]] %>%
+            filter(.data[["transparent"]] == "hs")
+          dataCurr[["Renovation: Different"]] <- dataCurr[["Renovation"]] %>%
+            filter(.data[["transparent"]] == "")
+          dataCurr[["Renovation"]] <- NULL
+          allNames <- c(names(vars)[-length(vars)], "Renovation: Identical", "Renovation: Different")
+        } else {
+          allNames <- names(vars)
+        }
+      }
+    } else {
+      allNames <- names(vars)
     }
+    data <- c(data, list(dataCurr))
+  }
 
-    return(var)
-  })
-
+  if (!is.null(compareGdx)) {
+    data <- lapply(allNames, function(v) {
+      dataAll <- data.frame()
+      for (i in seq_along(path)) {
+        diffData <- full_join(data[[2*i-1]][[v]] %>%
+                                rename(value_1 = "value"),
+                              data[[2*i]][[v]] %>%
+                                rename(value_2 = "value")) %>%
+          mutate(value = .data[["value_1"]] - .data[["value_2"]])
+        # if (!is.null(compRelTo)) {
+        #   diffData <- diffData %>%
+        #     mutate(value = ifelse(abs(.data[["value_1"]]) > 1E-7
+        #                           & abs(.data[["value_2"]]) > 1E-7,
+        #                           .data[["value"]] / .data[[paste0("value_", compRelTo)]],
+        #                           NaN))
+        # }
+        if (!is.null(scenNames) & is.null(facet)) {
+          diffData <- diffData %>%
+            mutate(facet = scenNames[i])
+        }
+        dataAll <- bind_rows(dataAll, diffData)
+      }
+      return(dataAll)
+    })
+    # for (v in vars) {
+    #   allData <- full_join(data[[1]][[v]] %>%
+    #                          rename(value_1 = "value"),
+    #                        data[[2]][[v]] %>%
+    #                          rename(value_2 = "value")) %>%
+    #     mutate(value = .data[["value_1"]] - .data[["value_2"]])
+    # }
+  } else {
+    data <- lapply(allNames, function(v) {
+      dataAll <- data.frame()
+      for (i in seq_along(path)) {
+        dataOne <- data[[i]][[v]]
+        if (!is.null(scenNames) & is.null(facet)) {
+          dataOne <- dataOne %>%
+            mutate(facet = scenNames[i])
+        }
+        dataAll <- bind_rows(dataAll, dataOne)
+      }
+      return(dataAll)
+    })
+  }
+  names(data) <- allNames
 
 
   # PLOT STYLE -----------------------------------------------------------------
@@ -156,12 +289,13 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE,
       theme_classic() +
       theme(strip.background = element_blank(),
             panel.grid.major.y = element_line(colour = "grey", linewidth = .25),
-            axis.title.x = element_blank())
+            axis.title.x = element_blank(),
+            text = ggplot2::element_text(size = 20))
 
     pOut <- pOut +
       scale_fill_manual(values = fillColours[[fillDim]],
                         labels = fillLabels[[fillDim]]) +
-      scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.2), guide = "none") +
+      ggplot2::scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.2), guide = "none") +
       labs(fill = fillTitle[[fillDim]])
 
     return(pOut)
@@ -171,91 +305,157 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE,
 
   # PLOT -----------------------------------------------------------------------
 
-  for (fillDim in c("hs", "vin")) {
+  for (filterVars in filtering) {
 
-    pData <- do.call(bind_rows, lapply(names(data), function(v) {
-      d <- data[[v]] %>%
-        filter(.data[["ttot"]] <= endyear)
+    for (fillDim in c("hs", "vin")) {
 
-      if (!"vin" %in% colnames(d)) {
-        d <- left_join(d, t2vin, by = "ttot")
+      pData <- do.call(bind_rows, lapply(names(data), function(v) {
+        d <- data[[v]] %>%
+          filter(.data[["ttot"]] <= endyear)
+
+        if (!"vin" %in% colnames(d)) {
+          d <- left_join(d, t2vin, by = "ttot")
+        }
+
+        if (!is.null(filterVars)) {
+          d <- d %>%
+            filter(.data[[filterVars[["var"]]]] == filterVars[["val"]])
+        }
+
+        if ("transparent" %in% colnames(d)) {
+          d[["transparent"]] <- grepl(fillDim, d[["transparent"]])
+        }
+
+        if (is.null(compRelTo)) {
+          d <- d %>%
+            group_by(across(any_of(c("facet", fillDim, "ttot", "renovation",
+                                     "transparent")))) %>%
+            summarise(value = sum(.data[["value"]], na.rm = TRUE),
+                      .groups = "drop")  %>%
+            mutate(quantity = v)
+        } else {
+          d <- d %>%
+            group_by(across(any_of(c("facet", fillDim, "ttot", "renovation",
+                                     "transparent")))) %>%
+            summarise(value = sum(.data[["value"]], na.rm = TRUE),
+                      value_1 = sum(.data[["value_1"]], na.rm = TRUE),
+                      value_2 = sum(.data[["value_2"]], na.rm = TRUE)) %>%
+            mutate(value = .data[["value"]] / .data[[paste0("value_", compRelTo)]],
+                   quantity = v)
+
+        }
+
+        return(d)
+      }))
+
+      if ("transparent" %in% colnames(pData)) {
+        pData[["transparent"]] <- factor(replace_na(pData[["transparent"]], FALSE), c(TRUE, FALSE))
       }
 
-      if ("transparent" %in% colnames(d)) {
-        d[["transparent"]] <- grepl(fillDim, d[["transparent"]])
-      }
-
-      d <- d %>%
-        group_by(across(any_of(c("facet", fillDim, "ttot", "renovation",
-                                 "transparent")))) %>%
-        summarise(value = sum(.data[["value"]], na.rm = TRUE),
-                  .groups = "drop")  %>%
-        mutate(quantity = v)
-
-      return(d)
-    }))
-
-    pData[["transparent"]] <- factor(replace_na(pData[["transparent"]], FALSE), c(TRUE, FALSE))
-
-    pData <- pData %>%
-      left_join(dt, by = "ttot") %>%
-      mutate(width = ifelse(.data[["quantity"]] == "Stock",
-                            1.5, 0.9 * .data[["dt"]]),
-             pos = .data[["ttot"]] - ifelse(.data[["quantity"]] == "Stock",
-                                            0, 0.5 * .data[["dt"]]),
-             quantity = factor(.data[["quantity"]], names(vars)),
-             value = .data[["value"]] / 1000) # million to billion
-
-    # remove negative renovation values unless relevant dims are chosen for fill
-    if (!fillDim %in% c("bs", "hs")) {
       pData <- pData %>%
-        filter(replace_na(.data[["renovation"]], "") != "from")
+        left_join(dt, by = "ttot") %>%
+        mutate(width = 0.9 * .data[["dt"]],
+               pos = .data[["ttot"]] - ifelse(.data[["quantity"]] == "Stock",
+                                              0, 0.5 * .data[["dt"]]),
+               quantity = factor(.data[["quantity"]], names(data)))
+      if (is.null(compRelTo)) {
+        pData <- pData %>%
+          mutate(width = ifelse(.data[["quantity"]] == "Stock",
+                                1.5, .data[["width"]]),
+                 value = .data[["value"]] / 1000) # million to billion
+      }
+
+      # remove negative renovation values unless relevant dims are chosen for fill
+      if (!fillDim %in% c("bs", "hs") & "renovation" %in% colnames(pData)) {
+        pData <- pData %>%
+          filter(replace_na(.data[["renovation"]], "") != "from")
+      }
+
+      # remove irrelevant fill  entries from legend
+      if (is.factor(pData[[fillDim]])) {
+        pData <- revalue.levels(pData, fillDim)
+      }
+
+
+      # position of flow unit
+      # flowUnit <- pData %>%
+      #   filter(.data[["quantity"]] != "Stock", .data[["value"]] >= 0) %>%
+      #   group_by(across(any_of(c("facet", "ttot", "quantity", "renovation", "renState")))) %>%
+      #   summarise(value = sum(.data[["value"]]), .groups = "drop") %>%
+      #   group_by(across(all_of(c("quantity")))) %>%
+      #   summarise(value = max(.data[["value"]]), .groups = "drop") %>%
+      #   mutate(pos = min(pData[["ttot"]]) - dt[1, "dt"] * 1.5,
+      #          facet = head(pData[["facet"]], 1))
+
+
+      ## plot ====
+
+      if (is.null(compRelTo)) {
+        p <- pData %>%
+          ggplot() +
+          suppressWarnings(geom_col(aes(.data[["pos"]], .data[["value"]],
+                                        width = .data[["width"]],
+                                        alpha = .data[["transparent"]],
+                                        fill = .data[[fillDim]]))) +
+          facet_grid(.data[["quantity"]] ~ .data[["facet"]], scales = "free") +
+          geom_hline(yintercept = 0)
+        # geom_text(aes(.data[["pos"]], .data[["value"]]),
+        #           flowUnit,
+        #           label = "/yr", vjust = 1, hjust = .2, size = 6)
+
+        p <- addTheme(p, expression(paste("Floor space [bn ", m^2, "or bn ", m^2, "/yr]")), fillDim) +
+          theme(panel.spacing = unit(4, "mm"))
+      } else {
+        p <- pData %>%
+          ggplot() +
+          suppressWarnings(geom_col(aes(.data[["pos"]], .data[["value"]],
+                                        width = .data[["width"]],
+                                        fill = .data[[fillDim]]), position = "dodge")) +
+          facet_grid(.data[["quantity"]] ~ .data[["facet"]], scales = "free") +
+          geom_hline(yintercept = 0)
+        # geom_text(aes(.data[["pos"]], .data[["value"]]),
+        #           flowUnit,
+        #           label = "/yr", vjust = 1, hjust = .2, size = 6)
+
+        p <- addTheme(p, expression(paste("Relative change")), fillDim) +
+          theme(panel.spacing = unit(4, "mm"))
+      }
+
+
+      ## save plot ====
+
+      plotDir <- file.path(path[1], "plots")
+      if (!dir.exists(plotDir)) {
+        dir.create(plotDir)
+      }
+      if (is.null(compRelTo)) {
+        pHeight <- 22 / 2.54 * length(allNames) / 4
+      } else {
+        pHeight <- 22 / 2.54 * length(allNames) / 2
+        nameAdd <- paste(nameAdd, paste0("relTo", compRelTo), sep = "_")
+      }
+      if (!is.null(filterVars)) {
+        nameAdd <- paste(nameAdd, filterVars[["val"]], sep = "_")
+      }
+      if (!is.null(compareGdx)) {
+        nameAdd <- paste(nameAdd, "diff", sep = "_")
+      }
+      if (computeRenState) {
+        nameAdd <- paste(nameAdd, "renState", sep = "_")
+      }
+      if (!is.null(scenNamesShort)) {
+        scenNames <- scenNamesShort
+      }
+      if (!is.null(scenNames)) {
+        for (sn in scenNames) {
+          nameAdd <- paste(nameAdd, sn, sep = "_")
+        }
+      }
+      plotFile <- file.path(plotDir, paste0(paste("summary", paste(facet, collapse = "_"), fillDim,
+                                                  nameAdd, sep = "_"), ".png"))
+      ggsave(plotFile, p, height = pHeight, width = 35.74 / 2.54, dpi = 600)
+
     }
-
-    # remove irrelevant fill  entries from legend
-    if (is.factor(pData[[fillDim]])) {
-      pData <- revalue.levels(pData, fillDim)
-    }
-
-
-    # position of flow unit
-    flowUnit <- pData %>%
-      filter(.data[["quantity"]] != "Stock") %>%
-      group_by(across(all_of(c("facet", "ttot", "quantity", "renovation")))) %>%
-      summarise(value = sum(.data[["value"]]), .groups = "drop") %>%
-      group_by(across(all_of(c("quantity")))) %>%
-      summarise(value = max(.data[["value"]]), .groups = "drop") %>%
-      mutate(pos = min(pData[["ttot"]]) - dt[1, "dt"] / 2,
-             facet = head(pData[["facet"]], 1))
-
-
-    ## plot ====
-
-    p <- pData %>%
-      ggplot() +
-      suppressWarnings(geom_col(aes(.data[["pos"]], .data[["value"]],
-                                    width = .data[["width"]],
-                                    alpha = .data[["transparent"]],
-                                    fill = .data[[fillDim]]))) +
-      facet_grid(.data[["quantity"]] ~ .data[["facet"]], scales = "free") +
-      geom_hline(yintercept = 0) +
-      geom_text(aes(.data[["pos"]], .data[["value"]]),
-                flowUnit,
-                label = "/yr", vjust = 1, hjust = .2, size = 3)
-
-    p <- addTheme(p, expression(paste("Floor space in billion ", m^2)), fillDim) +
-      theme(panel.spacing = unit(4, "mm"))
-
-
-    ## save plot ====
-
-    plotDir <- file.path(path, "plots")
-    if (!dir.exists(plotDir)) {
-      dir.create(plotDir)
-    }
-    plotFile <- file.path(plotDir, paste0(paste("summary", paste(facet, collapse = "_"), fillDim, sep = "_"), ".png"))
-    ggsave(plotFile, p, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
-
   }
 
 }
