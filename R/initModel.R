@@ -42,6 +42,7 @@ initModel <- function(config = NULL,
 
   copyHistoryGdx(path, cfg)
 
+  # TODO: This needs to be adapted to the case when Brick is called from the installation
   brickDir <- getwd()
 
   if (!sendToSlurm) {
@@ -51,17 +52,19 @@ initModel <- function(config = NULL,
     slurmScriptPath <- file.path("R", "startScriptSlurm.R")
     file.copy(slurmScriptPath, path)
 
-    on.exit(setwd(brickDir))
-    setwd(path)
-
+    logFilePath <- file.path(path, "log.txt")
+    slurmScriptRun <- file.path(path, "startScriptSlurm.R")
     slurmConfig <- setSlurmConfig(slurmQOS = slurmQOS, tasks32 = tasks32)
 
     exitCode <- system(paste0("sbatch --job-name=",
-                                title,
-                                " --mail-type=END",
-                                " --comment=BRICK",
-                                " --wrap=\"Rscript startScriptSlurm.R\" ",
-                                slurmConfig))
+                              title,
+                              " --output=", logFilePath,
+                              " --mail-type=END",
+                              " --comment=BRICK",
+                              " --wrap=\"",
+                              paste("Rscript", slurmScriptRun, path),
+                              "\" ",
+                              slurmConfig))
     Sys.sleep(1)
 
     if (exitCode > 0) {

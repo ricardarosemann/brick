@@ -1,0 +1,159 @@
+Global .Rprofile loaded! (R version 4.1.2 (2021-11-01))
+113 packages in personal lib '/home/ricardar/R/x86_64-pc-linux-gnu-library/4.1':
+- askpass
+- assertr
+- brew
+- brio
+- bslib
+- cachem
+- checkmate
+- cli
+- commonmark
+- corrplot
+- countrycode
+- cowplot
+- cpp11
+- credentials
+- crosstalk
+- curl
+- cyclocomp
+- data.table
+- desc
+- digest
+- dotCall64
+- downlit
+- fansi
+- fastmap
+- fields
+- filelock
+- fontawesome
+- Formula
+- fs
+- geometry
+- gert
+- ggplot2
+- ggpubr
+- ggrepel
+- ggsci
+- ggsignif
+- gh
+- glue
+- gtable
+- Hmisc
+- hms
+- htmlTable
+- htmltools
+- htmlwidgets
+- httpuv
+- httr
+- httr2
+- jsonlite
+- knitr
+- labeling
+- later
+- lifecycle
+- lintr
+- lpSolve
+- lubridate
+- maps
+- mip
+- openssl
+- openxlsx
+- pkgbuild
+- pkgload
+- plotly
+- plyr
+- polynom
+- prettyunits
+- processx
+- profvis
+- progress
+- promises
+- ps
+- purrr
+- qualV
+- ragg
+- Rcpp
+- readr
+- readxl
+- rematch
+- remind2
+- remotes
+- renv
+- rlang
+- rmarkdown
+- rprojroot
+- rstatix
+- rstudioapi
+- rworldmap
+- sass
+- scales
+- shiny
+- sourcetools
+- sp
+- spam
+- stringi
+- stringr
+- sys
+- systemfonts
+- terra
+- textshaping
+- timechange
+- tinytex
+- tzdb
+- usethis
+- utf8
+- vctrs
+- viridis
+- viridisLite
+- vroom
+- withr
+- xfun
+- xml2
+- yaml
+- zip
+- zoo
+see https://gitlab.pik-potsdam.de/rse/rsewiki/-/wikis/R-packages-on-the-cluster
+Loading required package: usethis
+ℹ Loading brick
+Loading required package: madrat
+Loading required package: magclass
+This is my path: output/fastTestRun_2024-02-06_16.18.08 
+ This is my brickDir: .
+
+Initialize madrat config with default settings..
+    regionmapping = regionmappingH12.csv
+    extramappings = NULL
+    packages = madrat
+    globalenv = FALSE
+    verbosity = 1
+    mainfolder = /p/projects/rd3mod/inputdata
+    sourcefolder = NA
+    cachefolder = NA
+    mappingfolder = NA
+    outputfolder = NA
+    pucfolder = NA
+    tmpfolder = NA
+    nolabels = NULL
+    forcecache = FALSE
+    ignorecache = NULL
+    cachecompression = gzip
+    hash = xxhash32
+    diagnostics = FALSE
+    debug = FALSE
+    maxLengthLogMessage = 200
+..done!
+
+You set 'forceDownload = TRUE'.New input data are downloaded and distributed.
+No 'files' file found. Input files won't be distributed.
+Load data..
+  try /p/projects/rd3mod/inputdata/output
+    -> rev0.4_262e2891_brick.tgz
+..unpack files..
+ -> rev0.4_262e2891_brick.tgz
+..done
+Start input data creation...
+  ... done.
+Start Gams: output/fastTestRun_2024-02-06_16.18.08/main.gms
+Gams finished after 114 sec.
+There were 16 warnings (use warnings() to see them)
