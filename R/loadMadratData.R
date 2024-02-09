@@ -3,6 +3,7 @@
 #' @author Robin Hasse
 #'
 #' @param config named list with run configuration
+#' @param brickDir character, path to directory of the brick installation used
 #' @returns directory of input folder
 #'
 #' @importFrom madrat toolGetMapping regionscode getConfig

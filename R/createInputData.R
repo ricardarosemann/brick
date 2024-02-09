@@ -10,6 +10,7 @@
 #'
 #' @param path character vector with folders to write input data into
 #' @param config named list with run configuration
+#' @param brickDir character, path to directory of the brick installation used
 #' @param overwrite logical, should existing input.gdx be overwritten?
 #'
 #' @importFrom quitte calc_addVariable

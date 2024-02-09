@@ -8,21 +8,24 @@
 #' @author Ricarda Rosemann
 #'
 
-# Only if this file is run directly via Rscript startOutside.R, but not if this file
+# Only if this file is run directly via Rscript startScriptSlurm.R, but not if this file
 # is sourced, actually run
 if (sys.nframe() == 0L) {
-  # To be replaced by library(brick) or brick::startModel below
-  # NEVER move this out of the if-clause to avoid recursive loading of brick. Or move the file outside the R folder.
-  library(devtools)
-  load_all()
 
-  # We extract the path to the correct output folder to run the model in from the call to the script
-  args <- commandArgs()
-  path <- args[grep("--args", args) + 1]
+  # Extract command line arguments
+  argsCL <- commandArgs(trailingOnly = TRUE)
+
+  # Extract the path to the output folder and to the installation of brick used
+  path <- argsCL[1]
   config <- file.path(path, "config", "config.yaml")
-  # This needs to be adapted to the case when we run from installation
-  brickDir <- dirname(dirname(path))
-  # Could also shift this to start model if adapted accordingly for the non-SLURM run
+  brickDir <- argsCL[2]
+
+  # NEVER move this out of the if-clause to avoid recursive loading of brick. Or move the file outside the R folder.
+  isDev <- as.logical(argsCL[3])
+  if (isDev) {
+    devtools::load_all(brickDir)
+    message(paste("This is a development run. Loading brick from local folder", brickDir))
+  }
 
   brick::startModel(config = config, path = path, brickDir = brickDir)
 }

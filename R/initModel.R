@@ -12,7 +12,9 @@
 #' @param outputFolder directory of output folder
 #' @param references named list of matching references
 #' @param sendToSlurm boolean whether or not the run should be started via SLURM
+#' @param slurmQOS character, slurm QOS to be used
 #' @param tasks32 boolean whether or not the SLURM run should be with 32 tasks
+#' @importFrom pkgload is_dev_package
 #' @export
 initModel <- function(config = NULL,
                       path = NULL,
@@ -42,13 +44,13 @@ initModel <- function(config = NULL,
 
   copyHistoryGdx(path, cfg)
 
-  # TODO: This needs to be adapted to the case when Brick is called from the installation
-  brickDir <- getwd()
+  brickDir <- find.package("brick")
 
   if (!sendToSlurm) {
     config <- file.path(path, "config", "config.yaml")
     startModel(config, path, brickDir)
   } else {
+    isDev <- as.character(is_dev_package("brick"))
     slurmScriptPath <- file.path("R", "startScriptSlurm.R")
     file.copy(slurmScriptPath, path)
 
@@ -62,13 +64,13 @@ initModel <- function(config = NULL,
                               " --mail-type=END",
                               " --comment=BRICK",
                               " --wrap=\"",
-                              paste("Rscript", slurmScriptRun, path),
+                              paste("Rscript", slurmScriptRun, path, brickDir, isDev),
                               "\" ",
                               slurmConfig))
     Sys.sleep(1)
 
     if (exitCode > 0) {
-      print("Executing startModel failed.")
+      print("Executing initModel failed.")
     }
   }
 }
