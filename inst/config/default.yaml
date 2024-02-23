@@ -180,6 +180,12 @@ switches:
     # maxlikely
   TARGETFUNCTION: NULL
 
+  ### Calibration logging ###
+  # Switch on extensive calibration logging
+    # TRUE
+    # FALSE
+  CALIBRATIONLOG: FALSE
+
 
 # gams parameters --------------------------------------------------------------
 # passed to gams

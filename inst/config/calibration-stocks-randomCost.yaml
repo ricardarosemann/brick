@@ -1,8 +1,8 @@
 ---
-title: "calibration-stocks-random"
+title: "calibration-randomCost"
 basedOn: "default.yaml"
 # scope and resolution
-periods: [2000, 2010, 2020]
+periods: [2000, 2010]
 startyear: 2010
 regionmapping: "inst/input/regionmappingEUplus.csv"
 regions: DEU
@@ -11,10 +11,12 @@ ignoreShell: TRUE
 switches:
   RUNTYPE: calibration
   CALIBRATIONTYPE: stocks
-  CALIBRATIONINPUT: randomTarget
+  CALIBRATIONINPUT: randomCost
   TARGETFUNCTION: minsquare
+  CALIBRATIONLOG: TRUE
+# parameters for calibration
 parameters:
   alpha: 0.1
-  iteration: 10
+  iteration: 2
   randDev: 20
 ...

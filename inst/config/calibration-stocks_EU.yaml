@@ -5,7 +5,9 @@ basedOn: "default.yaml"
 periods: [2000, 2010]
 startyear: 2010
 regionmapping: "inst/input/regionmappingEUplus.csv"
-regions: DEU
+regions: [AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV,
+           HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD, POL, PRT, ROU, SVK, SVN, SWE]
+
 ignoreShell: TRUE
 # switches
 switches:
@@ -13,9 +15,9 @@ switches:
   CALIBRATIONTYPE: stocks
   CALIBRATIONINPUT: data
   TARGETFUNCTION: minsquare
-  CALIBRATIONLOG: FALSE
+  CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
   alpha: 0.1
-  iteration: 2
+  iteration: 15
 ...
