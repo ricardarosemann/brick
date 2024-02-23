@@ -18,4 +18,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Robin Hasse \email{robin.hasse@pik-potsdam.de} (\href{https://orcid.org/0000-0003-1818-3186}{ORCID})
 
+Authors:
+\itemize{
+  \item Ricarda Rosemann \email{ricarda.rosemann@pik-potsdam.de} (\href{https://orcid.org/0009-0006-5939-3197}{ORCID})
+}
+
 }

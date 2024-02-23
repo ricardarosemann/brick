@@ -4,13 +4,16 @@
 \alias{readConfig}
 \title{Read config file}
 \usage{
-readConfig(config = NULL, basisOf = NULL)
+readConfig(config = NULL, basisOf = NULL, readDirect = FALSE)
 }
 \arguments{
 \item{config}{character, config file, either a path to a yaml file or the
 name of the file in `inst/config/`}
 
 \item{basisOf}{character, name of other config that is based on this config}
+
+\item{readDirect}{boolean, specify whether config is a valid path to a config
+file that should be read directly.}
 }
 \value{
 named list with run config

@@ -4,18 +4,17 @@
 #'
 #' @param path character vector with folders to run the model in
 #' @param config run configurations
-#' @param refs named list of matching references
 #' @param overwrite logical, should existing data be overwritten?
 #'
 #' @importFrom madrat calcOutput toolGetMapping
 #' @importFrom quitte as.quitte
 #' @importFrom tidyr matches
 #' @importFrom dplyr select
-#' @importFrom utils read.csv
+#' @importFrom utils read.csv read.csv2
 #' @importFrom stats median
 #' @export
 #'
-createMatchingData <- function(path, config, refs, overwrite = FALSE) {
+createMatchingData <- function(path, config, overwrite = FALSE) {
 
   # check file path
   refFilePath <- file.path(path, "references.gdx")
@@ -33,7 +32,10 @@ createMatchingData <- function(path, config, refs, overwrite = FALSE) {
 
   m <- gamstransfer::Container$new()
 
-
+  # Read passed references
+  refsDf <- read.csv2(file.path(path, "references.csv"), row.names = 1)
+  refs <- refsDf[["references"]]
+  names(refs) <- rownames(refsDf)
 
   # READ DATA ------------------------------------------------------------------
 

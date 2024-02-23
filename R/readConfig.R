@@ -7,22 +7,15 @@
 #' @param config character, config file, either a path to a yaml file or the
 #'   name of the file in `inst/config/`
 #' @param basisOf character, name of other config that is based on this config
+#' @param readDirect boolean, specify whether config is a valid path to a config
+#'   file that should be read directly.
 #' @returns named list with run config
 #'
 #' @author Robin Hasse
 #'
 #' @importFrom yaml read_yaml
 
-readConfig <- function(config = NULL, basisOf = NULL) {
-
-  configFolder <- brick.file("config")
-  defaultCfgPath <- file.path(configFolder, "default.yaml")
-
-  if (!file.exists(defaultCfgPath)) {
-    stop("Default config ", defaultCfgPath, " does not exist.")
-  }
-
-
+readConfig <- function(config = NULL, basisOf = NULL, readDirect = FALSE) {
 
   # check input ----------------------------------------------------------------
 
@@ -37,12 +30,27 @@ readConfig <- function(config = NULL, basisOf = NULL) {
     return(cfg)
   }
 
+  # Directly read the file in the given config file path - used after the final config has already been compiled
+  if (readDirect) {
+    if (!file.exists(config)) {
+      stop("The config", config, "that was called to be read directly does not exist. ",
+           "If this is a restart run, your folder to restart in likely misses the config file.")
+    }
+    return(readCfg(config))
+  }
+
+  configFolder <- brick.file("config")
+  defaultCfgPath <- file.path(configFolder, "default.yaml")
+
+  if (!file.exists(defaultCfgPath)) {
+    stop("Default config ", defaultCfgPath, " does not exist.")
+  }
+
   # use default.yaml by default
   if (is.null(config)) {
     if (is.null(basisOf)) {
       message("Using default config: ", config)
     }
-    return(readCfg(defaultCfgPath))
   }
 
   # find file to given config
@@ -158,7 +166,6 @@ readConfig <- function(config = NULL, basisOf = NULL) {
   } else {
     stop("Don't give more than one other config that this config is based on.")
   }
-
   # read base config and overwrite it with given config
   basedOnCfg <- readConfig(basedOn, customCfgPath)
   cfg <- overwriteList(basedOnCfg, customCfg)

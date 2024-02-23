@@ -22,6 +22,7 @@ loadMadratData <- function(config) {
   } else if (is.character(regionmapping)) {
     name <- regionmapping[1]
     if (length(regionmapping) == 1) {
+      name <- brick.file(name)
       where <- "local"
     } else if (length(regionmapping) == 2) {
       where <- regionmapping[2]

@@ -7,71 +7,31 @@
 #'
 #' @author Robin Hasse
 #'
-#' @param config run configurations
 #' @param path character vector with folders to run the model in
-#' @param outputFolder directory of output folder
-#' @param references named list of matching references
+#'
+#' @importFrom utils read.csv2
 #' @export
 #'
-startModel <- function(config = NULL,
-                       path = NULL,
-                       outputFolder = NULL,
-                       references = NULL) {
+startModel <- function(path) {
 
-  # if no outputFolder is defined, use this or create it in current wd
-  defaultOutputFolderName <- "output"
+  cfg <- readConfig(file.path(path, "config", "config.yaml"), readDirect = TRUE)
 
-  cfg <- readConfig(config)
-  title <- cfg[["title"]]
-
-  if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
-    title <- paste0(title, cfg[["parameters"]][["iteration"]], "Iter",
-                    cfg[["parameters"]][["alpha"]], "A")
-  }
-
-  # set (if needed create) outputFolder and set path to run
-  if (is.null(path)) {
-    if (is.null(outputFolder)) {
-      if (dir.exists(defaultOutputFolderName)) {
-        outputFolder <- defaultOutputFolderName
-        message("No outputFolder defined but a folder called '",
-                defaultOutputFolderName, "' is found and used:\n  ",
-                file.path(getwd(), outputFolder))
-      } else {
-        outputFolder <- "."
-        message("No outputFolder defined. Current working directory is used:\n  ",
-                getwd())
-      }
-    } else if (!dir.exists(outputFolder)) {
-      dir.create(outputFolder)
-      message("outputFolder did not exist and is created:\n  ",
-              file.path(getwd(), outputFolder))
-    }
-
-    stamp <- format(Sys.time(), "_%Y-%m-%d_%H.%M.%S")
-    path <- file.path(outputFolder, paste0(title, stamp))
-  } else if (dir.exists(path)) {
-    if (!is.null(outputFolder)) {
-      message("outputFolder is ignored as specific path is defined.")
-    }
+  if (file.exists(file.path(path, "config", "restartOptions.csv"))) {
+    restart <- read.csv2(file.path(path, "config", "restartOptions.csv"))[["restart"]]
   } else {
-    stop("This path does not exist: ", path)
+    restart <- NULL
   }
 
-  createRunFolder(path, cfg)
+  if (is.null(restart) || "crInp" %in% restart) {
+    createInputData(path, cfg, overwrite = !is.null(restart))
+  }
 
-  copyGamsFiles(path)
-
-  copyInitialGdx(path, cfg)
-
-  copyHistoryGdx(path, cfg)
-
-  createInputData(path, cfg)
-
-  if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
-    createMatchingData(path, cfg, references)
-  # } else if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
-  #   aggregateMatching(path, cfg)
+  if (is.null(restart) || "crMatch" %in% restart) {
+    if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
+      createMatchingData(path, cfg, overwrite = !is.null(restart))
+    } else if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
+      aggregateMatching(path, cfg, overwrite = !is.null(restart))
+    }
   }
 
   runGams(path,

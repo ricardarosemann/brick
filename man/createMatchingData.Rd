@@ -4,14 +4,12 @@
 \alias{createMatchingData}
 \title{Create data for reference matching}
 \usage{
-createMatchingData(path, config, refs, overwrite = FALSE)
+createMatchingData(path, config, overwrite = FALSE)
 }
 \arguments{
 \item{path}{character vector with folders to run the model in}
 
 \item{config}{run configurations}
-
-\item{refs}{named list of matching references}
 
 \item{overwrite}{logical, should existing data be overwritten?}
 }
