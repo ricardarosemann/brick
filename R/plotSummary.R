@@ -295,7 +295,7 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
     pOut <- pOut +
       scale_fill_manual(values = fillColours[[fillDim]],
                         labels = fillLabels[[fillDim]]) +
-      ggplot2::scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.2), guide = "none") +
+      ggplot2::scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.3), guide = "none") +
       labs(fill = fillTitle[[fillDim]])
 
     return(pOut)
@@ -340,7 +340,7 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
             summarise(value = sum(.data[["value"]], na.rm = TRUE),
                       value_1 = sum(.data[["value_1"]], na.rm = TRUE),
                       value_2 = sum(.data[["value_2"]], na.rm = TRUE)) %>%
-            mutate(value = .data[["value"]] / .data[[paste0("value_", compRelTo)]],
+            mutate(value = .data[["value"]] / .data[[paste0("value_", compRelTo)]] * 100,
                    quantity = v)
 
         }
@@ -417,7 +417,7 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
         #           flowUnit,
         #           label = "/yr", vjust = 1, hjust = .2, size = 6)
 
-        p <- addTheme(p, expression(paste("Relative change")), fillDim) +
+        p <- addTheme(p, expression(paste("Relative change [%]")), fillDim) +
           theme(panel.spacing = unit(4, "mm"))
       }
 
