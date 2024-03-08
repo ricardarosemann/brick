@@ -23,6 +23,7 @@ inc "income quantile"
 tall        "all time steps"
 ttot(tall)  "all modelling time steps"
 t(ttot)     "modelled time steps"
+tcalib(ttot) "time steps for calibration"
 thist(ttot) "historic time steps"
 tinit(ttot) "initial modelling time step"
 
@@ -100,7 +101,7 @@ alias(flow, flow2)
 $gdxin input.gdx
 $load bsr hsr bs hs
 $load reg loc typ inc
-$load tall ttot t thist tinit
+$load tall ttot t thist tinit tcalib
 $load vin
 $ifthen.calibration "%RUNTYPE%" == "calibration"
 $load flow iterationAll iteration

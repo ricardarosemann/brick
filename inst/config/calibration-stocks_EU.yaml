@@ -4,7 +4,7 @@ basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
 startyear: 2010
-regionmapping: "inst/input/regionmappingEUplus.csv"
+regionmapping: "input/regionmappingEUplus.csv"
 regions: [AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV,
            HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD, POL, PRT, ROU, SVK, SVN, SWE]
 

@@ -121,43 +121,43 @@ subs(all_subs) = yes;
 
 $ifThen.targetFunc "%TARGETFUNCTION%" == "minsquare"
 $ifThen.calibTarget "%CALIBRATIONTYPE%" == "flows"
-$macro func sum((state3, t), \
-  power(p_constructionHist("area", state3, subs, t) - v_construction.l("area", state3, subs, t), 2)) \
-  + sum((vin3, state3, stateFull3, t), \
-  power(p_renovationHist("area", state3, stateFull3, vin3, subs, t) - v_renovation.l("area", state3, stateFull3, vin3, subs, t), 2));
+$macro func sum((state3, tcalib), \
+  power(p_constructionHist("area", state3, subs, tcalib) - v_construction.l("area", state3, subs, tcalib), 2)) \
+  + sum((vin3, state3, stateFull3, tcalib), \
+  power(p_renovationHist("area", state3, stateFull3, vin3, subs, tcalib) - v_renovation.l("area", state3, stateFull3, vin3, subs, tcalib), 2));
 
 $elseIf.calibTarget "%CALIBRATIONTYPE%" == "stocks"
-$macro func sum((vin3, state3, t), \
-  power(p_stockHist("area", state3, vin3, subs, t) - v_stock.l("area", state3, vin3, subs, t), 2));
+$macro func sum((vin3, state3, tcalib), \
+  power(p_stockHist("area", state3, vin3, subs, tcalib) - v_stock.l("area", state3, vin3, subs, tcalib), 2));
 $endIf.calibTarget
 
 $elseIf.targetFunc "%TARGETFUNCTION%" == "maxlikely"
 $ifThen.calibTarget "%CALIBRATIONTYPE%" == "flows"
-$macro func - sum((state3, t), \
-  p_constructionHist("area", state3, subs, t) \
-  * log(v_construction.l("area", state3, subs, t) \
+$macro func - sum((state3, tcalib), \
+  p_constructionHist("area", state3, subs, tcalib) \
+  * log(v_construction.l("area", state3, subs, tcalib) \
     / (sum(state4, \
-      v_construction.l("area", state4, subs, t) \
+      v_construction.l("area", state4, subs, tcalib) \
       ) \
       + epsilonSmall) \
     + epsilonSmall) \
   ) \
-  + sum((vin3, state3, stateFull3, t), \
-  p_renovationHist("area", state3, stateFull3, vin3, subs, t) \
-  * log(v_renovation.l("area", state3, stateFull3, vin3, subs, t) \
+  + sum((vin3, state3, stateFull3, tcalib), \
+  p_renovationHist("area", state3, stateFull3, vin3, subs, tcalib) \
+  * log(v_renovation.l("area", state3, stateFull3, vin3, subs, tcalib) \
     / (sum((state4, stateFull4), \
-      v_renovation.l("area", state4, stateFull4, vin3, subs, t) \
+      v_renovation.l("area", state4, stateFull4, vin3, subs, tcalib) \
       ) \
       + epsilonSmall) \
     + epsilonSmall) \
   );
 
 $elseIf.calibTarget "%CALIBRATIONTYPE%" == "stocks"
-$macro func - sum((vin3, state3, t), \
-  p_stockHist("area", state3, vin3, subs, t) \
-  * log(v_stock.l("area", state3, vin3, subs, t) \
+$macro func - sum((vin3, state3, tcalib), \
+  p_stockHist("area", state3, vin3, subs, tcalib) \
+  * log(v_stock.l("area", state3, vin3, subs, tcalib) \
     / (sum((state4), \
-      v_stock.l("area", state4, vin3, subs, t) \
+      v_stock.l("area", state4, vin3, subs, tcalib) \
     ) \
     + epsilonSmall) \
   + epsilonSmall) \

@@ -19,6 +19,10 @@ startyear: 2005
 # no impact on results
 endyear: 2100
 
+### calibration periods ###
+# time steps on which to conduct the calibration
+calibperiods: NULL
+
 ### region mapping ###
 # file that maps countries to modelled regions
   # []: country-level resolution

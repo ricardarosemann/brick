@@ -30,7 +30,7 @@ startModel <- function(path) {
     if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
       createMatchingData(path, cfg, overwrite = !is.null(restart))
     } else if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
-      aggregateMatching(path, cfg, overwrite = !is.null(restart))
+      # aggregateMatching(path, cfg, overwrite = !is.null(restart))
     }
   }
 

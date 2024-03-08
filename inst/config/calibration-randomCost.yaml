@@ -1,10 +1,11 @@
 ---
-title: "calibration-randomCost"
+title: "calibration-randomCost-2010"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
 startyear: 2010
-regionmapping: "inst/input/regionmappingEUplus.csv"
+calibperiods: 2010
+regionmapping: "input/regionmappingEUplus.csv"
 regions: DEU
 ignoreShell: TRUE
 # switches
@@ -13,6 +14,7 @@ switches:
   CALIBRATIONTYPE: flows
   CALIBRATIONINPUT: randomCost
   TARGETFUNCTION: minsquare
+  CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
   alpha: 0.1

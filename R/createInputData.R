@@ -188,6 +188,19 @@ createInputData <- function(path,
     description = "historic time steps"
   )
 
+  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+    calibperiods <- config[["calibperiods"]]
+    #TODO: Add check that calibration periods are consistent with t
+  } else {
+    calibperiods <- ttot$getUELs()[which(ttot$getUELs() == startyear)]
+  }
+
+  tcalib <- m$addSet(
+    "tcalib",
+    records = ttot$getUELs()[which(ttot$getUELs() %in% calibperiods)],
+    description = "time steps for calibration"
+  )
+
 
   ## vintages ====
 
@@ -426,11 +439,12 @@ createInputData <- function(path,
     if (file.exists(fileNameRandCost)) {
       input <- gamstransfer::Container$new(fileNameRandCost)
       # input$read("inputRandCost.gdx", "p_specCostCon")
-      p_specCostConTang <- readSymbol(input, symbol = "p_specCostCon") %>%
+      p_specCostConTangRead <- readSymbol(input, symbol = "p_specCostCon") %>%
         filter(.data[["cost"]] == "tangible") %>%
         filter(.data[["ttot"]] %in% ttotNum)
-      if (all(ttotNum %in% p_specCostConTang[["ttot"]])) {
+      if (all(ttotNum %in% p_specCostConTangRead[["ttot"]])) {
         needNewFile <- FALSE
+        p_specCostConTang <- p_specCostConTangRead
         message(paste("Randomized costs read from", fileNameRandCost, "."))
       }
     }
