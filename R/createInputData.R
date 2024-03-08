@@ -89,7 +89,7 @@ createInputData <- function(path,
   regionmapping <- loadReturn[["regionmapping"]]
 
   missingRegions <- setdiff(config[["regions"]], regionmapping[["RegionCode"]])
-  if (length(missingRegions) > 1) {
+  if (length(missingRegions) > 0) {
     stop("The regions in your config don't match the region mapping. ",
          "The following regions are not part of the mapping:\n  ",
          paste(missingRegions, collapse = c(", ")))
@@ -182,11 +182,11 @@ createInputData <- function(path,
     description = "modelled time steps"
   )
 
-  thist <- m$addSet(
+  invisible(m$addSet(
     "thist",
     records = setdiff(ttot$getUELs(), t$getUELs()),
     description = "historic time steps"
-  )
+  ))
 
   if (config[["switches"]][["RUNTYPE"]] == "calibration") {
     calibperiods <- config[["calibperiods"]]
@@ -306,7 +306,7 @@ createInputData <- function(path,
   # read ban definition from config
   hsBanConfig <- config[["boilerBan"]] %>%
     listToDf() %>%
-    guessColnames()
+    guessColnames(m)
 
   if (!(is.null(hsBanConfig) || identical(hsBanConfig, "NULL"))) {
 
@@ -320,7 +320,8 @@ createInputData <- function(path,
       select(-"value")
     hsBan <- expandSets(var, reg, ttot, hs) %>%
       mutate(across(everything(), as.character)) %>%
-      mutate(ttot = as.numeric(.data[["ttot"]])) %>%
+      mutate(ttot = as.numeric(.data[["ttot"]]))
+    hsBan <- hsBan %>%
       inner_join(hsBanConfig, by = intersect(colnames(hsBan),
                                              colnames(hsBanConfig))) %>%
       select("var", "reg", "ttot", "hs")
@@ -520,7 +521,7 @@ createInputData <- function(path,
   } else {
     carbonPrice %>%
       listToDf() %>%
-      guessColnames() %>%
+      guessColnames(m) %>%
       toModelResolution(m)
   }
   carbonPrice <- rename(carbonPrice, carbonPrice = "value")
@@ -613,6 +614,18 @@ createInputData <- function(path,
   lt   <- readInput("f_lifetimeBuilding.cs4r",      c("reg", "typ", "variable"),       inputDir)
   ltBs <- readInput("f_lifetimeBuildingShell.cs4r", c("reg", "variable"),              inputDir)
   ltHs <- readInput("f_lifetimeHeatingSystem.cs4r", c("reg", "typ", "hs", "variable"), inputDir)
+
+  # shift scale parameter of Weibull distribution
+  ltHsShift <- config[["ltHsShift"]]
+  if (!is.null(ltHsShift)) {
+    ltHsShift <- data.frame(hs = names(ltHsShift),
+                            variable = "scale",
+                            shift = as.numeric(ltHsShift))
+    ltHs <- ltHs %>%
+      left_join(ltHsShift, by = c("hs", "variable")) %>%
+      mutate(value = .data[["value"]] + replace_na(.data[["shift"]], 0)) %>%
+      select(-"shift")
+  }
 
   # calculate share of buildings that need to be renovated or demolished between
   # given time steps assuming a Weibull distribution of the technology life time
@@ -746,9 +759,13 @@ createInputData <- function(path,
 
   ### discount factor ####
   p_discountFac <- expandSets(typ, ttot) %>%
+    left_join(readSymbol(p_dt) %>%
+                rename(dt = "value"),
+              by = "ttot") %>%
     mutate(r = c(SFH = 0.21, MFH = 0.25)[.data[["typ"]]], # Giraudet et al. 2012
-           value = 1 / (1 + .data[["r"]])^(.data[["ttot"]] - unlist(readSymbol(t0)))) %>%
-    select(-"r")
+           value = 1 / (1 + .data[["r"]])^(.data[["ttot"]] - .data[["dt"]] / 2
+                                           - unlist(readSymbol(t0)))) %>%
+    select("typ", "ttot", "value")
   p_discountFac <- m$addParameter(
     "p_discountFac",
     c(typ, ttot),

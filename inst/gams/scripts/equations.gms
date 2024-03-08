@@ -70,12 +70,17 @@ q_RenCost(subs,t)..
 
 * calculate cash flow of operation cost with area-specific cost
 
-q_OpeCost(subs(reg,loc,typ,inc),t)..
-  v_OpeCost(subs,t)
+* we assume a linear transition from the previous to the current stock and
+* therfore take the average stock between the two for the operation cost
+
+q_OpeCost(subs(reg,loc,typ,inc),ttot)$(t(ttot))..
+  v_OpeCost(subs,ttot)
   =e=
-  sum((state,vinExists(t,vin)),
-    v_stock("area",state,vin,subs,t)
-    * p_specCostOpe(state,vin,reg,loc,typ,t)
+  sum((state,vinExists(ttot,vin)),
+    sum(ttot2$(sameas(ttot2,ttot) or sameas(ttot2,ttot-1)),
+      v_stock("area",state,vin,subs,ttot2)
+    ) / 2
+    * p_specCostOpe(state,vin,reg,loc,typ,ttot)
   )
 ;
 

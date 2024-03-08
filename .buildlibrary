@@ -1,5 +1,5 @@
-ValidationKey: '395480'
-AutocreateReadme: yes
+ValidationKey: '415401'
+AutocreateReadme: no # automatic creation removes logo
 AcceptedWarnings:
 - 'Warning: package ''.*'' was built under R version'
 - 'Warning: namespace ''.*'' is not available and has been replaced'

@@ -4,8 +4,8 @@ type: software
 title: |-
   brick: Building sector model with heterogeuous renovation and construction of
       the stock
-version: 0.2.0
-date-released: '2024-02-21'
+version: 0.2.1
+date-released: '2024-02-28'
 abstract: This building stock model represents residential and commercial buildings
   at customisable regional and temporal resolution. The building stock is quantified
   in floor area and distinguished by building type (SFH/MFH) and location (rural/urban).

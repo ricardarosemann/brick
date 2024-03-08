@@ -4,10 +4,12 @@
 \alias{guessColnames}
 \title{guess column names based on column values}
 \usage{
-guessColnames(x)
+guessColnames(x, m)
 }
 \arguments{
 \item{x}{data.frame with unknown column names}
+
+\item{m}{gams Conatiner with sets}
 }
 \value{
 data.frame with guessed column names

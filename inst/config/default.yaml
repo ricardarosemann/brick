@@ -60,7 +60,7 @@ inputRevision: "0.5"
 # force the model to download new input data even though it seems unchanged
   # TRUE
   # FALSE
-forceDownload: TRUE
+forceDownload: FALSE
 
 ### starting point ###
 # path to previous model run to use as initial starting point
@@ -108,6 +108,11 @@ boilerBan: []
 # named list with carbon price in USD/t_CO2
   # e.g. {2022: 0, 2030: 300, 2050: 500}
 carbonPrice: []
+
+### shift of heating system life time ###
+# named list with the shift in the Weibull scale parameter in yr
+  # e.g. {sobo: 3, libo: 2}
+ltHsShift: []
 
 ### carrier prices ###
 # scenario of future energy carrier prices

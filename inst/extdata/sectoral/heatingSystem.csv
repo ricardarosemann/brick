@@ -2,7 +2,7 @@ hs,carrier,energyLadder,colour,label
 biom,biomod,1,"#69923A",Biomass boiler
 dihe,heat,1,"#ff6b07",District heating
 ehp1,elec,1,"#009FDA",Heat pump
-gabo,gases,2,"#c00000",Gas boiler
-reel,elec,2,"#ffc000",Resistive electric
-libo,liquids,3,"#7030a0",Liquids boiler
-sobo,coal,4,"#8E908F",Solids boiler
+reel,elec,1,"#ffc000",Resistive electric
+gabo,gases,1,"#c00000",Gas boiler
+libo,liquids,2,"#7030a0",Liquids boiler
+sobo,coal,3,"#8E908F",Solids boiler

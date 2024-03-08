@@ -8,6 +8,7 @@
 #' @author Robin Hasse
 #'
 #' @importFrom utils read.csv
+#' @export
 
 readInput <- function(filename, dims, inputDir = NULL) {
 

@@ -41,7 +41,6 @@ model fullSysNLP "full system linear optimisation"
 $ifthenE.shell (not(sameas("%ignoreShell%","TRUE")))
   q_buildingShellLifeTime
 $endif.shell
-*  q_buildingShellLifeTime  !! rule out building shell dimension
   q_heatingSystemLifeTime
   q_HeteroPrefCon
   q_HeteroPrefRen

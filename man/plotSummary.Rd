@@ -4,7 +4,7 @@
 \alias{plotSummary}
 \title{Plot Summary of a run}
 \usage{
-plotSummary(path, facet = "typ", showHistStock = FALSE)
+plotSummary(path, facet = "typ", showHistStock = FALSE, splitRen = FALSE)
 }
 \arguments{
 \item{path}{character, path to the run}
@@ -12,6 +12,9 @@ plotSummary(path, facet = "typ", showHistStock = FALSE)
 \item{facet}{character, dimension to resolve as facets}
 
 \item{showHistStock}{logical, show given historic next to the modeled stock}
+
+\item{splitRen}{logical, plot renovation with identical replacement
+semi-transparent}
 }
 \description{
 Plot an overview of the stock and flows

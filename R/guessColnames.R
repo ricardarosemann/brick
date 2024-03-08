@@ -1,11 +1,12 @@
 #' guess column names based on column values
 #'
 #' @param x data.frame with unknown column names
+#' @param m gams Conatiner with sets
 #' @returns data.frame with guessed column names
 #'
 #' @author Robin Hasse
 
-guessColnames <- function(x) {
+guessColnames <- function(x, m) {
   if (is.null(x)) return(NULL)
 
   for (j in seq_len(ncol(x))) {
@@ -15,9 +16,9 @@ guessColnames <- function(x) {
     } else if (all(grepl("^\\d{4}$", as.character(x[[j]])))) {
       colnames(x)[j] <- "ttot"
       x[[j]] <- as.numeric(x[[j]])
-    } else if (all(x[[j]] %in% get("var")$getUELs())) {
+    } else if (all(x[[j]] %in% readSymbol(m, "var"))) {
       colnames(x)[j] <- "var"
-    } else if (all(x[[j]] %in% get("hs")$getUELs())) {
+    } else if (all(x[[j]] %in% readSymbol(m, "hs"))) {
       colnames(x)[j] <- "hs"
     } else {
       stop("Cannot identify dimension with the following elements:\n  ",

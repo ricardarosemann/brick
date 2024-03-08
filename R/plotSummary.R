@@ -5,21 +5,24 @@
 #' @param path character, path to the run
 #' @param facet character, dimension to resolve as facets
 #' @param showHistStock logical, show given historic next to the modeled stock
+#' @param splitRen logical, plot renovation with identical replacement
+#'   semi-transparent
 #'
 #' @author Robin Hasse
 #'
 #' @importFrom quitte revalue.levels
 #' @importFrom tidyr replace_na unite
+#' @importFrom scales gradient_n_pal brewer_pal
 #' @importFrom dplyr row_number n bind_rows any_of group_by across mutate filter
 #'   arrange select left_join rename .data %>% bind_rows summarise
-#' @importFrom scales gradient_n_pal brewer_pal
-#' @importFrom ggplot2 ggplot geom_col geom_area aes_string scale_x_continuous
-#'   scale_y_continuous ggtitle theme_classic theme aes geom_line facet_wrap
-#'   element_blank element_line scale_fill_manual labs position_stack geom_hline
-#'   expand_limits ggsave geom_point facet_grid margin unit
+#' @importFrom ggplot2 ggplot geom_col geom_area scale_x_continuous geom_point
+#'   scale_y_continuous theme_classic theme aes geom_line scale_alpha_manual
+#'   element_blank element_line scale_fill_manual labs geom_hline ggsave unit
+#'   facet_grid
 #' @export
 
-plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
+plotSummary <- function(path, facet = "typ", showHistStock = FALSE,
+                        splitRen = FALSE) {
 
   config <- readConfig(file.path(path, "config", "config.yaml"), readDirect = TRUE)
   endyear <- config[["endyear"]]
@@ -69,6 +72,13 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
   data <- lapply(vars, function(v) {
     var <- readSymbol(m, v)
 
+    if (showHistStock && v == "v_stock") {
+      var[["historic"]] <- FALSE
+      var <- readSymbol(m, "p_stockHist") %>%
+        mutate(historic = TRUE) %>%
+        rbind(var)
+    }
+
     if (is.null(facet)) {
       var[["facet"]] <- "all"
     } else {
@@ -76,6 +86,19 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
     }
 
     if (all(c("bsr", "hsr") %in% colnames(var))) {
+
+      # mark identical replacement of heating systems and building shell
+      var <- var %>%
+        mutate(transparent = paste0(
+          ifelse(as.character(.data[["hs"]]) == as.character(.data[["hsr"]]),
+                 "hs", ""),
+          ifelse(as.character(.data[["bs"]]) == as.character(.data[["bsr"]]),
+                 "bs", "")
+        ))
+      if (!splitRen) {
+        var[["transparent"]] <- ""
+      }
+
       var <- rbind(
         var %>%
           filter(!(.data[["bsr"]] == "0" & .data[["hsr"]] == "0")) %>%
@@ -137,7 +160,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
   addTheme <- function(p, yLabel, fillDim) {
     pOut <- p +
       scale_y_continuous(yLabel, expand = c(0, 0)) +
-      scale_x_continuous(expand = c(0, 1, 0, 1)) +
+      scale_x_continuous(expand = c(0, 0.075)) +
       theme_classic() +
       theme(strip.background = element_blank(),
             panel.grid.major.y = element_line(colour = "grey", linewidth = .25),
@@ -146,6 +169,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
     pOut <- pOut +
       scale_fill_manual(values = fillColours[[fillDim]],
                         labels = fillLabels[[fillDim]]) +
+      scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.3), guide = "none") +
       labs(fill = fillTitle[[fillDim]])
 
     return(pOut)
@@ -183,20 +207,36 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
         d <- left_join(d, t2vin, by = "ttot")
       }
 
+      if ("transparent" %in% colnames(d)) {
+        d[["transparent"]] <- grepl(fillDim, d[["transparent"]])
+      }
+
       d <- d %>%
-        group_by(across(any_of(c("facet", fillDim, "ttot", "renovation")))) %>%
+        group_by(across(any_of(c("facet", fillDim, "ttot", "renovation", "historic",
+                                 "transparent")))) %>%
         summarise(value = sum(.data[["value"]], na.rm = TRUE),
                   .groups = "drop")  %>%
+        filter(.data[["value"]] != 0) %>%
         mutate(quantity = v)
 
       return(d)
     }))
+
+    pData[["transparent"]] <- factor(replace_na(pData[["transparent"]], FALSE), c(TRUE, FALSE))
+
     pData <- pData %>%
       left_join(dt, by = "ttot") %>%
       mutate(width = ifelse(.data[["quantity"]] == "Stock",
-                            1.5, 0.9 * .data[["dt"]]),
+                            min(.data[["dt"]]) * if (showHistStock) 0.15 else 0.3,
+                            0.9 * .data[["dt"]]),
              pos = .data[["ttot"]] - ifelse(.data[["quantity"]] == "Stock",
-                                            0, 0.5 * .data[["dt"]]),
+                                            min(.data[["dt"]]) *
+                                              if (showHistStock) {
+                                                ifelse(.data[["historic"]], 0.09, -0.09)
+                                              } else {
+                                                0
+                                              },
+                                            0.5 * .data[["dt"]]),
              quantity = factor(.data[["quantity"]], names(vars)),
              value = .data[["value"]] / 1000) # million to billion
 
@@ -219,22 +259,35 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
       summarise(value = sum(.data[["value"]]), .groups = "drop") %>%
       group_by(across(all_of(c("quantity")))) %>%
       summarise(value = max(.data[["value"]]), .groups = "drop") %>%
-      mutate(pos = min(pData[["ttot"]]) - dt[1, "dt"] / 2,
+      mutate(pos = min(pData[["ttot"]]) - dt[1, "dt"] / 3,
              facet = head(pData[["facet"]], 1))
 
 
     ## plot ====
-
     p <- pData %>%
       ggplot() +
       suppressWarnings(geom_col(aes(.data[["pos"]], .data[["value"]],
                                     width = .data[["width"]],
+                                    alpha = .data[["transparent"]],
                                     fill = .data[[fillDim]]))) +
       facet_grid(.data[["quantity"]] ~ .data[["facet"]], scales = "free") +
       geom_hline(yintercept = 0) +
       geom_text(aes(.data[["pos"]], .data[["value"]]),
                 flowUnit,
                 label = "/yr", vjust = 1, hjust = .2, size = 3)
+
+    # mark historic stock with target sign above
+    if (showHistStock) {
+      histSignHeight <- pData %>%
+        filter(.data[["historic"]]) %>%
+        group_by(across(all_of(c("facet", "pos", "quantity")))) %>%
+        summarise(value = sum(.data[["value"]]), .groups = "drop")
+
+      p <- p +
+        geom_point(aes(.data[["pos"]], .data[["value"]]),
+                   histSignHeight,
+                   shape = 10)
+    }
 
     p <- addTheme(p, expression(paste("Floor space in billion ", m^2)), fillDim) +
       theme(panel.spacing = unit(4, "mm"))
@@ -247,7 +300,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE) {
       dir.create(plotDir)
     }
     plotFile <- file.path(plotDir, paste0(paste("summary", paste(facet, collapse = "_"), fillDim, sep = "_"), ".png"))
-    ggsave(plotFile, p, height = 14.6 / 2.54, width = 25 / 2.54, dpi = 300)
+    ggsave(plotFile, p, height = 17 / 2.54, width = 25 / 2.54, dpi = 300)
 
   }
 
