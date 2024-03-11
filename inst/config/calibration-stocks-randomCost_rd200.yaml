@@ -1,0 +1,23 @@
+---
+title: "calibration-stocks-randomCost-rd200-2010"
+basedOn: "default.yaml"
+# scope and resolution
+periods: [2000, 2010]
+startyear: 2010
+calibperiods: 2010
+regionmapping: "input/regionmappingEUplus.csv"
+regions: DEU
+ignoreShell: TRUE
+# switches
+switches:
+  RUNTYPE: calibration
+  CALIBRATIONTYPE: stocks
+  CALIBRATIONINPUT: randomCost
+  TARGETFUNCTION: minsquare
+  CALIBRATIONLOG: TRUE
+# parameters for calibration
+parameters:
+  alpha: 0.1
+  iteration: 30
+  randDev: 200
+...
