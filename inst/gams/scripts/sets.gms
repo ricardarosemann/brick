@@ -108,6 +108,16 @@ $load flow iterationAll iteration
 $endif.calibration
 $gdxin
 
+* *** Adjust bsr for ignore shell runs
+* $ifthenE.shell (not(sameas("%ignoreShell%","TRUE")))
+* sets
+* bsr
+* /
+* 0
+* /
+* ;
+* $endif.shell
+
 *** load reference sets
 $ifthen.matching "%RUNTYPE%" == "matching"
 !! TODO: automatic code generation
@@ -144,6 +154,7 @@ ren(bs,hs,bsr,hsr)      "renovation alternatives"
 *** mappings to filter unwanted combinations
 vinExists(ttot,vin)                "Can this vintage cohort exist i.e. ttot cannot be before cohort starts"
 renAllowed(bs,hs,bsr,hsr)          "Is this renovation transition allowed"
+renTarAllowed(flow, bsr, hsr)      "Is this renovation/construction target allowed"
 sameState(bs,hs,bsr,hsr)           "Is the state after the renovation the same as before"
 renEffective(bs,hs,bsr,hsr)        "Renovations without untouched buildings"
 conAllowed(bsr, hsr, vin)  "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
@@ -190,8 +201,15 @@ state(bs,hs)              = yes;
 ren(state,stateFull)      = yes;
 $ifthen.calibration "%RUNTYPE%" == "calibration"
 *** TODO: Adapt this so that only the vintages relevant for the calibration are taken into account (i.e. vintages that already exist for the calibration years)
-loop(t,
-  vinCalib(vin)$vinExists(t, vin) = yes;
+loop(tcalib,
+  vinCalib(vin)$vinExists(tcalib, vin) = yes;
+);
+
+loop(renAllowed(bs, hs, bsr, hsr),
+  renTarAllowed("ren", bsr, hsr) = yes;
+);
+loop((bsr, hsr)$(bs(bsr) and hs(hsr)),
+  renTarAllowed("con", bsr, hsr) = yes;
 );
 $endif.calibration
 * sets

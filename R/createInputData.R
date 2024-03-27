@@ -203,8 +203,8 @@ createInputData <- function(path,
 
 
   ## vintages ====
-
   vintages <- getBrickMapping("vintage.csv")
+  if (config[["minimal"]]) vintages <- filter(vintages, .data[["vin"]] %in% c("1990-1999", "2000-2010", "2011-2020"))
 
   vin <- m$addSet(
     "vin",
@@ -247,6 +247,7 @@ createInputData <- function(path,
   hs <- getBrickMapping("heatingSystem.csv", "sectoral") %>%
     getElement("hs") %>%
     unique()
+  if (config[["minimal"]]) hs <- c("gabo", "ehp1")
   hs <-  m$addSet(
     "hs",
     records = hs,
@@ -276,6 +277,7 @@ createInputData <- function(path,
   loc <- getBrickMapping("location.csv") %>%
     getElement("loc") %>%
     unique()
+  if (config[["minimal"]]) loc <- head(loc, 1)
   loc <- m$addSet(
     "loc",
     records = loc,
@@ -283,11 +285,13 @@ createInputData <- function(path,
   )
 
   typ <- getBrickMapping("buildingType.csv") %>%
+    filter(.data[["typ"]] != "Com") %>% #TODO: Remove this! Temporary adjustment
     getElement("typ") %>%
     unique()
+  if (config[["minimal"]]) typ <- head(typ, 1)
   typ <- m$addSet(
     "typ",
-    records = c("SFH", "MFH"),
+    records = typ,
     description = "type of residential building (SFH, MFH)"
   )
 
@@ -436,7 +440,7 @@ createInputData <- function(path,
   if (config[["switches"]][["CALIBRATIONINPUT"]] == "randomCost") {
     needNewFile <- TRUE
     randDev <- config[["parameters"]][["randDev"]]
-    fileNameRandCost <- paste0("inputRandCost", randDev, ".gdx")
+    fileNameRandCost <- paste0("inputRandCost", ifelse(config[["minimal"]], "Min", ""), randDev, ".gdx")
     if (file.exists(fileNameRandCost)) {
       input <- gamstransfer::Container$new(fileNameRandCost)
       # input$read("inputRandCost.gdx", "p_specCostCon")
@@ -454,10 +458,34 @@ createInputData <- function(path,
         mutate(value = .data[["value"]] * max(0, (runif(1, 1 - randDev / 100, 1 + randDev / 100))))
       message("Costs are randomized.")
     }
+  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "highReel") {
+    p_specCostConTang <- p_specCostConTang %>%
+      mutate(value = ifelse(.data[["hs"]] == "reel", 10 * .data[["value"]], .data[["value"]]))
+  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "highEhp1") {
+    p_specCostConTang <- p_specCostConTang %>%
+      mutate(value = ifelse(.data[["hs"]] == "ehp1", 10 * .data[["value"]], .data[["value"]]))
   }
-  p_specCostConIntang <- p_specCostCon %>%
-    filter(.data[["cost"]] == "intangible") %>%
-    addAssump(brick.file("assump/costIntangCon.csv"))
+
+  if (is.null(config[["calibGdx"]])) {
+    p_specCostConIntang <- p_specCostCon %>%
+      filter(.data[["cost"]] == "intangible") %>%
+      addAssump(brick.file("assump/costIntangCon.csv"))
+  } else {
+    # TODO: Put this in a function
+    calibInput <- gamstransfer::Container$new(config[["calibGdx"]])
+    p_specCostConCalib <- readSymbol(calibInput, "p_specCostCon") %>%
+      filter(.data[["cost"]] == "intangible")
+    p_calibLast <- p_specCostConCalib %>%
+      filter(ttot == max(ttot)) %>%
+      rename(valueLast = .data[["value"]], ttotLast = .data[["ttot"]]) %>%
+      tidyr::crossing(ttot = ttotNum)
+    p_specCostConIntang <- p_specCostCon %>%
+      filter(.data[["cost"]] == "intangible") %>%
+      left_join(p_specCostConCalib) %>%
+      left_join(p_calibLast) %>%
+      mutate(value = ifelse(is.na(.data[["value"]]), .data[["valueLast"]], .data[["value"]])) %>%
+      select(-"valueLast", -"ttotLast")
+  }
   p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang)
   p_specCostCon <- m$addParameter(
     "p_specCostCon",
@@ -490,10 +518,35 @@ createInputData <- function(path,
                                               * (runif(1, -randDev / 100, randDev / 100)))) %>%
         ungroup()
     }
+  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "highReel") {
+    p_specCostRenTang <- p_specCostRenTang %>%
+      mutate(value = ifelse(.data[["hsr"]] == "reel", 10 * .data[["value"]], .data[["value"]]))
+  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "highEhp1") {
+    p_specCostRenTang <- p_specCostRenTang %>%
+      mutate(value = ifelse(.data[["hsr"]] == "ehp1", 10 * .data[["value"]], .data[["value"]]))
   }
-  p_specCostRenIntang <- p_specCostRen %>%
-    filter(.data[["cost"]] == "intangible") %>%
-    addAssump(brick.file("assump/costIntangRen.csv"))
+
+  if (is.null(config[["calibGdx"]])) {
+    p_specCostRenIntang <- p_specCostRen %>%
+      filter(.data[["cost"]] == "intangible") %>%
+      addAssump(brick.file("assump/costIntangRen.csv"))
+  } else {
+    # TODO: Put this in a function
+    vinCalib <- readSymbol(calibInput, "vinCalib")[["vin"]]
+    p_specCostRenCalib <- readSymbol(calibInput, "p_specCostRen") %>%
+      filter(.data[["cost"]] == "intangible")
+    p_calibLast <- p_specCostRenCalib %>%
+      filter(ttot == max(ttot)) %>%
+      rename(valueLast = .data[["value"]], ttotLast = .data[["ttot"]]) %>%
+      tidyr::crossing(ttot = ttotNum)
+    p_specCostRenIntang <- p_specCostRen %>%
+      filter(.data[["cost"]] == "intangible") %>%
+      left_join(p_specCostRenCalib) %>%
+      left_join(p_calibLast) %>%
+      mutate(value = ifelse(is.na(.data[["value"]]), .data[["valueLast"]], .data[["value"]]),
+             value = ifelse(!.data[["vin"]] %in% vinCalib, 0, .data[["value"]])) %>%
+      select(-"valueLast", -"ttotLast")
+  }
   p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang)
   p_specCostRen <- m$addParameter(
     "p_specCostRen",
@@ -588,6 +641,14 @@ createInputData <- function(path,
              (.data[["price"]] + .data[["carbonPrice"]] * .data[["emi"]]) *
              .data[["ueDem"]] / .data[["eff"]]) %>%
     select(-"price", -"carbonPrice", -"emi", -"ueDem", -"eff")
+
+  if (config[["switches"]][["CALIBRATIONINPUT"]] == "lowReel") {
+    p_specCostOpe <- p_specCostOpe %>%
+      mutate(value = ifelse(.data[["hs"]] == "reel", 0.001, .data[["value"]]))
+  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "lowEhp1") {
+    p_specCostOpe <- p_specCostOpe %>%
+      mutate(value = ifelse(.data[["hs"]] == "ehp1", 0.001, .data[["value"]]))
+  }
 
   p_specCostOpe <- m$addParameter(
     "p_specCostOpe",
@@ -855,15 +916,39 @@ createInputData <- function(path,
       mutate(bs  = "low",
              qty = "area")
     p_stockHist <- expandSets(qty, bs, hs, vin, reg, loc, typ, inc, ttot) %>%
+      filter(.data[["qty"]] == "area") %>%
       inner_join(readSymbol(vinExists, stringAsFactor = FALSE),
                  by = c("vin", "ttot")) %>%
       left_join(p_stockHist,
                 by = c("qty", "bs", "hs", "vin", "reg", "loc", "typ", "ttot")) %>%
       mutate(value = replace_na(.data[["value"]], 0))
     message("Stock data read from cs4r file.")
+
+    # Scale up stock in minimal scenario/data runs
+    if (config[["minimal"]]) {
+      stockSum <- p_stockHist %>%
+        group_by(across(all_of(c("reg", "loc", "typ", "inc", "ttot")))) %>%
+        dplyr::summarize(stock = sum(.data[["value"]])) %>%
+        mutate(ttot = factor(ttot, levels = levels(p_population$records[["ttot"]]), ordered = TRUE))
+      housingDem <- full_join(p_population$records %>%
+                                rename(pop = "value"),
+                              p_floorPerCap$records %>%
+                                rename(floor = "value"),
+                              by = c("reg", "loc", "typ", "inc", "ttot")) %>%
+        mutate(dem = .data[["pop"]] * .data[["floor"]]) %>%
+        full_join(stockSum, by = c("reg", "loc", "typ", "inc", "ttot")) %>%
+        mutate(scale = ifelse(.data[["stock"]] != 0, .data[["dem"]] / .data[["stock"]], 0))
+
+      p_stockHist <- p_stockHist %>%
+        mutate(ttot = factor(ttot, levels = levels(p_population$records[["ttot"]]), ordered = TRUE)) %>%
+        left_join(housingDem, by = c("reg", "loc", "typ", "inc", "ttot")) %>%
+        mutate(value = .data[["value"]] * .data[["scale"]]) %>%
+        select(-"pop", -"floor", -"dem", -"stock", -"scale")
+    }
   } else {
-    fileNameHist <- paste0("inputHist", as.character(max(ttotNum)), ".gdx")
-    fileNameRandHist <- paste0("inputRandHist", as.character(max(ttotNum)), ".gdx")
+    fileNameHist <- paste0("inputHist", ifelse(config[["minimal"]], "Min", ""), as.character(max(ttotNum)), ".gdx")
+    fileNameRandHist <- paste0("inputRandHist", ifelse(config[["minimal"]], "Min", ""),
+                               as.character(max(ttotNum)), ".gdx")
     input <- gamstransfer::Container$new()
 
     if (file.exists(fileNameHist)) {
@@ -884,20 +969,27 @@ createInputData <- function(path,
     } else {
       message(paste("Historic stock data read from", fileNameHist))
     }
+
+    p_stockHist <- expandSets(qty, bs, hs, vin, reg, loc, typ, inc, ttot) %>%
+      inner_join(readSymbol(vinExists, stringAsFactor = FALSE),
+                 by = c("vin", "ttot")) %>%
+      mutate(ttot = factor(.data[["ttot"]], levels = levels(p_stockHist[["ttot"]]))) %>%
+      filter(.data[["qty"]] == "area") %>%
+      left_join(p_stockHist,
+                by = c("qty", "bs", "hs", "vin", "reg", "loc", "typ", "inc", "ttot"))
   }
 
   # flows (for calibration)
   if (config[["switches"]][["RUNTYPE"]] == "calibration"
-      && (config[["switches"]][["CALIBRATIONINPUT"]] == "file"
-          || config[["switches"]][["CALIBRATIONINPUT"]] == "randomCost"
-          || config[["switches"]][["CALIBRATIONINPUT"]] == "randomTarget"
-          && config[["switches"]][["CALIBRATIONTYPE"]] == "flows")) {
+      && config[["switches"]][["CALIBRATIONINPUT"]] != "data") {
 
-    fileNameHist <- paste0("inputHist", as.character(max(ttotNum)), ".gdx")
-    fileNameRandHist <- paste0("inputRandHist", as.character(max(ttotNum)), ".gdx")
+    fileNameHist <- paste0("inputHist", ifelse(config[["minimal"]], "Min", ""), as.character(max(ttotNum)), ".gdx")
+    fileNameRandHist <- paste0("inputRandHist", ifelse(config[["minimal"]], "Min", ""),
+                               as.character(max(ttotNum)), ".gdx")
 
     if (file.exists(fileNameRandHist)
-        && config[["switches"]][["CALIBRATIONINPUT"]] == "randomTarget") {
+        && config[["switches"]][["CALIBRATIONINPUT"]] == "randomTarget"
+        && config[["switches"]][["CALIBRATIONTYPE"]] == "flows") {
       input <- gamstransfer::Container$new()
 
       input$read(fileNameRandHist, "p_constructionHist")
@@ -923,7 +1015,8 @@ createInputData <- function(path,
         select(-"marginal", -"lower", -"upper", -"scale") %>%
         rename(value = "level") %>%
         filter(.data[["ttot"]] %in% setAsVector(t)[["t"]])
-      if (config[["switches"]][["CALIBRATIONINPUT"]] == "randomTarget") {
+      if (config[["switches"]][["CALIBRATIONINPUT"]] == "randomTarget"
+          && config[["switches"]][["CALIBRATIONTYPE"]] == "flows") {
         p_constructionHist <- p_constructionHist %>%
           mutate(value = .data[["value"]] * (runif(1, 0.80, 1.20)))
       }
@@ -934,7 +1027,8 @@ createInputData <- function(path,
         select(-"marginal", -"lower", -"upper", -"scale") %>%
         rename(value = "level") %>%
         filter(.data[["ttot"]] %in% setAsVector(t)[["t"]])
-      if (config[["switches"]][["CALIBRATIONINPUT"]] == "randomTarget") {
+      if (config[["switches"]][["CALIBRATIONINPUT"]] == "randomTarget"
+          && config[["switches"]][["CALIBRATIONTYPE"]] == "flows") {
         p_renovationHist <- p_renovationHist %>%
           mutate(value = .data[["value"]] * runif(1, 0.80, 1.20))
         message("Historic flow data generated by random perturbation.")
@@ -976,12 +1070,28 @@ createInputData <- function(path,
 
     }
 
+    p_constructionHist <- expandSets(qty, bs, hs, reg, loc, typ, inc, ttot) %>%
+      filter(.data[["qty"]] == "area",
+             .data[["ttot"]] %in% setAsVector(t)[["t"]]) %>%
+      mutate(ttot = factor(.data[["ttot"]], levels = levels(p_constructionHist[["ttot"]]))) %>%
+      left_join(p_constructionHist,
+                by = c("qty", "bs", "hs", "reg", "loc", "typ", "inc", "ttot"))
+
     p_constructionHist <- m$addParameter(
       "p_constructionHist",
       c(qty, bs, hs, reg, loc, typ, inc, ttot),
       p_constructionHist,
       description = "Historic construction flow in million m2"
     )
+
+    p_renovationHist <- expandSets(qty, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot) %>%
+      inner_join(readSymbol(vinExists, stringAsFactor = FALSE),
+                 by = c("vin", "ttot")) %>%
+      filter(.data[["qty"]] == "area",
+             .data[["ttot"]] %in% setAsVector(t)[["t"]]) %>%
+      mutate(ttot = factor(.data[["ttot"]], levels = levels(p_renovationHist[["ttot"]]))) %>%
+      left_join(p_renovationHist,
+                by = c("qty", "bs", "hs", "bsr", "hsr", "vin", "reg", "loc", "typ", "inc", "ttot"))
 
     p_renovationHist <- m$addParameter(
       "p_renovationHist",
@@ -1041,5 +1151,7 @@ createInputData <- function(path,
 
   m$write(inputFilePath, compress = TRUE)
   message("  ... done.")
+
+  #browser()
 
 }

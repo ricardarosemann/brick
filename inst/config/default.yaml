@@ -45,6 +45,9 @@ regions: NULL
   # FALSE
 ignoreShell: FALSE
 
+### Create minimal version with reduced run time ###
+minimal: FALSE
+
 ### historic run ###
 # path to run to consider as history before startyear
   # NULL: no history before this run
@@ -72,6 +75,9 @@ startingPoint: NULL
 # TODO: to be removed when migrating to mredgebuidlings
 matchingRun: NULL
 
+### calibration data ###
+# path to gdx with calibration data
+calibGdx: NULL
 
 # solvers ----------------------------------------------------------------------
 

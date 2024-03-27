@@ -10,6 +10,7 @@
 #' @param config run configurations
 #' @param path character vector with folders to run the model in
 #' @param outputFolder directory of output folder
+#' @param nameAdd character to be added to the run folder name
 #' @param references named character vector of matching references
 #' @param restart character vector of elements to be restarted.
 #' Allowed elements are:
@@ -26,6 +27,7 @@
 initModel <- function(config = NULL,
                       path = NULL,
                       outputFolder = "output",
+                      nameAdd = "",
                       references = NULL,
                       restart = NULL,
                       sendToSlurm = TRUE,
@@ -65,7 +67,7 @@ initModel <- function(config = NULL,
     }
 
     cfg <- readConfig(config)
-    title <- cfg[["title"]]
+    title <- paste(cfg[["title"]], nameAdd, sep = "-")
 
     if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
       title <- paste0(title, cfg[["parameters"]][["iteration"]], "Iter",
