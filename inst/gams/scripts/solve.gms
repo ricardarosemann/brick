@@ -238,18 +238,16 @@ solveParallel
 *** Compute the functional value
 p_f(subs) = func
 p_f0(subs) = p_f(subs);
-p_fIter("0", subs) = p_f0(subs);
 
 $ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
-p_xIter("0", flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_x(flow, stateFull, vinCalib, subs);
 
 *** Store renovation and construction values
-p_constructionIter("0", "area", state, subs, t) = v_construction.l("area", state, subs, t);
-p_renovationIter("0", "area", state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
+p_construction("area", state, subs, t) = v_construction.l("area", state, subs, t);
+p_renovation("area", state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
 $else.calLog
 abort "Did not start full logging"
 $endIf.calLog
-p_stockIter("0", "area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
+p_stock("area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
 
 *** Save the model statistics of the previous iteration. This means that the iteration counter is off by one in some sense.
 p_repyFullSysNLPIter("0",all_subs,'solvestat') = fullSysNLP.solvestat;
@@ -265,7 +263,6 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
   p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
-*  p_xDiffAll("0", flow2, bsr3, hsr3, vin2, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
   p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xDiff("con", state, "2000-2010", subs);
   p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xDiff("ren", stateFull, vinCalib, subs);
 
@@ -275,33 +272,18 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
 
   solveParallel
 
-$ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
-  p_constructionDiffIter("0", flow2, bsr3, hsr3, vin2, state, subs, t) = v_construction.l("area", state, subs, t);
-  p_renovationDiffIter("0", flow2, bsr3, hsr3, vin2, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
-$endIf.calLog
-* if (sameas(flow2, "ren") and sameas(bsr3, "low") and sameas(hsr3, "gabo") and sameas(vin2, "1990-1999"),
-*   p_xDiffGabo(iteration, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
-*   p_stockGabo(iteration, state, vinCalib, subs, t) = v_stock.l("area", state, vinCalib, subs, t);
-*   p_constructionGabo(iteration, state, subs, t) = v_construction.l("area", state, subs, t);
-*   p_renovationGabo(iteration, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
-* )
-* ;
+* $ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
+*   p_constructionDiffIter("0", flow2, bsr3, hsr3, vin2, state, subs, t) = v_construction.l("area", state, subs, t);
+*   p_renovationDiffIter("0", flow2, bsr3, hsr3, vin2, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
+* $endIf.calLog
 
   p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
 );
-
-$ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
-p_fDiffIter("0", flow, bsr, hsr, vinCalib, subs) = p_fDiff(flow, bsr, hsr, vinCalib, subs);
-$endIf.calLog
 
 p_r(flow, stateFull, vinCalib, subs)$renTarAllowed(flow, stateFull) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
 p_d(flow, stateFull, vinCalib, subs)$renTarAllowed(flow, stateFull) = - p_r(flow, stateFull, vinCalib, subs);
 p_delta(subs) = sum((flow, stateFull, vinCalib)$renTarAllowed(flow, stateFull),
   -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
-
-$ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
-p_dIter("0", flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_d(flow, stateFull, vinCalib, subs);
-$endIf.calLog
 
 execute_unload "calibration_0.gdx";
 
@@ -339,18 +321,18 @@ loop(iterA,
   loop((all_subs),
     if (p_fA(all_subs) le p_f(all_subs) + p_sigma * p_alpha(all_subs) * p_phiDeriv(all_subs),
       subs(all_subs) = no;
-      p_iterA(iteration, all_subs) = iterA.val;
+      p_iterA(all_subs) = iterA.val;
       );
-    p_fAIter(iteration, iterA, all_subs) = p_fA(all_subs);
-    p_fArmijoRHIter(iteration, iterA, all_subs) = p_f(all_subs) + p_sigma * p_alpha(all_subs) * p_phiDeriv(all_subs);
+    p_fAIterA(iterA, all_subs) = p_fA(all_subs);
+    p_fArmijoRHIterA(iterA, all_subs) = p_f(all_subs) + p_sigma * p_alpha(all_subs) * p_phiDeriv(all_subs);
   );
   if(card(subs) = 0,
-    p_alphaIter(iteration, iterA, all_subs) = p_alpha(all_subs);
+    p_alphaIterA(iterA, all_subs) = p_alpha(all_subs);
     break;
   );
 *** Update alpha
   p_alpha(subs) = p_alpha(subs) * p_beta;
-  p_alphaIter(iteration, iterA, all_subs) = p_alpha(all_subs);
+  p_alphaIterA(iterA, all_subs) = p_alpha(all_subs);
 );
 subs(all_subs) = yes;
 
@@ -359,13 +341,11 @@ p_x(flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2
 p_fPrev(subs) = p_f(subs);
 p_f(subs) = p_fA(subs);
 
-p_fIter(iteration, subs) = p_f(subs);
 $ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
-p_xIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_x(flow, stateFull,vinCalib, subs);
-p_renovationIter(iteration, "area", state, stateFull, vinCalib, subs, ttot) = v_renovation.l("area", state, stateFull, vinCalib, subs, ttot);
-p_constructionIter(iteration, "area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
+p_renovation("area", state, stateFull, vinCalib, subs, ttot) = v_renovation.l("area", state, stateFull, vinCalib, subs, ttot);
+p_construction("area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
 $endIf.calLog
-p_stockIter(iteration, "area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
+p_stock("area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
 
 *** Save the model statistics of the previous iteration. This means that the iteration counter is off by one in some sense.
 p_repyFullSysNLPIter(iteration,all_subs,'solvestat') = fullSysNLP.solvestat;
@@ -381,7 +361,6 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
   p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
-* p_xDiffAll(iteration, flow2, bsr3, hsr3, vin2, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
   p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xDiff("con", state, "2000-2010", subs);
   p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xDiff("ren", stateFull, vinCalib, subs);
 
@@ -391,33 +370,18 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
 
   solveParallel
 
-$ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
-  p_constructionDiffIter(iteration, flow2, bsr3, hsr3, vin2, state, subs, t) = v_construction.l("area", state, subs, t);
-  p_renovationDiffIter(iteration, flow2, bsr3, hsr3, vin2, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
-$endIf.calLog
-* if (sameas(flow2, "ren") and sameas(bsr3, "low") and sameas(hsr3, "gabo") and sameas(vin2, "1990-1999"),
-*   p_xDiffGabo(iteration, flow, stateFull, vinCalib, subs) = p_xDiff(flow, stateFull, vinCalib, subs);
-*   p_stockGabo(iteration, state, vinCalib, subs, t) = v_stock.l("area", state, vinCalib, subs, t);
-*   p_constructionGabo(iteration, state, subs, t) = v_construction.l("area", state, subs, t);
-*   p_renovationGabo(iteration, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
-* )
-* ;
+* $ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
+*   p_constructionDiffIter(iteration, flow2, bsr3, hsr3, vin2, state, subs, t) = v_construction.l("area", state, subs, t);
+*   p_renovationDiffIter(iteration, flow2, bsr3, hsr3, vin2, state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
+* $endIf.calLog
 
   p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
 );
-
-$ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
-p_fDiffIter(iteration, flow, bsr, hsr, vinCalib, subs) = p_fDiff(flow, bsr, hsr, vinCalib, subs);
-$endIf.calLog
 
 p_r(flow, stateFull, vinCalib, subs)$renTarAllowed(flow, stateFull) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
 p_d(flow, stateFull, vinCalib, subs)$renTarAllowed(flow, stateFull) = - p_r(flow, stateFull, vinCalib, subs);
 p_delta(subs) = sum((flow, stateFull, vinCalib)$renTarAllowed(flow, stateFull),
   -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
-
-$ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
-p_dIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_d(flow, stateFull, vinCalib, subs);
-$endIf.calLog
 
 *** Save results of current iteration
 execute_unload "calibration.gdx";

@@ -48,7 +48,6 @@ p_diff
 p_x(flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_xDiff(flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_xA(flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_xDiffAll(iterationAll, flow2, bsr3, hsr3, vin, flow, bsr, hsr, vin, reg, loc, typ, inc)
 
 p_f(reg, loc, typ, inc)
 p_f0(reg, loc, typ, inc)
@@ -65,26 +64,18 @@ p_beta
 p_sigma
 p_phiDeriv(reg, loc, typ, inc)
 
-p_xIter(iterationAll, flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_dIter(iterationAll, flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_fIter(iterationAll, reg, loc, typ, inc)
-p_fDiffIter(iterationAll, flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_renovationIter(iterationAll,qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot)
-p_constructionIter(iterationAll,qty,bs,hs,reg,loc,typ,inc,ttot)
-p_stockIter(iterationAll, qty, bs, hs, vin, reg, loc, typ, inc, ttot)
+p_renovation(qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot)
+p_construction(qty,bs,hs,reg,loc,typ,inc,ttot)
+p_stock(qty, bs, hs, vin, reg, loc, typ, inc, ttot)
 
-p_iterA(iterationAll, reg, loc, typ, inc)
-p_alphaIter(iterationAll, iterA, reg, loc, typ, inc)
-p_fAIter(iterationAll, iterA, reg, loc, typ, inc)
-p_fArmijoRHIter(iterationAll, iterA, reg, loc, typ, inc)
+p_iterA(reg, loc, typ, inc)
+p_alphaIterA(iterA, reg, loc, typ, inc)
+p_fAIterA(iterA, reg, loc, typ, inc)
+p_fArmijoRHIterA(iterA, reg, loc, typ, inc)
 
+* Might be deleted in the future, is commented out in solve.gms for now
 p_constructionDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, reg, loc, typ, inc, ttot)
 p_renovationDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
-
-* p_xDiffGabo(iterationAll flow, bsr, hsr, vin, reg, loc, typ, inc)
-* p_stockGabo(iterationAll bs, hs, vin, reg, loc, typ, inc, ttot)
-* p_constructionGabo(iterationAll bs, hs, reg, loc, typ, inc, ttot)
-* p_renovationGabo(iterationAll bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
 
 p_calibSpeed(varFLow)                                                 "Control of the step size in the calibration iteration"
 p_calibDeviationCon(iterationAll,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
