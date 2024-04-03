@@ -36,11 +36,11 @@ readSymbol <- function(x, symbol = NULL, selectArea = TRUE,
     Variable = {
       data <- data %>%
         select(-"marginal", -"lower", -"upper", -"scale") %>%
-        rename(value = "level")},
-    Set = {
-      data <- data %>%
-        select(-"element_text")
-    }
+        rename(value = "level")}#,
+    # Set = {
+    #   data <- data %>%
+    #     select(-"element_text")
+    # }
   )
   # nolint end: indentation_linter.
 

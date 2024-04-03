@@ -303,7 +303,7 @@ $ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
 p_dIter("0", flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_d(flow, stateFull, vinCalib, subs);
 $endIf.calLog
 
-execute_unload "firstIter.gdx";
+execute_unload "calibration_0.gdx";
 
 loop(iteration,
 
@@ -418,6 +418,12 @@ p_delta(subs) = sum((flow, stateFull, vinCalib)$renTarAllowed(flow, stateFull),
 $ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
 p_dIter(iteration, flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010")) = p_d(flow, stateFull, vinCalib, subs);
 $endIf.calLog
+
+*** Save results of current iteration
+execute_unload "calibration.gdx";
+!! retain gdxes of intermediate iterations by copying them using shell
+!! commands
+put_utility "shell" / "cp calibration.gdx calibration_" iteration.val:0:0 ".gdx";
 
 *** end iteration loop
 );
