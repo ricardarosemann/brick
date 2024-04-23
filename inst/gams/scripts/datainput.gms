@@ -8,10 +8,8 @@ $load p_population
 $load p_stockHist
 $ifthen.calibration "%RUNTYPE%" == "calibration"
 $load conAllowed p_alphaL p_diff p_beta p_sigma
-$endif.calibration
-$ifthen.calibrationFlows "%CALIBRATIONTYPE%" == "flows"
 $load p_renovationHist p_constructionHist
-$endIf.calibrationFlows
+$endif.calibration
 $load p_shareDem p_shareRenBS p_shareRenHS p_shareRenBSinit p_shareRenHSinit
 $load p_floorPerCap
 $load p_probDem p_LifeTimeBS p_LifeTimeHS
