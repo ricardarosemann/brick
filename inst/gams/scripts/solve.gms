@@ -143,7 +143,7 @@ $macro func - sum((state3, tcalib)$renTarAllowed("con", state3), \
       + epsilonSmall) \
     + epsilonSmall) \
   ) \
-  + sum((vin3, state3, stateFull3, tcalib)$renAllowed(state3, stateFull3), \
+  - sum((vin3, state3, stateFull3, tcalib)$renAllowed(state3, stateFull3), \
   p_renovationHist("area", state3, stateFull3, vin3, subs, tcalib) \
   * log(v_renovation.l("area", state3, stateFull3, vin3, subs, tcalib) \
     / (sum((state4, stateFull4), \
