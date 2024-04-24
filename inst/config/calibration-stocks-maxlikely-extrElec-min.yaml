@@ -1,5 +1,5 @@
 ---
-title: "calibration-stocks-lowEhp1-min-2010"
+title: "calibration-stocks-maxlikely-extrElec-min-2010"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
@@ -14,7 +14,7 @@ switches:
   RUNTYPE: calibration
   CALIBRATIONTYPE: stocks
   CALIBRATIONINPUT: lowEhp1
-  TARGETFUNCTION: minsquare
+  TARGETFUNCTION: maxlikely
   CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:

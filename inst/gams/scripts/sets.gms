@@ -160,6 +160,9 @@ renEffective(bs,hs,bsr,hsr)        "Renovations without untouched buildings"
 conAllowed(bsr, hsr, vin)  "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
 refVarExists (ref,refVar,reg,ttot) "There is a value for this combination of reference, variable, region and period"
 
+*** Temporary: To check whether the stock calibration uses the right flow
+zeroFlow(bs, hs, bsr, hsr)
+
 *** control sets (should be empty)
 ErrStock(bs,hs,vin,reg,loc,typ,inc,ttot)              "Error in stock of buildings"
 ErrConstruction(bs,hs,reg,loc,typ,inc,ttot)           "Error in flow of new buildings"
@@ -211,6 +214,17 @@ loop(renAllowed(bs, hs, bsr, hsr),
 loop((bsr, hsr)$(bs(bsr) and hs(hsr)),
   renTarAllowed("con", bsr, hsr) = yes;
 );
+
+***Determine sets of flows which are included in the stock calibration
+$ifthenE.shell (sameas("%ignoreShell%","TRUE"))
+ loop((bs,hs,bsr,hsr),
+   zeroFlow(bs,hs,bsr,hsr)$(renAllowed(bs,hs, bsr, hsr) and sameas(hsr,"0")) = YES;
+ );
+$else.shell
+loop((bs,hs,bsr,hsr),
+   zeroFlow(bs,hs,bsr,hsr)$(renAllowed(bs,hs, bsr, hsr) and (sameas(bsr, "0") or sameas(hsr,"0"))) = YES;
+ );
+$endIf.shell
 $endif.calibration
 * sets
 * vinCalib(vin)  "Dynamic vintages in calibration"
