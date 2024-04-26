@@ -1,23 +1,23 @@
 ---
-title: "calibration-highEhp1-min-2040"
+title: "calibration-stocks-highEhp1-2010"
 basedOn: "default.yaml"
 # scope and resolution
-periods: [2000, 2010, 2020, 2030, 2040]
+periods: [2000, 2010]
 startyear: 2010
 calibperiods: 2010
 regionmapping: "input/regionmappingEUplus.csv"
 regions: DEU
 ignoreShell: TRUE
-minimal: TRUE
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: flows
-  CALIBRATIONINPUT: highEhp1
+  CALIBRATIONTYPE: stocks
+  CALIBRATIONINPUT: file
+  CALIBRATIONHICAP: "ehp1"
   TARGETFUNCTION: minsquare
   CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
   alpha: 0.1
-  iteration: 2
+  iteration: 10
 ...

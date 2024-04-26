@@ -189,6 +189,14 @@ switches:
     # randomTarget: target is randomized
   CALIBRATIONINPUT: data
 
+  ### Artificial (and extreme) increase of CAPEX ###
+  # Pass the HS that should have increased CAPEX
+  CALIBRATIONHICAP: no
+
+    ### Artificial (and extreme) decrease of OPEX ###
+  # Pass the HS that should have decreased OPEX
+  CALIBRATIONLOWOP: no
+
   ### Target function ###
   # Target function of the calibration
     # minsquare

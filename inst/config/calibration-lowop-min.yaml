@@ -1,5 +1,5 @@
 ---
-title: "calibration-highEhp1-2040"
+title: "calibration-lowEhp1-min-2040"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010, 2020, 2030, 2040]
@@ -8,15 +8,17 @@ calibperiods: 2010
 regionmapping: "input/regionmappingEUplus.csv"
 regions: DEU
 ignoreShell: TRUE
+minimal: TRUE
 # switches
 switches:
   RUNTYPE: calibration
   CALIBRATIONTYPE: flows
-  CALIBRATIONINPUT: highEhp1
+  CALIBRATIONINPUT: file
+  CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
   CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
   alpha: 0.1
-  iteration: 30
+  iteration: 2
 ...

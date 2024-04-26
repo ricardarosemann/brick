@@ -458,12 +458,10 @@ createInputData <- function(path,
         mutate(value = .data[["value"]] * max(0, (runif(1, 1 - randDev / 100, 1 + randDev / 100))))
       message("Costs are randomized.")
     }
-  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "highReel") {
+  } else if (!isFALSE(config[["switches"]][["CALIBRATIONHICAP"]])) {
     p_specCostConTang <- p_specCostConTang %>%
-      mutate(value = ifelse(.data[["hs"]] == "reel", 10 * .data[["value"]], .data[["value"]]))
-  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "highEhp1") {
-    p_specCostConTang <- p_specCostConTang %>%
-      mutate(value = ifelse(.data[["hs"]] == "ehp1", 10 * .data[["value"]], .data[["value"]]))
+      mutate(value = ifelse(.data[["hs"]] == config[["switches"]][["CALIBRATIONHICAP"]],
+                            10 * .data[["value"]], .data[["value"]]))
   }
 
   if (is.null(config[["calibGdx"]])) {
@@ -518,12 +516,10 @@ createInputData <- function(path,
                                               * (runif(1, -randDev / 100, randDev / 100)))) %>%
         ungroup()
     }
-  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "highReel") {
+  } else if (!isFALSE(config[["switches"]][["CALIBRATIONHICAP"]])) {
     p_specCostRenTang <- p_specCostRenTang %>%
-      mutate(value = ifelse(.data[["hsr"]] == "reel", 10 * .data[["value"]], .data[["value"]]))
-  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "highEhp1") {
-    p_specCostRenTang <- p_specCostRenTang %>%
-      mutate(value = ifelse(.data[["hsr"]] == "ehp1", 10 * .data[["value"]], .data[["value"]]))
+      mutate(value = ifelse(.data[["hsr"]] == config[["switches"]][["CALIBRATIONHICAP"]],
+                            10 * .data[["value"]], .data[["value"]]))
   }
 
   if (is.null(config[["calibGdx"]])) {
@@ -641,13 +637,9 @@ createInputData <- function(path,
              (.data[["price"]] + .data[["carbonPrice"]] * .data[["emi"]]) *
              .data[["ueDem"]] / .data[["eff"]]) %>%
     select(-"price", -"carbonPrice", -"emi", -"ueDem", -"eff")
-
-  if (config[["switches"]][["CALIBRATIONINPUT"]] == "lowReel") {
+  if (!isFALSE(config[["switches"]][["CALIBRATIONLOWOP"]])) {
     p_specCostOpe <- p_specCostOpe %>%
-      mutate(value = ifelse(.data[["hs"]] == "reel", 0.001, .data[["value"]]))
-  } else if (config[["switches"]][["CALIBRATIONINPUT"]] == "lowEhp1") {
-    p_specCostOpe <- p_specCostOpe %>%
-      mutate(value = ifelse(.data[["hs"]] == "ehp1", 0.001, .data[["value"]]))
+      mutate(value = ifelse(.data[["hs"]] == config[["switches"]][["CALIBRATIONLOWOP"]], 0.001, .data[["value"]]))
   }
 
   p_specCostOpe <- m$addParameter(
