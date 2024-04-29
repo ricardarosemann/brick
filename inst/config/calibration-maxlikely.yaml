@@ -1,8 +1,8 @@
 ---
-title: "calibration-maxlikely"
+title: "calibration-maxlikely-2010"
 basedOn: "default.yaml"
 # scope and resolution
-periods: [2000, 2010, 2020]
+periods: [2000, 2010]
 startyear: 2010
 regionmapping: "input/regionmappingEUplus.csv"
 regions: DEU
@@ -16,5 +16,5 @@ switches:
 # parameters for calibration
 parameters:
   alpha: 0.1
-  iteration: 3
+  iteration: 20
 ...

@@ -12,7 +12,7 @@ minimal: TRUE
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: stocks
+  CALIBRATIONTYPE: stockszero
   CALIBRATIONINPUT: file
   CALIBRATIONHICAP: "ehp1"
   TARGETFUNCTION: minsquare

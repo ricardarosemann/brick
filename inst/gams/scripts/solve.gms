@@ -127,6 +127,10 @@ $macro func sum((state3, tcalib)$renTarAllowed("con", state3), \
 
 $elseIf.calibTarget "%CALIBRATIONTYPE%" == "stocks"
 $macro func sum((vin3, state3, tcalib), \
+  power(p_stockHist("area", state3, vin3, subs, tcalib) - v_stock.l("area", state3, vin3, subs, tcalib), 2));
+
+$elseIf.calibTarget "%CALIBRATIONTYPE%" == "stockszero"
+$macro func sum((vin3, state3, tcalib), \
   power(p_stockHist("area", state3, vin3, subs, tcalib) - v_stock.l("area", state3, vin3, subs, tcalib), 2)) \
   + sum((vin3, state3, stateFull3, tcalib)$zeroFlow(state3, stateFull3), \
   power(p_renovationHist("area", state3, stateFull3, vin3, subs, tcalib) - v_renovation.l("area", state3, stateFull3, vin3, subs, tcalib), 2));
@@ -171,6 +175,16 @@ $macro func - sum((vin3, state3, tcalib), \
       + epsilonSmall) \
     + epsilonSmall) \
 );
+
+$elseIf.calibTarget "%CALIBRATIONTYPE%" == "stockszero"
+$macro func - sum((vin3, state3, tcalib), \
+  p_stockHist("area", state3, vin3, subs, tcalib) \
+  * log(v_stock.l("area", state3, vin3, subs, tcalib) \
+    / (sum((state4), \
+      v_stock.l("area", state4, vin3, subs, tcalib) \
+    ) \
+    + epsilonSmall) \
+  + epsilonSmall));
 $endIf.calibTarget
 
 $endIf.targetFunc
@@ -255,7 +269,7 @@ $ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
 p_construction("area", state, subs, t) = v_construction.l("area", state, subs, t);
 p_renovation("area", state, stateFull, vinCalib, subs, t) = v_renovation.l("area", state, stateFull, vinCalib, subs, t);
 $else.calLog
-abort "Did not start full logging"
+abort "Did not start full logging";
 $endIf.calLog
 p_stock("area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
 

@@ -178,6 +178,7 @@ switches:
   ### Calibration type ###
   # Calibration on which quantity?
     # stocks
+    # stockszero
     # flows
   CALIBRATIONTYPE: NULL
 
@@ -207,7 +208,7 @@ switches:
   # Switch on extensive calibration logging
     # TRUE
     # FALSE
-  CALIBRATIONLOG: FALSE
+  CALIBRATIONLOG: TRUE
 
 
 # gams parameters --------------------------------------------------------------

@@ -19,5 +19,5 @@ switches:
 # parameters for calibration
 parameters:
   alpha: 0.1
-  iteration: 10
+  iteration: 30
 ...

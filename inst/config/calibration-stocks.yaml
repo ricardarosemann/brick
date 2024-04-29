@@ -10,7 +10,7 @@ ignoreShell: TRUE
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: stocks
+  CALIBRATIONTYPE: stockszero
   CALIBRATIONINPUT: data
   TARGETFUNCTION: minsquare
   CALIBRATIONLOG: FALSE

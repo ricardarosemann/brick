@@ -11,7 +11,7 @@ ignoreShell: TRUE
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: stocks
+  CALIBRATIONTYPE: stockszero
   CALIBRATIONINPUT: randomCost
   TARGETFUNCTION: minsquare
   CALIBRATIONLOG: TRUE
