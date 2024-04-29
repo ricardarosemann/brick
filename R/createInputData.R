@@ -18,6 +18,7 @@
 #' @importFrom utils head
 #' @importFrom dplyr %>% mutate select group_by filter ungroup arrange left_join
 #'   .data rename lag all_of across inner_join everything cross_join
+#' @importFrom gamstransfer Container
 
 createInputData <- function(path,
                             config,
@@ -98,7 +99,7 @@ createInputData <- function(path,
 
   ## create container ====
 
-  m <- gamstransfer::Container$new()
+  m <- Container$new()
   message("Start input data creation...")
 
 

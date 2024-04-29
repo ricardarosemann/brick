@@ -12,6 +12,7 @@
 #' @importFrom dplyr select
 #' @importFrom utils read.csv read.csv2
 #' @importFrom stats median
+#' @importFrom gamstransfer Container
 #' @export
 #'
 createMatchingData <- function(path, config, overwrite = FALSE) {
@@ -30,7 +31,7 @@ createMatchingData <- function(path, config, overwrite = FALSE) {
   regions <- config[["regions"]]
   periods <- config[["periods"]]
 
-  m <- gamstransfer::Container$new()
+  m <- Container$new()
 
   # Read passed references
   refsDf <- read.csv2(file.path(path, "references.csv"), row.names = 1)

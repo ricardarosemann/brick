@@ -2,7 +2,7 @@
 
 # Building sector model with heterogeneous renovation and construction of the stock
 
-R package **brick**, version **0.2.1**
+R package **brick**, version **0.2.2**
 
 [![CRAN status](https://www.r-pkg.org/badges/version/brick)](https://cran.r-project.org/package=brick)  [![R build status](https://github.com/pik-piam/brick/workflows/check/badge.svg)](https://github.com/pik-piam/brick/actions) [![codecov](https://codecov.io/gh/pik-piam/brick/branch/master/graph/badge.svg)](https://app.codecov.io/gh/pik-piam/brick) 
 
@@ -50,7 +50,7 @@ In case of questions / problems please contact Robin Hasse <robin.hasse@pik-pots
 
 To cite package **brick** in publications use:
 
-Hasse R, Rosemann R (2024). _brick: Building sector model with heterogeneous renovation and construction of the stock_. R package version 0.2.1, <https://github.com/pik-piam/brick>.
+Hasse R, Rosemann R (2024). _brick: Building sector model with heterogeneous renovation and construction of the stock_. R package version 0.2.2, <https://github.com/pik-piam/brick>.
 
 A BibTeX entry for LaTeX users is
 
@@ -60,7 +60,7 @@ A BibTeX entry for LaTeX users is
 the stock},
   author = {Robin Hasse and Ricarda Rosemann},
   year = {2024},
-  note = {R package version 0.2.1},
+  note = {R package version 0.2.2},
   url = {https://github.com/pik-piam/brick},
 }
 ```

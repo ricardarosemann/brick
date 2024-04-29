@@ -48,6 +48,15 @@ ignoreShell: FALSE
 ### Create minimal version with reduced run time ###
 minimal: FALSE
 
+### reporting template ###
+# alternative reporting mapping
+# There has to be a mapping in the package reportbrick named with the same
+#  suffix: brickSets_<reportingTemplate>.yaml
+  # NULL: default reporting
+  # onlyRes: default reporting without commercial buildings
+  # ignoreShell_onlyRes: ignore building shell + no commercial buildings
+reportingTemplate: onlyRes
+
 ### historic run ###
 # path to run to consider as history before startyear
   # NULL: no history before this run

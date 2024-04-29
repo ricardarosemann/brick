@@ -1,8 +1,7 @@
-ValidationKey: '415401'
-AutocreateReadme: no # automatic creation removes logo
+ValidationKey: '614885'
+AutocreateReadme: no
 AcceptedWarnings:
 - 'Warning: package ''.*'' was built under R version'
 - 'Warning: namespace ''.*'' is not available and has been replaced'
-AcceptedNotes: 'Package suggested but not available for checking: .gamstransfer.'
 allowLinterWarnings: no
 enforceVersionUpdate: no

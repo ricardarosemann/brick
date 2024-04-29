@@ -13,6 +13,7 @@
 #'
 #' @importFrom dplyr %>% rename left_join arrange reframe ungroup group_by
 #'   mutate lag right_join summarise
+#' @importFrom gamstransfer Container
 
 aggregateMatching <- function(path, config, overwrite = FALSE) {
 
@@ -54,7 +55,7 @@ aggregateMatching <- function(path, config, overwrite = FALSE) {
     stop("Cannot find suitable gdx in matching run directory: ", pathMatching)
   }
 
-  m <- gamstransfer::Container$new(gdxMatching)
+  m <- Container$new(gdxMatching)
 
   dt <- readSymbol(m, "p_dt") %>%
     rename(dt = "value")
@@ -133,7 +134,7 @@ aggregateMatching <- function(path, config, overwrite = FALSE) {
 
   # write gdx ------------------------------------------------------------------
 
-  mCalib <- gamstransfer::Container$new()
+  mCalib <- Container$new()
 
   for (s in symbols) {
     invisible(mCalib$addParameter(

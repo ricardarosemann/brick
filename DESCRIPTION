@@ -2,8 +2,8 @@ Type: Package
 Package: brick
 Title: Building sector model with heterogeneous renovation and construction of
     the stock
-Version: 0.2.1
-Date: 2024-02-28
+Version: 0.3.1
+Date: 2024-04-22
 Authors@R: c(
     person("Robin", "Hasse", , "robin.hasse@pik-potsdam.de",
            role = c("aut", "cre"),
@@ -31,17 +31,18 @@ Depends:
 Imports:
     dplyr,
     ggplot2,
+    gamstransfer (>= 3.0.1),
     gms (>= 0.26.0),
     pkgload,
     purrr,
     quitte,
+    reportbrick (>= 0.1.1),
     scales,
     tidyr,
     withr,
     yaml
 Suggests:
     covr,
-    gamstransfer,
     devtools,
     testthat
 Encoding: UTF-8

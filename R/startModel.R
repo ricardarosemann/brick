@@ -40,8 +40,9 @@ startModel <- function(path) {
                                      "ignoreShell")]),
           gamsCall = cfg[["gamsCall"]])
 
-  plotSummary(path, NULL, showHistStock = cfg[["switches"]][["RUNTYPE"]] %in% c("calibration", "matching") ||
-                cfg[["title"]] == "iamc_base")
+  reportMif(path)
+
+  plotSummary(path, NULL, showHistStock = cfg[["switches"]][["RUNTYPE"]] %in% c("calibration", "matching"))
 
   if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
     plotRefDeviation(path)

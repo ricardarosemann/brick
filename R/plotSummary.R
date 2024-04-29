@@ -13,6 +13,7 @@
 #' @importFrom quitte revalue.levels
 #' @importFrom tidyr replace_na unite
 #' @importFrom scales gradient_n_pal brewer_pal
+#' @importFrom gamstransfer Container
 #' @importFrom dplyr row_number n bind_rows any_of group_by across mutate filter
 #'   arrange select left_join rename .data %>% bind_rows summarise
 #' @importFrom ggplot2 ggplot geom_col geom_area scale_x_continuous geom_point
@@ -49,7 +50,7 @@ plotSummary <- function(path, facet = "typ", showHistStock = FALSE,
 
   # READ DATA ------------------------------------------------------------------
 
-  m <- gamstransfer::Container$new(gdx)
+  m <- Container$new(gdx)
 
 
   dt <- readSymbol(m, "p_dt") %>%
