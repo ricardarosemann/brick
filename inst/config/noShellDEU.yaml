@@ -1,0 +1,11 @@
+---
+title: "noShellDEU"
+basedOn: "default.yaml"
+# scope and resolution
+periods: [2000, 2005, 2010, 2015, 2020, 2030, 2040, 2050, 2060, 2070]
+regionmapping: "input/regionmappingEUplus.csv"
+regions: DEU
+ignoreShell: TRUE
+# data
+# startingPoint: "output/iamc_base_2023-09-28_11.13.04"
+...
