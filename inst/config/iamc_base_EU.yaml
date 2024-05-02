@@ -1,0 +1,19 @@
+---
+title: iamc_base_EU
+# scope and resolution
+periods: [2000, 2005, 2010, 2015, 2020, 2025, 2030, 2035, 2040, 2045,
+          2050, 2055, 2060]
+startyear: 2005
+endyear: 2050
+regionmapping: "inst/input/regionmappingEUplus.csv"
+regions: [AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV,
+          HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD, POL, PRT, ROU, SVK, SVN, SWE]
+carrierEmi: central
+inputRevision: "0.4"
+forceDownload: FALSE
+ignoreShell: TRUE
+# historic: "output/iamc_statusquo_0_3_2023-11-09_17.08.01"
+#regions: [DEU, ESP, FRA, GBR, ITA, NLD, POL]
+#regions: HRV
+# startingPoint: /p/tmp/krekeler/dev/brick/output/iamc_base_2023-07-06_21.52.10
+...

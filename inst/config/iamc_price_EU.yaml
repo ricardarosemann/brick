@@ -1,0 +1,12 @@
+---
+title: iamc_price_EU
+basedOn: iamc_base_EU.yaml
+# regions: DEU
+regions: [AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV,
+          HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD, POL, PRT, ROU, SVK, SVN, SWE]
+startyear: 2020
+carrierEmi: low
+carbonPrice: {2020: 0, 2030: 150, 2050: 400}
+# compareGdx: "output/iamc_base_2023-07-06_16.43.59/output.gdx"
+historic: "output/iamc_base_EU_2023-11-09_21.00.47"
+...

@@ -1,0 +1,14 @@
+---
+title: iamc_statusquo_0_3_EU
+basedOn: iamc_base_EU.yaml
+# regions: DEU
+regions: [AUT, BEL, BGR, CYP, CZE, DEU, DNK, ESP, EST, FIN, FRA, GBR, GRC, HRV,
+          HUN, IRL, ITA, LTU, LUX, LVA, MLT, NLD, POL, PRT, ROU, SVK, SVN, SWE]
+startyear: 2020
+iamcSwitch: "statusquo"
+markupPct: 0.3
+# startingPoint: output/iamc_statusquo_2023-11-08_16.31.33
+# compareGdx: "output/iamc_base_2023-07-06_16.43.59/output.gdx"
+# historic: "output/iamc_base_2023-11-06_16.45.35"
+historic: "output/iamc_base_EU_2023-11-09_21.00.47"
+...
