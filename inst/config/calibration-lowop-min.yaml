@@ -9,6 +9,7 @@ regionmapping: "input/regionmappingEUplus.csv"
 regions: DEU
 ignoreShell: TRUE
 minimal: TRUE
+reportingTemplate: "/p/tmp/ricardar/reportbrick-tmpl/ignoreShell_min"
 # switches
 switches:
   RUNTYPE: calibration

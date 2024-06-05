@@ -248,8 +248,8 @@ q("area") = yes;
 *** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
 *** TODO: IMPORTANT! The implementation below relies on having constant intangible renovation costs for bs and hs, and assumes that the calibration is solely carried out for 2010!!!
 *** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
-p_x("con", state, "2000-2010", subs) = p_specCostCon("intangible", state, subs, "2010");
-p_x("ren", stateFull, vinCalib, subs) = p_specCostRen("intangible", "low", "gabo", stateFull, vinCalib, subs, "2010");
+p_x("con", state, "2000-2010", subs)$renTarAllowed("con", state) = p_specCostCon("intangible", state, subs, "2010");
+p_x("ren", stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = p_specCostRen("intangible", "low", "gabo", stateFull, vinCalib, subs, "2010");
 p_alpha(subs) = p_alphaL;
 p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
 
@@ -281,10 +281,10 @@ p_repyFullSysNLPIter("0",all_subs,'objval')    = fullSysNLP.objval;
 
 *** Compute the gradient
 loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
-  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                       and (not sameas(bsr, bsr3) or not sameas(hsr, hsr3) or not sameas(flow, flow2) or not sameas(vinCalib, vin2)))
                                       = p_x(flow, bsr, hsr, vinCalib, subs);
-  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
   p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xDiff("con", state, "2000-2010", subs);
@@ -304,8 +304,8 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
   p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
 );
 
-p_r(flow, stateFull, vinCalib, subs)$renTarAllowed(flow, stateFull) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
-p_d(flow, stateFull, vinCalib, subs)$renTarAllowed(flow, stateFull) = - p_r(flow, stateFull, vinCalib, subs);
+p_r(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
+p_d(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))) = - p_r(flow, stateFull, vinCalib, subs);
 p_delta(subs) = sum((flow, stateFull, vinCalib)$renTarAllowed(flow, stateFull),
   -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
 
@@ -325,7 +325,7 @@ p_alpha(subs)$(p_delta(subs) le 0.001) = p_alphaL;
 
 loop(iterA,
 *** Solve the model only for the subsets which do not satisfy the Armijo condition yet
-  p_xA(flow, bsr, hsr, vinCalib, subs)$(sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+  p_xA(flow, bsr, hsr, vinCalib, subs)$(renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                   = p_x(flow, bsr, hsr, vinCalib, subs) + p_alpha(subs) * p_d(flow, bsr, hsr, vinCalib, subs);
   p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xA("con", state, "2000-2010", subs);
   p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xA("ren", stateFull, vinCalib, subs);
@@ -360,7 +360,7 @@ loop(iterA,
 );
 subs(all_subs) = yes;
 
-p_x(flow, stateFull, vinCalib, subs)$(sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))
+p_x(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                 = p_xA(flow, stateFull, vinCalib, subs);
 p_fPrev(subs) = p_f(subs);
 p_f(subs) = p_fA(subs);
@@ -379,10 +379,10 @@ p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
 
 *** Compute the gradient
 loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
-  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                       and (not sameas(bsr, bsr3) or not sameas(hsr, hsr3) or not sameas(flow, flow2) or not sameas(vinCalib, vin2)))
                                       = p_x(flow, bsr, hsr, vinCalib, subs);
-  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((sameas(flow, "ren") or (sameas(vinCalib, "2000-2010") and not sameas(bsr, "0") and not sameas(hsr, "0")))
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
   p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xDiff("con", state, "2000-2010", subs);
@@ -402,8 +402,8 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
   p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
 );
 
-p_r(flow, stateFull, vinCalib, subs)$renTarAllowed(flow, stateFull) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
-p_d(flow, stateFull, vinCalib, subs)$renTarAllowed(flow, stateFull) = - p_r(flow, stateFull, vinCalib, subs);
+p_r(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
+p_d(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))= - p_r(flow, stateFull, vinCalib, subs);
 p_delta(subs) = sum((flow, stateFull, vinCalib)$renTarAllowed(flow, stateFull),
   -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
 
