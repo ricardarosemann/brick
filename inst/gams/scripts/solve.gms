@@ -248,8 +248,10 @@ q("area") = yes;
 *** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
 *** TODO: IMPORTANT! The implementation below relies on having constant intangible renovation costs for bs and hs, and assumes that the calibration is solely carried out for 2010!!!
 *** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
-p_x("con", state, "2000-2010", subs)$renTarAllowed("con", state) = p_specCostCon("intangible", state, subs, "2010");
-p_x("ren", stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = p_specCostRen("intangible", "low", "gabo", stateFull, vinCalib, subs, "2010");
+p_xinitCon(state, subs)$renTarAllowed("con", state) = p_specCostCon("intangible", state, subs, "2010");
+p_xinitRen(state, stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = p_specCostRen("intangible", state, stateFull, vinCalib, subs, "2010");
+p_x("con", state, "2000-2010", subs)$renTarAllowed("con", state) = 0;
+p_x("ren", stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = 0;
 p_alpha(subs) = p_alphaL;
 p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
 
@@ -287,8 +289,8 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
   p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
-  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xDiff("con", state, "2000-2010", subs);
-  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xDiff("ren", stateFull, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xinitCon(state, subs) + p_xDiff("con", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xDiff("ren", stateFull, vinCalib, subs);
 
   v_stock.l("area", state, vinCalib, subs, ttot) = 0;
   v_construction.l("area", state, subs, ttot) = 0;
@@ -327,8 +329,8 @@ loop(iterA,
 *** Solve the model only for the subsets which do not satisfy the Armijo condition yet
   p_xA(flow, bsr, hsr, vinCalib, subs)$(renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                   = p_x(flow, bsr, hsr, vinCalib, subs) + p_alpha(subs) * p_d(flow, bsr, hsr, vinCalib, subs);
-  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xA("con", state, "2000-2010", subs);
-  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xA("ren", stateFull, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xinitCon(state, subs) + p_xA("con", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xA("ren", stateFull, vinCalib, subs);
 
   v_stock.l("area", state, vinCalib, subs, ttot) = 0;
   v_construction.l("area", state, subs, ttot) = 0;
@@ -385,8 +387,8 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
   p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
-  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xDiff("con", state, "2000-2010", subs);
-  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xDiff("ren", stateFull, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xinitCon(state, subs) + p_xDiff("con", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xDiff("ren", stateFull, vinCalib, subs);
 
   v_stock.l("area", state, vinCalib, subs, ttot) = 0;
   v_construction.l("area", state, subs, ttot) = 0;

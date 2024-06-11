@@ -46,6 +46,8 @@ p_refValsMed(ref,reg)          "median non-zero reference value to normalise dev
 
 p_diff
 p_x(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_xinitCon(bs, hs, reg, loc, typ, inc)
+p_xinitRen(bs, hs, bsr, hsr, vin, reg, loc, typ, inc)
 p_xDiff(flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_xA(flow, bsr, hsr, vin, reg, loc, typ, inc)
 

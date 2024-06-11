@@ -1,5 +1,5 @@
 ---
-title: "calibration-stocks-lowEhp1-2010"
+title: "calibration-stockszero-lowEhp1-2010"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
@@ -11,7 +11,7 @@ ignoreShell: TRUE
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: stocks
+  CALIBRATIONTYPE: stockszero
   CALIBRATIONINPUT: file
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
