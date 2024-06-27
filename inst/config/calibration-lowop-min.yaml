@@ -9,7 +9,7 @@ regionmapping: "input/regionmappingEUplus.csv"
 regions: DEU
 ignoreShell: TRUE
 minimal: TRUE
-reportingTemplate: "/p/tmp/ricardar/reportbrick-tmpl/ignoreShell_min"
+reportingTemplate: "/p/tmp/ricardar/reportbrick-tmpl/brickSets_ignoreShell_min.yaml"
 # switches
 switches:
   RUNTYPE: calibration
@@ -20,6 +20,7 @@ switches:
   CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
-  alpha: 0.1
+  alpha: 1
+  alphaInit: 0.05
   iteration: 2
 ...

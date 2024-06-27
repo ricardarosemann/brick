@@ -62,6 +62,7 @@ p_d(flow, bsr, hsr, vin, reg, loc, typ, inc)
 p_delta(reg, loc, typ, inc)
 p_alpha(reg, loc, typ, inc)
 p_alphaL
+p_alphaLInit "Initial step size alpha"
 p_beta
 p_sigma
 p_phiDeriv(reg, loc, typ, inc)

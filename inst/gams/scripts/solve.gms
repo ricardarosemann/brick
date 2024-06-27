@@ -252,7 +252,7 @@ p_xinitCon(state, subs)$renTarAllowed("con", state) = p_specCostCon("intangible"
 p_xinitRen(state, stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = p_specCostRen("intangible", state, stateFull, vinCalib, subs, "2010");
 p_x("con", state, "2000-2010", subs)$renTarAllowed("con", state) = 0;
 p_x("ren", stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = 0;
-p_alpha(subs) = p_alphaL;
+p_alpha(subs) = p_alphaLInit;
 p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
 
 * p_specCostCon("intangible", bs, hs, subs, t) = p_x("con", bs, hs, "2000-2010", subs);
@@ -323,7 +323,7 @@ p_alpha(subs)$(iteration.val > 1 and p_delta(subs) > 0.001) = min(abs(0.5 * p_f(
     (p_fPrev(subs) - p_f(subs))
       / p_delta(subs))
   );
-p_alpha(subs)$(p_delta(subs) le 0.001) = p_alphaL;
+p_alpha(subs)$(iteration.val > 1 and p_delta(subs) le 0.001) = p_alphaL;
 
 loop(iterA,
 *** Solve the model only for the subsets which do not satisfy the Armijo condition yet
