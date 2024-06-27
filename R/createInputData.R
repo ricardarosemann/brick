@@ -1108,18 +1108,11 @@ createInputData <- function(path,
 
   if (config[["switches"]][["RUNTYPE"]] == "calibration") {
     alpha <- config[["parameters"]][["alpha"]]
-    alphaInit <- config[["parameters"]][["alphaInit"]]
 
     p_alphaL <- m$addParameter(
       "p_alphaL",
       records = alpha,
       description = "Lower bound of alpha before Armijo backtracking in calibration"
-    )
-
-    p_alphaLInit <- m$addParameter(
-      "p_alphaLInit",
-      records = alphaInit,
-      description = "Initial step size alpha"
     )
 
     if (is.null(config[["parameters"]][["diff"]])) {

@@ -7,7 +7,7 @@ $load p_discountFac
 $load p_population
 $load p_stockHist
 $ifthen.calibration "%RUNTYPE%" == "calibration"
-$load conAllowed p_alphaL p_alphaLInit p_diff p_beta p_sigma
+$load conAllowed p_alphaL p_diff p_beta p_sigma
 $load p_renovationHist p_constructionHist
 $endif.calibration
 $load p_shareDem p_shareRenBS p_shareRenHS p_shareRenBSinit p_shareRenHSinit

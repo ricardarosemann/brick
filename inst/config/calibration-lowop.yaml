@@ -8,7 +8,6 @@ calibperiods: 2010
 regionmapping: "input/regionmappingEUplus.csv"
 regions: DEU
 ignoreShell: TRUE
-reportingTemplate: "ignoreShell_onlyRes"
 # switches
 switches:
   RUNTYPE: calibration
@@ -19,7 +18,6 @@ switches:
   CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
-  alpha: 200
-  alphaInit: 200
-  iteration: 10
+  alpha: 0.1
+  iteration: 30
 ...

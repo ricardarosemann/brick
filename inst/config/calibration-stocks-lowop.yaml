@@ -11,14 +11,13 @@ ignoreShell: TRUE
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: stocks
+  CALIBRATIONTYPE: stockszero
   CALIBRATIONINPUT: file
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
   CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
-  alpha: 10
-  alphaInit: 10
+  alpha: 0.1
   iteration: 30
 ...
