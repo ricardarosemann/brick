@@ -3,6 +3,7 @@
 $gdxin input.gdx
 $load p_dt p_dtVin t0
 $load vinExists
+$load priceSensHS
 $load p_specCostCon p_specCostRen p_specCostDem
 $load p_carbonPrice p_carrierPrice p_carrierEmi p_ueDemand p_eff
 $load p_interestRate

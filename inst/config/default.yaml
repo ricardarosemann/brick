@@ -201,4 +201,35 @@ gamsOptions:
   ### page width ###
     # page width of log file (max number of characters in one line)
   pw: 185
+
+
+# model parameters ------------------------------------------------------------
+# modify specific model parameters
+
+### price sensitivity HS
+  # Numeric value of the price sensitivity of heating systems
+priceSensHs: 0.1
+
+# cost modification
+costMod:
+
+  ### cost type(s) to be modified
+    # construction: construction investment costs
+    # renovation: renovation investment costs
+    # carrier: carrier costs
+  costType: NULL
+
+  ### scaling factor
+    # numeric value of the cost scaling factor (or the new cost value)
+  scale: 1
+
+  ### method to modify the costs
+    # scale: scale all costs by the given scaling factor
+    # scale_constant: fix costs to their t0 value scaled by the scaling factor
+    # value: set (tangible) costs to the value of the scaling factor
+  method: NULL
+
+  ### heating system whose costs should be modified
+    # one of the heating systems given in heatingSystem.csv
+  hs: NULL
 ...

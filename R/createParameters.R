@@ -56,6 +56,14 @@ createParameters <- function(m, config, inputDir) {
   ))
 
 
+  # Price sensitivity ----------------------------------------------------------
+
+  invisible(m$addParameter(
+    name = "priceSensHs",
+    records = config[["priceSensHs"]],
+    description = "price sensitivity of heating system choice"
+  ))
+
 
   # Specific cost --------------------------------------------------------------
 
@@ -76,6 +84,9 @@ createParameters <- function(m, config, inputDir) {
     filter(.data[["cost"]] == "intangible") %>%
     addAssump(brick.file("assump", "costIntangCon.csv"))
   p_specCostCon <- rbind(p_specCostConTang, p_specCostConIntang)
+  if ("construction" %in% config[["costMod"]][["costType"]]) {
+    p_specCostCon <- modifyCosts(p_specCostCon, config[["costMod"]], periodFromConfig(config, "t0"))
+  }
   p_specCostCon <- m$addParameter(
     name = "p_specCostCon",
     domain = c("cost", state, "reg", "loc", "typ", "inc", "ttot"),
@@ -101,6 +112,9 @@ createParameters <- function(m, config, inputDir) {
     filter(.data[["cost"]] == "intangible") %>%
     addAssump(brick.file("assump", "costIntangRen.csv"))
   p_specCostRen <- rbind(p_specCostRenTang, p_specCostRenIntang)
+  if ("renovation" %in% config[["costMod"]][["costType"]]) {
+    p_specCostRen <- modifyCosts(p_specCostRen, config[["costMod"]], periodFromConfig(config, "t0"))
+  }
   p_specCostRen <- m$addParameter(
     name = "p_specCostRen",
     domain = c("cost", state, stateR, "vin", "reg", "loc", "typ", "inc", "ttot"),
@@ -142,6 +156,9 @@ createParameters <- function(m, config, inputDir) {
     .filterLevel(carrierPriceLevel, "carrierPrice") %>%
     select("carrier", "reg", "ttot", "value") %>%
     toModelResolution(m)
+  if ("carrier" %in% config[["costMod"]][["costType"]]) {
+    p_carrierPrice <- modifyCosts(p_carrierPrice, config[["costMod"]], periodFromConfig(config, "t0"))
+  }
   p_carrierPrice <- m$addParameter(
     name = "p_carrierPrice",
     domain = c("carrier", "reg", "ttot"),
