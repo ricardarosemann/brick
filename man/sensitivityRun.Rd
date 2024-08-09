@@ -4,7 +4,14 @@
 \alias{sensitivityRun}
 \title{Modify costs as specified in config}
 \usage{
-sensitivityRun(config, method = "scale", allScales = NULL, hs = "gabo", ...)
+sensitivityRun(
+  config,
+  method = "scale",
+  allScales = NULL,
+  hs = "gabo",
+  fullRun = TRUE,
+  ...
+)
 }
 \arguments{
 \item{config}{character, file name  of the config to be used}
@@ -14,6 +21,9 @@ sensitivityRun(config, method = "scale", allScales = NULL, hs = "gabo", ...)
 \item{allScales}{numeric, scale/values for cost modification}
 
 \item{hs}{character, heating system for which the costs are modified}
+
+\item{fullRun}{logical, whether to call brick;
+can be switched off to evaluate results after conducting runs with SLURM}
 
 \item{...}{named list, arguments passed to initModel}
 }

@@ -39,7 +39,7 @@ setSlurmConfig <- function(slurmQOS, tasksPerNode = 16, tasks32 = FALSE) {
   } else {
     if (is.null(slurmQOS) || slurmQOS == "default") slurmQOS <- "priority"
     if (is.null(tasksPerNode)) tasksPerNode <- 16
-    slurmConfig <- paste0("--qos=", slurmQOS, " --nodes=1 --tasks-per-node=", tasksPerNode)
+    slurmConfig <- paste0("--qos=", slurmQOS, " --partition=priority --nodes=1 --tasks-per-node=", tasksPerNode)
     message("SLURM QOS is set to ", slurmQOS, " with ", tasksPerNode, " CPUs.")
   }
 

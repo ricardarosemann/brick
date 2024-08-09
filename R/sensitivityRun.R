@@ -4,6 +4,8 @@
 #' @param method character, specification on how to modify costs
 #' @param allScales numeric, scale/values for cost modification
 #' @param hs character, heating system for which the costs are modified
+#' @param fullRun logical, whether to call brick;
+#'   can be switched off to evaluate results after conducting runs with SLURM
 #' @param ... named list, arguments passed to initModel
 #'
 #' @author Ricarda Rosemann
@@ -12,7 +14,7 @@
 #' @importFrom piamPlotComparison compareScenarios
 #' @importFrom yaml read_yaml
 
-sensitivityRun <- function(config, method = "scale", allScales = NULL, hs = "gabo", ...) {
+sensitivityRun <- function(config, method = "scale", allScales = NULL, hs = "gabo", fullRun = TRUE, ...) {
 
   configFolder <- brick.file("config")
   output <- "./output"
@@ -39,27 +41,33 @@ sensitivityRun <- function(config, method = "scale", allScales = NULL, hs = "gab
         currCfg[["costMod"]][["method"]] <- method
         currCfg[["costMod"]][["hs"]] <- hs
 
-        currCfgName <- paste0(paste(sub(".yaml$", "", config), currName), ".yaml")
-        write_yaml(currCfg, file.path(configFolder, currCfgName))
+        if (isTRUE(fullRun)) {
+          currCfgName <- paste0(paste(sub(".yaml$", "", config), currName), ".yaml")
+          write_yaml(currCfg, file.path(configFolder, currCfgName))
 
-        initModel(config = currCfgName, ...)
+          initModel(config = currCfgName, ...)
+
+          file.remove(file.path(configFolder, currCfgName))
+        }
 
         allScens <- c(allScens, currCfg[["title"]])
-        file.remove(file.path(configFolder, currCfgName))
       }
     }
 
-    allMifScens <- file.path(output, vapply(allScens, .findMif, character(1)), "BRICK_general.mif")
-    names(allMifScens) <- allScens
-    compareScenarios(
-      projectLibrary = "reportbrick",
-      mifScen = allMifScens, # vector of paths to MIF
-      mifHist = "./output/noShellDEU_2024-08-01_14.06.02/BRICK_general.mif", # pass any valid MIF
-      outputFile = paste("sensitivity", paste(ct, collapse = "-"), sep = "_"),
-      outputDir = "./output",
-      mainReg = "DEU",
-      yearsHist = NULL
-    )
+    if (file.exists(file.path(output, .findMif(allScens[1]), "BRICK_general.mif"))) {
+      allMifScens <- file.path(output, vapply(allScens, .findMif, character(1)), "BRICK_general.mif")
+      names(allMifScens) <- allScens
+      stamp <- format(Sys.time(), "%Y-%m-%d_%H.%M.%S")
+      compareScenarios(
+        projectLibrary = "reportbrick",
+        mifScen = allMifScens, # vector of paths to MIF
+        mifHist = allMifScens[1], # pass any valid MIF
+        outputFile = paste0(paste("sensitivity", paste(ct, collapse = "-"), stamp, sep = "_"), ".pdf"),
+        outputDir = "./output",
+        mainReg = "DEU",
+        yearsHist = NULL
+      )
+    }
   }
 
 }
