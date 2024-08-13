@@ -13,7 +13,7 @@
 #'
 #' @export
 
-setSlurmConfig <- function(slurmQOS, tasksPerNode = 16, tasks32 = FALSE) {
+setSlurmConfig <- function(slurmQOS = NULL, tasksPerNode = 16, tasks32 = FALSE) {
 
   allowedQOS <- c("default", "priority", "standby", "short", "medium", "long")
 
