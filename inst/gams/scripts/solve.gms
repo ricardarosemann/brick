@@ -2,7 +2,8 @@
 
 model fullSysLP "full system linear optimisation"
   /
-  q_totSysCost
+  q_totObj
+  q_Obj
   q_SysCost
   q_ConCost
   q_RenCost
@@ -16,6 +17,7 @@ $ifthenE.shell (not(sameas("%ignoreShell%","TRUE")))
   q_buildingShellLifeTime
 $endif.shell
   q_heatingSystemLifeTime
+  q_SysHeteroPref
   q_zeroHeteroPrefCon
   q_zeroHeteroPrefRen
 *  q_minDivConHS
@@ -28,7 +30,8 @@ $endif.shell
 
 model fullSysNLP "full system linear optimisation"
   /
-  q_totSysCost
+  q_totObj
+  q_Obj
   q_SysCost
   q_ConCost
   q_RenCost
@@ -42,6 +45,7 @@ $ifthenE.shell (not(sameas("%ignoreShell%","TRUE")))
   q_buildingShellLifeTime
 $endif.shell
   q_heatingSystemLifeTime
+  q_SysHeteroPref
   q_HeteroPrefCon
   q_HeteroPrefRen
 *  q_maxRenRate
@@ -115,7 +119,7 @@ if(iteration.val eq 1,
 $endif.calibration
 
 $ifthenE.lp (sameas("%SOLVEPROBLEM%","lp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))
-solve fullSysLP minimizing v_totSysCost using lp;
+solve fullSysLP minimizing v_totObj using lp;
 p_repyFullSysLP('solvestat') = fullSysLP.solvestat;
 p_repyFullSysLP('modelstat') = fullSysLP.modelstat;
 p_repyFullSysLP('resusd')    = fullSysLP.resusd;
@@ -137,7 +141,7 @@ fullSysNLP.SolveLink = 3;
 
 loop(all_subs,
   subs(all_subs) = yes;
-  solve fullSysNLP minimizing v_totSysCost using nlp;
+  solve fullSysNLP minimizing v_totObj using nlp;
 
   subs(all_subs) = no;
   p_handle(all_subs) = fullSysNLP.handle;
@@ -165,7 +169,7 @@ subs(all_subs) = yes;
 
 $else.parallel
 
-solve fullSysNLP minimizing v_totSysCost using nlp;
+solve fullSysNLP minimizing v_totObj using nlp;
 
 p_repyFullSysNLP(subs,'solvestat') = fullSysNLP.solvestat;
 p_repyFullSysNLP(subs,'modelstat') = fullSysNLP.modelstat;

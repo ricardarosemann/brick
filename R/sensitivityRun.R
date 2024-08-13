@@ -19,7 +19,8 @@ sensitivityRun <- function(config, method = "scale", allScales = NULL, hs = "gab
   configFolder <- brick.file("config")
   output <- "./output"
 
-  allLambda <- c(0.02, 0.1, 0.5)
+  priceSensHS <- list(construction = 0.1, renovation = 0.08)
+  allLambda <- c(0.2, 1, 5)
 
   if (is.null(allScales)) allScales <- c(0.75, 1, 1.25)
   allCosts <- list("construction", "renovation", "carrier",
@@ -29,7 +30,7 @@ sensitivityRun <- function(config, method = "scale", allScales = NULL, hs = "gab
     for (l in allLambda) {
       allScens <- NULL
       for (s in allScales) {
-      
+
         currCfg <- read_yaml(file.path(configFolder, config))
         origTitle <- currCfg[["title"]]
         currName <- gsub("\\.", "-", paste("l", l, "sc", s, paste(ct, collapse = "-"), sep = "_"))
@@ -38,7 +39,14 @@ sensitivityRun <- function(config, method = "scale", allScales = NULL, hs = "gab
 
         currCfg[["costMod"]][["costType"]] <- ct
         currCfg[["costMod"]][["scale"]] <- s
-        currCfg[["priceSensHs"]] <- l
+
+        # Modify lambda for both flows if carrier price varies, otherwise modify for flows which vary
+        for (var in c("construction", "renovation")) {
+          if (is.null(currCfg[["priceSensHS"]][[var]])) currCfg[["priceSensHS"]][[var]] <- priceSensHS[[var]]
+          if ("carrier" %in% ct || var %in% ct) {
+            currCfg[["priceSensHS"]][[var]] <- l * currCfg[["priceSensHS"]][[var]]
+          }
+        }
 
         currCfg[["costMod"]][["method"]] <- method
         currCfg[["costMod"]][["hs"]] <- hs

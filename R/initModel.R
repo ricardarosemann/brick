@@ -41,6 +41,7 @@ initModel <- function(config = NULL,
                       sendToSlurm = NULL,
                       slurmQOS = NULL,
                       tasksPerNode = NULL,
+                      timeLimit = NULL,
                       tasks32 = FALSE) {
 
   if (!dir.exists(outputFolder)) {
@@ -105,7 +106,8 @@ initModel <- function(config = NULL,
       tasks32 <- cfg[["tasks32"]]
       warning("Using 32 tasks as defined in the config file.")
     }
-    slurmConfig <- setSlurmConfig(slurmQOS = slurmQOS, tasksPerNode = tasksPerNode, tasks32 = tasks32)
+    slurmConfig <- setSlurmConfig(slurmQOS = slurmQOS, tasksPerNode = tasksPerNode,
+                                  tasks32 = tasks32, timeLimit = timeLimit)
   }
 
   # Copy gams files if this is not a restart run or if this is specified in restart parameters

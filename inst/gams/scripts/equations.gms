@@ -3,11 +3,11 @@
 * objective function: full system cost with benefit for heterogeneity in
 * contruction and renovation choices discounted to t0
 
-q_totSysCost..
-  v_totSysCost
+q_totObj..
+  v_totObj
   =e=
   sum(subs,
-    v_SysCost(subs)
+    v_Obj(subs)
   )
 ;
 
@@ -17,20 +17,31 @@ q_totSysCost..
 * sum all cost components and benefit for heterogeneity in contruction and
 * renovation choices and discount them to t0 for each subset
 
-q_SysCost(subs(reg,loc,typ,inc))..
-  v_SysCost(subs)
+q_Obj(subs(reg,loc,typ,inc))..
+  v_Obj(subs)
   =e=
   sum(t,
     p_discountFac(typ,t)
     * p_dt(t)
-    * (  v_ConCost(subs,t)
-       + v_RenCost(subs,t)
-       + v_OpeCost(subs,t)
-       + v_DemCost(subs,t)
-       + v_HeteroPrefCon(subs,t)
-       + v_HeteroPrefRen(subs,t)
-      )
+    * (  v_SysCost(subs,t)
+       + v_SysHeteroPref(subs,t))
   )
+;
+
+q_SysCost(subs,t)..
+  v_SysCost(subs,t)
+  =e=
+    v_ConCost(subs,t)
+  + v_RenCost(subs,t)
+  + v_OpeCost(subs,t)
+  + v_DemCost(subs,t)
+;
+
+q_SysHeteroPref(subs,t)..
+  v_SysHeteroPref(subs,t)
+  =e=
+    v_HeteroPrefCon(subs,t)
+  + v_HeteroPrefRen(subs,t)
 ;
 
 
@@ -108,7 +119,7 @@ q_DemCost(subs,t)..
 q_HeteroPrefCon(subs,t)..
   v_HeteroPrefCon(subs,t)
   =e=
-  1 / priceSensBS
+  1 / priceSensBS("construction")
   * sum(bs,
       sum(hs, v_construction("area",bs,hs,subs,t))
       * (
@@ -121,7 +132,7 @@ q_HeteroPrefCon(subs,t)..
         - 1
       )
     )
-  + 1 / priceSensHS
+  + 1 / priceSensHS("construction")
   * (
     sum(bs,
       sum(hs,
@@ -157,7 +168,7 @@ q_HeteroPrefRen(subs,t)..
   v_HeteroPrefRen(subs,t)
   =e=
   sum(state, sum(vin$vinExists(t,vin),
-    1 / priceSensBS
+    1 / priceSensBS("renovation")
     * sum(bsr,
         sum(hsr$renAllowed(state,bsr,hsr),
           v_renovation("area",state,bsr,hsr,vin,subs,t)
@@ -172,7 +183,7 @@ q_HeteroPrefRen(subs,t)..
           - 1
         )
       )
-    + 1 / priceSensHS
+    + 1 / priceSensHS("renovation")
     * (
       sum(bsr,
         sum(hsr$renAllowed(state,bsr,hsr),

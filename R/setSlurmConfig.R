@@ -13,7 +13,7 @@
 #'
 #' @export
 
-setSlurmConfig <- function(slurmQOS = NULL, tasksPerNode = 16, tasks32 = FALSE) {
+setSlurmConfig <- function(slurmQOS = NULL, tasksPerNode = 16, tasks32 = FALSE, timeLimit = NULL) {
 
   allowedQOS <- c("default", "priority", "standby", "short", "medium", "long")
 
@@ -41,6 +41,7 @@ setSlurmConfig <- function(slurmQOS = NULL, tasksPerNode = 16, tasks32 = FALSE) 
     if (is.null(tasksPerNode)) tasksPerNode <- 16
     slurmConfig <- paste0("--qos=", slurmQOS, " --partition=priority --nodes=1 --tasks-per-node=", tasksPerNode)
     message("SLURM QOS is set to ", slurmQOS, " with ", tasksPerNode, " CPUs.")
+    if (!is.null(timeLimit)) slurmConfig <- paste0(slurmConfig, " --time=", timeLimit)
   }
 
   return(slurmConfig)

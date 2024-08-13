@@ -57,12 +57,15 @@ createParameters <- function(m, config, inputDir) {
 
 
   # Price sensitivity ----------------------------------------------------------
+  priceSensHS <- as.data.frame(config[["priceSensHS"]]) %>%
+    tidyr::pivot_longer(everything(), names_to = "var", values_to = "value")
 
-  invisible(m$addParameter(
-    name = "priceSensHs",
-    records = config[["priceSensHs"]],
+  priceSensHS <- m$addParameter(
+    name = "priceSensHS",
+    domain = "var",
+    records = priceSensHS,
     description = "price sensitivity of heating system choice"
-  ))
+  )
 
 
   # Specific cost --------------------------------------------------------------

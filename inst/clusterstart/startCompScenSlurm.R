@@ -19,7 +19,7 @@ if (sys.nframe() == 0L) {
   mifScen <- stringr::str_split_1(argsCL[1], ",")
   scenName <- stringr::str_split_1(argsCL[2], ",")
   names(mifScen) <- scenName
-  
+
   outputFolder <- argsCL[3]
   outputFile <- argsCL[4]
 
