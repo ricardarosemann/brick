@@ -1106,6 +1106,28 @@ createInputData <- function(path,
     description = "historic stock of buildings in million m2"
   )
 
+  allPriceSensHS <- c(seq(200, 1000, 100), seq(2000, 10000, 1000))
+
+  allPriceSensHS <- expandSets(iteration) %>%
+    mutate(value = allPriceSensHS[1:config[["parameters"]][["iteration"]]])
+
+  allPriceSensHS <- m$addParameter(
+    "allPriceSensHS",
+    iteration,
+    records = allPriceSensHS,
+    description = "Different price sensitivities"
+  )
+
+  priceSensHS <- expandSets(reg, loc, typ, inc) %>%
+    mutate(value = 0.01)
+
+  priceSensHS <- m$addParameter(
+    "priceSensHS",
+    c(reg, loc, typ, inc),
+    priceSensHS,
+    description = "price sensitivity of heating system choice"
+  )
+
   if (config[["switches"]][["RUNTYPE"]] == "calibration") {
     alpha <- config[["parameters"]][["alpha"]]
 

@@ -75,6 +75,18 @@ p_alphaIterA(iterA, reg, loc, typ, inc)
 p_fAIterA(iterA, reg, loc, typ, inc)
 p_fArmijoRHIterA(iterA, reg, loc, typ, inc)
 
+priceSensHS(reg, loc, typ, inc) "price sensitivity of heating system choice"
+p_xPS(reg, loc, typ, inc)
+p_xDiffPS(reg, loc, typ, inc)
+p_xAPS(reg, loc, typ, inc)
+p_fDiffPS(reg, loc, typ, inc)
+p_rPS(reg, loc, typ, inc)
+p_dPS(reg, loc, typ, inc)
+p_deltaPS(reg, loc, typ, inc)
+
+allPriceSensHS(iteration)
+
+
 * Might be deleted in the future, is commented out in solve.gms for now
 p_constructionDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, reg, loc, typ, inc, ttot)
 p_renovationDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
@@ -91,7 +103,6 @@ epsilon "offset to avoid log(0)" /1E-5/
 epsilonSmall "Smaller offset for calibration" /1E-9/
 
 priceSensBS "price sensitivity of building shell choice" /5E-2/
-priceSensHS "price sensitivity of heating system choice" /1E-1/
 ;
 
 variables

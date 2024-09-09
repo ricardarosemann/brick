@@ -239,19 +239,14 @@ $endif.nlp
 
 
 $elseif.fullSys "%RUNTYPE%" == "calibration"
+*********************************************************************************
+*** Preparation of the calibration
+*********************************************************************************
+
 * measure stocks and flows in floor area
 q("dwel") = no;
 q("area") = yes;
 
-*** TODO: Still need to check the proper time dimension!
-*** TODO: Fix sets: What do I mean by subs? Where do I need to consider the vintage?
-*** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
-*** TODO: IMPORTANT! The implementation below relies on having constant intangible renovation costs for bs and hs, and assumes that the calibration is solely carried out for 2010!!!
-*** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
-p_xinitCon(state, subs)$renTarAllowed("con", state) = p_specCostCon("intangible", state, subs, "2010");
-p_xinitRen(state, stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = p_specCostRen("intangible", state, stateFull, vinCalib, subs, "2010");
-p_x("con", state, "2000-2010", subs)$renTarAllowed("con", state) = 0;
-p_x("ren", stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = 0;
 p_alpha(subs) = p_alphaL;
 p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
 
@@ -280,6 +275,155 @@ p_repyFullSysNLPIter("0",all_subs,'solvestat') = fullSysNLP.solvestat;
 p_repyFullSysNLPIter("0",all_subs,'modelstat') = fullSysNLP.modelstat;
 p_repyFullSysNLPIter("0",all_subs,'resusd')    = fullSysNLP.resusd;
 p_repyFullSysNLPIter("0",all_subs,'objval')    = fullSysNLP.objval;
+
+
+************************************************************************************
+*** Calibration of price sensitivity
+************************************************************************************
+$ifThen.calPrice "%CALIBRATEPRICESENS%" == "NORMAL"
+
+*** Compute the gradient
+p_xPS(subs) = priceSensHS(subs);
+p_xDiffPS(subs) = p_xPS(subs) + p_diff;
+priceSensHS(subs) = p_xDiffPS(subs);
+
+solveParallel
+
+p_fDiffPS(subs) = func
+
+p_rPS(subs) = (p_fDiffPS(subs) - p_f(subs)) / p_diff;
+p_dPS(subs) = - p_rPS(subs);
+p_deltaPS(subs) = -p_rPS(subs) * p_dPS(subs);
+
+execute_unload "calibrationPS_0.gdx";
+
+loop(iteration,
+
+*** Armijo backtracking method
+p_alpha(subs)$(iteration.val > 1 and p_deltaPS(subs) > 0.001) = min(abs(0.5 * p_f(subs)),
+  max(p_alphaL,
+    (p_fPrev(subs) - p_f(subs))
+      / p_deltaPS(subs))
+  );
+p_alpha(subs)$(p_deltaPS(subs) le 0.001) = p_alphaL;
+
+loop(iterA,
+*** Solve the model only for the subsets which do not satisfy the Armijo condition yet
+  p_xAPS(subs) = p_xPS(subs) + p_alpha(subs) * p_dPS(subs);
+
+  v_stock.l("area", state, vinCalib, subs, ttot) = 0;
+  v_construction.l("area", state, subs, ttot) = 0;
+  v_renovation.l("area", state, stateFull, vinCalib, subs, ttot) = 0;
+
+  priceSensHS(subs) = p_xAPS(subs);
+
+  solveParallel
+
+  p_fA(subs) = func
+
+  p_phiDeriv(subs) = p_rPS(subs) * p_dPS(subs);
+
+*** Stopping criterion in all dimensions
+  loop((all_subs),
+    if (p_fA(all_subs) le p_f(all_subs) + p_sigma * p_alpha(all_subs) * p_phiDeriv(all_subs),
+      subs(all_subs) = no;
+      p_iterA(all_subs) = iterA.val;
+      );
+    p_fAIterA(iterA, all_subs) = p_fA(all_subs);
+    p_fArmijoRHIterA(iterA, all_subs) = p_f(all_subs) + p_sigma * p_alpha(all_subs) * p_phiDeriv(all_subs);
+  );
+  if(card(subs) = 0,
+    p_alphaIterA(iterA, all_subs) = p_alpha(all_subs);
+    break;
+  );
+*** Update alpha
+  p_alpha(subs) = p_alpha(subs) * p_beta;
+  p_alphaIterA(iterA, all_subs) = p_alpha(all_subs);
+);
+subs(all_subs) = yes;
+
+p_xPS(subs) = p_xAPS(subs);
+p_fPrev(subs) = p_f(subs);
+p_f(subs) = p_fA(subs);
+
+$ifThen.calLog "%CALIBRATIONLOG%" == "TRUE"
+p_renovation("area", state, stateFull, vinCalib, subs, ttot) = v_renovation.l("area", state, stateFull, vinCalib, subs, ttot);
+p_construction("area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
+$endIf.calLog
+p_stock("area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
+
+*** Save the model statistics of the previous iteration. This means that the iteration counter is off by one in some sense.
+p_repyFullSysNLPIter(iteration,all_subs,'solvestat') = fullSysNLP.solvestat;
+p_repyFullSysNLPIter(iteration,all_subs,'modelstat') = fullSysNLP.modelstat;
+p_repyFullSysNLPIter(iteration,all_subs,'resusd')    = fullSysNLP.resusd;
+p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
+
+*** Compute the gradient
+p_xDiffPS(subs) = p_xPS(subs) + p_diff;
+priceSensHS(subs) = p_xDiffPS(subs);
+solveParallel
+
+p_fDiffPS(subs) = func
+
+p_rPS(subs) = (p_fDiffPS(subs) - p_f(subs)) / p_diff;
+p_dPS(subs) = - p_rPS(subs);
+p_deltaPS(subs) = -p_rPS(subs) * p_dPS(subs);
+
+*** Save results of current iteration
+execute_unload "calibrationPS.gdx";
+!! retain gdxes of intermediate iterations by copying them using shell
+!! commands
+put_utility "shell" / "cp calibrationPS.gdx calibrationPS_" iteration.val:0:0 ".gdx";
+
+*** end iteration loop
+);
+
+$elseIf.calPrice "%CALIBRATEPRICESENS%" == "SIMPLE"
+
+execute_unload "calibrationPS_0.gdx";
+
+loop(iteration,
+
+  priceSensHS(subs) = allPriceSensHS(iteration);
+
+  solveParallel
+
+  p_renovation("area", state, stateFull, vinCalib, subs, ttot) = v_renovation.l("area", state, stateFull, vinCalib, subs, ttot);
+  p_construction("area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
+  p_stock("area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
+
+  p_f(subs) = func
+
+  execute_unload "calibrationPS.gdx";
+
+  !! retain gdxes of intermediate iterations by copying them using shell
+  !! commands
+  put_utility "shell" / "cp calibrationPS.gdx calibrationPS_" iteration.val:0:0 ".gdx";
+
+
+);
+
+abort "Stop here";
+
+$endIf.calPrice
+
+**************************************************************************************
+*** Calibration of intangible costs
+**************************************************************************************
+
+*** TODO: Still need to check the proper time dimension!
+*** TODO: Fix sets: What do I mean by subs? Where do I need to consider the vintage?
+*** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
+*** TODO: IMPORTANT! The implementation below relies on having constant intangible renovation costs for bs and hs, and assumes that the calibration is solely carried out for 2010!!!
+*** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
+p_xinitCon(state, subs)$renTarAllowed("con", state) = p_specCostCon("intangible", state, subs, "2010");
+p_xinitRen(state, stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = p_specCostRen("intangible", state, stateFull, vinCalib, subs, "2010");
+p_x("con", state, "2000-2010", subs)$renTarAllowed("con", state) = 0;
+p_x("ren", stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = 0;
+p_alpha(subs) = p_alphaL;
+p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
+
+p_f0(subs) = p_f(subs);
 
 *** Compute the gradient
 loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),

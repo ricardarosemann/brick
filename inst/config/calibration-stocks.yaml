@@ -4,8 +4,9 @@ basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
 startyear: 2010
-regionmapping: "input/regionmappingEUplus.csv"
-regions: DEU
+calibperiods: 2010
+regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
+regions: EUR
 ignoreShell: TRUE
 # switches
 switches:
@@ -13,9 +14,10 @@ switches:
   CALIBRATIONTYPE: stockszero
   CALIBRATIONINPUT: data
   TARGETFUNCTION: minsquare
-  CALIBRATIONLOG: FALSE
+  CALIBRATIONLOG: TRUE
+  CALIBRATEPRICESENS: NORMAL
 # parameters for calibration
 parameters:
-  alpha: 0.1
-  iteration: 2
+  alpha: 10
+  iteration: 10
 ...

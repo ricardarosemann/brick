@@ -121,7 +121,7 @@ q_HeteroPrefCon(subs,t)..
         - 1
       )
     )
-  + 1 / priceSensHS
+  + 1 / priceSensHS(subs)
   * (
     sum(bs,
       sum(hs,
@@ -172,7 +172,7 @@ q_HeteroPrefRen(subs,t)..
           - 1
         )
       )
-    + 1 / priceSensHS
+    + 1 / priceSensHS(subs)
     * (
       sum(bsr,
         sum(hsr$renAllowed(state,bsr,hsr),

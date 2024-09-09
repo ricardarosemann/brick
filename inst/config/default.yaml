@@ -219,6 +219,12 @@ switches:
     # FALSE
   CALIBRATIONLOG: TRUE
 
+  ### Calibration of price sensitivity
+  # Switch to control whether first price sensitivity is calibrated
+    # TRUE
+    # FALSE
+  CALIBRATEPRICESENS: FALSE
+
 
 # gams parameters --------------------------------------------------------------
 # passed to gams

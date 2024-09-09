@@ -16,8 +16,9 @@ switches:
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
   CALIBRATIONLOG: TRUE
+  CALIBRATEPRICESENS: NORMAL
 # parameters for calibration
 parameters:
-  alpha: 0.1
+  alpha: 10
   iteration: 30
 ...

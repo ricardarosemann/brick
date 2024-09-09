@@ -55,6 +55,7 @@ solveinfo	"model and solver stats"
 iterationAll "calibration iteration including zero"
 iteration(iterationAll) "calibration iteration"
 iterA  "Armijo backtracking iteration" / 1*50 /
+iterPriceSensHS "values for price sensitivity"
 
 *** matching reference sources
 qty    "quantity unit to measure stocks and flows in"
