@@ -9,47 +9,75 @@
 #'
 #' @param config run configurations
 #' @param path character vector with folders to run the model in
+#' @param configFolder character, directory to search for configs. If NULL, the
+#'   BRICK-internal config folder is used.
 #' @param outputFolder directory of output folder
 #' @param nameAdd character to be added to the run folder name
 #' @param references named character vector of matching references
-#' @param restart character vector of elements to be restarted.
-#' Allowed elements are:
-#'  "cpGms" to recopy the Gams scripts (necessary if changes were made in Gams code)
-#'  "crInp" to recreate input data,
-#'  "crMatch" to either recreate the matching data or reaggregate the matching
-#'  "none" (or any other string) to do none of the above
+#' @param restart logical or character vector of elements to be restarted.
+#'   If FALSE (default), then no restart is initiated.
+#'   If TRUE, then the run in the given path or the latest run is restarted with default settings.
+#'   Allowed elements of the character vector are:
+#'   \itemize{
+#'   \item \code{"copyGams"} to recopy the Gams scripts (necessary if changes were
+#'         made in Gams code)
+#'   \item \code{"createInput"} to recreate input data,
+#'   \item \code{"createMatching"} to either recreate the matching data or reaggregate
+#'         the matching
+#'   \item \code{"none"} (or any other string) to do none of the above
+##'  }
 #' @param sendToSlurm boolean whether or not the run should be started via SLURM
 #' @param slurmQOS character, slurm QOS to be used
+#' @param tasksPerNode numeric, number of tasks per node to be requested
 #' @param tasks32 boolean whether or not the SLURM run should be with 32 tasks
+#' @returns path (invisible)
+#'
 #' @importFrom pkgload is_dev_package
 #' @importFrom utils write.csv2
 #' @export
 initModel <- function(config = NULL,
                       path = NULL,
+                      configFolder = NULL,
                       outputFolder = "output",
                       nameAdd = "",
                       references = NULL,
-                      restart = NULL,
-                      sendToSlurm = TRUE,
-                      slurmQOS = "default",
+                      restart = FALSE,
+                      sendToSlurm = NULL,
+                      slurmQOS = NULL,
+                      tasksPerNode = NULL,
                       tasks32 = FALSE) {
 
   if (!dir.exists(outputFolder)) {
     dir.create(outputFolder)
   }
 
-  # Generate SLURM configuration if sending to SLURM
-  if (sendToSlurm) {
-    slurmConfig <- setSlurmConfig(slurmQOS = slurmQOS, tasks32 = tasks32)
+  # Check if SLURM is available. Start via SLURM if available, and directly otherwise.
+  if (is.null(sendToSlurm)) {
+    if (isSlurmAvailable()) {
+      message("SLURM is available. Run will be sent to SLURM.")
+      sendToSlurm <- TRUE
+    } else {
+      message("SLURM is not available. Run will be executed directly.")
+      sendToSlurm <- FALSE
+    }
+  } else if (isTRUE(sendToSlurm) && !isSlurmAvailable()) {
+    stop("sendToSlurm is TRUE, but SLURM is not available. Stopping.")
   }
 
-  # Check if an already existing path was given
-  if (!is.null(path) && file.exists(path)) {
-    message("Given path already exists. Restarting on this path.")
-    if (is.null(restart)) {
+  # Check if this is a restart run and determine the path to be restarted
+  if (isTRUE(restart) || is.character(restart)) {
+    if (!is.null(path) && file.exists(path)) {
+      message("Restarting on given path: ", path)
+    } else if (is.null(path)) {
+      path <- findLastRun(outputFolder)
+      message("No path given or given path does not exist. Restarting on the latest run: ", path)
+    } else {
+      stop("You passed a non-existing path in a restart run. Stopping.")
+    }
+    if (isTRUE(restart)) {
       message("No restart options were specified. ",
-              "Default options are applied: Recreating input data and recreate/reaggregate matching.")
-      restart <- c("crInp", "crMatch")
+              "Default options are applied: Copy Gams files, recreate input data and recreate/reaggregate matching.")
+      restart <- c("copyGams", "createInput", "createMatching")
     }
     write.csv2(data.frame(restart = restart), file.path(path, "config", "restartOptions.csv"))
 
@@ -58,15 +86,19 @@ initModel <- function(config = NULL,
               "This config will be ignored and the existing config in 'config/config.yaml' will be used.")
     }
 
-    cfg <- readConfig(file.path(path, "config", "config.yaml"))
+    cfg <- readConfig(config = file.path(path, "config", "config.yaml"),
+                      configFolder = configFolder,
+                      readDirect = TRUE)
     title <- cfg[["title"]]
   } else {
-    if (!is.null(restart)) {
-      message("Restart options were given, but no existing path was specified. Starting a new run.")
-      restart <- NULL
+    # Start a new run
+    restart <- FALSE
+    if (!is.null(path) && file.exists(path)) {
+      stop("You passed an existing path, but did not set this as a restart run. Stopping.")
     }
 
-    cfg <- readConfig(config)
+    cfg <- readConfig(config = config,
+                      configFolder = configFolder)
     title <- paste(cfg[["title"]], nameAdd, sep = "-")
 
     if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
@@ -82,14 +114,25 @@ initModel <- function(config = NULL,
     createRunFolder(path, cfg)
   }
 
+  # Generate SLURM configuration if sending to SLURM
+  if (sendToSlurm) {
+    if (is.null(slurmQOS) && !is.null(cfg[["slurmQOS"]])) slurmQOS <- cfg[["slurmQOS"]]
+    if (is.null(tasksPerNode) && !is.null(cfg[["tasksPerNode"]])) tasksPerNode <- cfg[["tasksPerNode"]]
+    if (isFALSE(tasks32) && isTRUE(cfg[["tasks32"]])) {
+      tasks32 <- cfg[["tasks32"]]
+      warning("Using 32 tasks as defined in the config file.")
+    }
+    slurmConfig <- setSlurmConfig(slurmQOS = slurmQOS, tasksPerNode = tasksPerNode, tasks32 = tasks32)
+  }
+
   # Copy gams files if this is not a restart run or if this is specified in restart parameters
-  if (is.null(restart) || "cpGms" %in% restart) {
-    copyGamsFiles(path, overwrite = !is.null(restart))
+  if (isFALSE(restart) || "copyGams" %in% restart) {
+    copyGamsFiles(path, overwrite = !isFALSE(restart))
   }
 
   copyInitialGdx(path, cfg)
 
-  copyHistoryGdx(path, cfg)
+  copyHistoryGdx(path, outputFolder, cfg)
 
   # In matching run: Save references to csv
   if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
@@ -108,7 +151,7 @@ initModel <- function(config = NULL,
     exitCode <- system(paste0("sbatch --job-name=",
                               title,
                               " --output=", logFilePath,
-                              " --mail-type=END",
+                              " --mail-type=END,FAIL",
                               " --comment=BRICK",
                               " --wrap=\"",
                               paste("Rscript", slurmScriptPath, path, brickDir, isDev),
@@ -119,5 +162,8 @@ initModel <- function(config = NULL,
     if (exitCode > 0) {
       message("Executing initModel failed with exit code ", exitCode, ".")
     }
+
   }
+
+  invisible(path)
 }

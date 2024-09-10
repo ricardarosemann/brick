@@ -10,6 +10,13 @@ p_specCostRen(cost,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "floor-space specific
 p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot)                  "floor-space specific operation cost in USD/(m2.yr)"
 p_specCostDem                                              "floor-space specific demolition cost in USD/m2"
 
+p_carbonPrice(ttot)                "Carbon price in USD/t_CO2eq"
+p_carrierPrice(carrier,reg,ttot)   "final energy carrier price in USD/kWh"
+p_carrierEmi(carrier,reg,ttot)     "energy carrier emission intensity in t_CO2/kWh"
+p_ueDemand(bs,vin,reg,typ)         "floor-space specific useful energy demand for space heating in kWh/yr/m2"
+p_feDemand(hs,bs,vin,reg,typ,ttot) "floor-space specific final energy demand for space heating in kWh/yr/m2"
+p_eff(hs,reg,typ,ttot)             "technical efficiency of space heating technologies"
+
 p_lccCon(cost,var,bs,hs,reg,loc,typ,inc,ttot) "Estimate of life cycle cost of constructed housing in USD/m2"
 p_probDem(reg,typ,ttot2,ttot)                 "probability of a building having reached its end of life"
 p_LifeTimeBS(reg)                             "life time of building shell system in yr"
@@ -29,8 +36,8 @@ p_shareRenHS(hs,reg,typ,ttot,ttot)     "minimum share of renovation from the hea
 p_shareRenBSinit(reg,ttot,ttot)        "minimum share of renovation from the building shell of initial stock reaching end of life"
 p_shareRenHSinit(hs,reg,typ,ttot,ttot) "minimum share of renovation from the heating system of initial stock reaching end of life"
 
-p_discountFac(typ,ttot)         "discount factor w.r.t. t0"
-p_renAllowed(bs,hs,bsr,hsr) "1 if renovation is allowed else 0"
+p_interestRate(typ,ttot) "interest rate (incl. implicit) w.r.t. t0 in 1/yr"
+p_discountFac(typ,ttot)  "discount factor w.r.t. t0"
 
 p_runtime(reg,loc,typ,inc)                  "model runtime"
 p_handle(reg,loc,typ,inc)                   "parallel model handle parameter"
@@ -75,13 +82,12 @@ p_alphaIterA(iterA, reg, loc, typ, inc)
 p_fAIterA(iterA, reg, loc, typ, inc)
 p_fArmijoRHIterA(iterA, reg, loc, typ, inc)
 
-priceSensHS(reg, loc, typ, inc) "price sensitivity of heating system choice"
-p_xPS(reg, loc, typ, inc)
-p_xDiffPS(reg, loc, typ, inc)
-p_xAPS(reg, loc, typ, inc)
-p_fDiffPS(reg, loc, typ, inc)
-p_rPS(reg, loc, typ, inc)
-p_dPS(reg, loc, typ, inc)
+p_xPS(var, reg, loc, typ, inc)
+p_xDiffPS(var, reg, loc, typ, inc)
+p_xAPS(var, reg, loc, typ, inc)
+p_fDiffPS(var, reg, loc, typ, inc)
+p_rPS(var, reg, loc, typ, inc)
+p_dPS(var, reg, loc, typ, inc)
 p_deltaPS(reg, loc, typ, inc)
 
 allPriceSensHS(iteration)
@@ -94,6 +100,9 @@ p_renovationDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, bsr, hsr, vin, r
 p_calibSpeed(varFLow)                                                 "Control of the step size in the calibration iteration"
 p_calibDeviationCon(iterationAll,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
 p_calibDeviationRen(iterationAll,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
+
+priceSensBS(var) "price sensitivity of building shell choice" / construction 10000, renovation 10000 /
+priceSensHS(var, reg, loc, typ, inc) "price sensitivity of heating system choice"
 ;
 
 scalars
@@ -102,13 +111,11 @@ t0 "reference year for discounting"
 epsilon "offset to avoid log(0)" /1E-5/
 epsilonSmall "Smaller offset for calibration" /1E-9/
 
-priceSensBS "price sensitivity of building shell choice" /5E-2/
-;
-
 variables
-v_totSysCost               "total system cost incl. diversity preference in EUR"
-v_SysCost(reg,loc,typ,inc) "system cost incl. diversity preference in EUR"
+v_totObj               "total objective value"
+v_Obj(reg,loc,typ,inc) "objective value: discounted system cost + heterogeneity preference"
 
+v_SysHeteroPref(reg,loc,typ,inc,ttot) "system-wide heterogeneity preference"
 v_HeteroPrefCon(reg,loc,typ,inc,ttot) "diversity preference for construction"
 v_HeteroPrefRen(reg,loc,typ,inc,ttot) "diversity preference for renovation"
 
@@ -119,13 +126,14 @@ v_refDeviationVar(ref,refVar,reg,ttot) "deviation from each variable in referenc
 v_matchingObj              "matching objective: reference deviation and flow variation"
 $endif.matching
 
-v_ConCost(reg,loc,typ,inc,ttot) "construction cost cash flow in EUR/yr"
-v_RenCost(reg,loc,typ,inc,ttot) "renovation cost cash flow in EUR/yr"
+v_SysCost(reg,loc,typ,inc,ttot) "system cost cost cash flow in USD/yr"
+v_ConCost(reg,loc,typ,inc,ttot) "construction cost cash flow in USD/yr"
+v_RenCost(reg,loc,typ,inc,ttot) "renovation cost cash flow in USD/yr"
 ;
 
 positive variables
-v_OpeCost(reg,loc,typ,inc,ttot) "operational cost cash flow in EUR/yr"
-v_DemCost(reg,loc,typ,inc,ttot) "demolition cost cash flow in EUR/yr"
+v_OpeCost(reg,loc,typ,inc,ttot) "operational cost cash flow in USD/yr"
+v_DemCost(reg,loc,typ,inc,ttot) "demolition cost cash flow in USD/yr"
 
 v_stock(qty,bs,hs,vin,reg,loc,typ,inc,ttot)              "stock of buildings in million m2"
 v_construction(qty,bs,hs,reg,loc,typ,inc,ttot)           "flow of new buildings in million m2/yr"
@@ -134,7 +142,7 @@ v_demolition(qty,bs,hs,vin,reg,loc,typ,inc,ttot)         "flow of demolished bui
 
 v_dwelSizeStock(vin,reg,loc,typ,inc,ttot)              "average dwelling size of the stock in m2/dwel"
 v_dwelSizeConstruction(reg,loc,typ,inc,ttot)           "average dwelling size of newly constructed buildings in m2/dwel"
-v_dwelSizeRenovation(vin,reg,loc,typ,inc,ttot) "average dwelling size of renovated buildings in m2/dwel"
+v_dwelSizeRenovation(vin,reg,loc,typ,inc,ttot)         "average dwelling size of renovated buildings in m2/dwel"
 v_dwelSizeDemolition(vin,reg,loc,typ,inc,ttot)         "average dwelling size of demolished buildings in m2/dwel"
 
 $ifthen.matching "%RUNTYPE%" == "matching"
@@ -149,13 +157,17 @@ $endif.matching
 ;
 
 equations
-q_totSysCost                    "total discounted system cost"
-q_SysCost(reg,loc,typ,inc)      "discounted system cost"
+
+q_totObj               "total objective"
+q_Obj(reg,loc,typ,inc) "objective: discounted system cost + heterogeneity preference"
+
+q_SysCost(reg,loc,typ,inc,ttot) "system cost (con + ren + ope + dem)"
 q_ConCost(reg,loc,typ,inc,ttot) "construction cost"
 q_RenCost(reg,loc,typ,inc,ttot) "renovation cost"
 q_OpeCost(reg,loc,typ,inc,ttot) "operation cost"
 q_DemCost(reg,loc,typ,inc,ttot) "demolition cost"
 
+q_SysHeteroPref(reg,loc,typ,inc,ttot) "system-wide heterogeneity preference"
 q_HeteroPrefCon(reg,loc,typ,inc,ttot) "diversity preference for construction"
 q_HeteroPrefRen(reg,loc,typ,inc,ttot) "diversity preference for renovation"
 q_zeroHeteroPrefCon(reg,loc,typ,inc,ttot) "zero diversity preference for construction (lp)"

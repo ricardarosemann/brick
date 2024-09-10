@@ -19,18 +19,18 @@ startModel <- function(path) {
   if (file.exists(file.path(path, "config", "restartOptions.csv"))) {
     restart <- read.csv2(file.path(path, "config", "restartOptions.csv"))[["restart"]]
   } else {
-    restart <- NULL
+    restart <- FALSE
   }
 
-  if (is.null(restart) || "crInp" %in% restart) {
-    createInputData(path, cfg, overwrite = !is.null(restart))
+  if (isFALSE(restart) || "createInput" %in% restart) {
+    createInputData(path, cfg, overwrite = !isFALSE(restart))
   }
 
-  if (is.null(restart) || "crMatch" %in% restart) {
+  if (isFALSE(restart) || "createMatching" %in% restart) {
     if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
-      createMatchingData(path, cfg, overwrite = !is.null(restart))
+      createMatchingData(path, cfg, overwrite = !isFALSE(restart))
     } else if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
-      # aggregateMatching(path, cfg, overwrite = !is.null(restart))
+      # aggregateMatching(path, cfg, overwrite = !isFALSE(restart))
     }
   }
 
@@ -39,6 +39,8 @@ startModel <- function(path) {
           c(cfg[["switches"]], cfg[c("solverLP", "solverNLP", "solverQCP",
                                      "ignoreShell")]),
           gamsCall = cfg[["gamsCall"]])
+
+  checkGamsSuccess(path)
 
   reportMif(path)
 

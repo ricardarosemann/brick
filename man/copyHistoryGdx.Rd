@@ -4,14 +4,24 @@
 \alias{copyHistoryGdx}
 \title{Copy history gdx to output folder}
 \usage{
-copyHistoryGdx(path, config, overwrite = FALSE)
+copyHistoryGdx(
+  path,
+  outputFolder = NULL,
+  config,
+  overwrite = FALSE,
+  thistOnly = TRUE
+)
 }
 \arguments{
 \item{path}{character vector with folders to write input data into}
 
+\item{outputFolder}{directory of output folder}
+
 \item{config}{named list with run configuration}
 
 \item{overwrite}{logical, should existing input.gdx be overwritten?}
+
+\item{thistOnly}{logical, crop temporal parameters to historic periods}
 }
 \description{
 Copy history gdx to output folder

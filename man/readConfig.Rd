@@ -4,16 +4,17 @@
 \alias{readConfig}
 \title{Read config file}
 \usage{
-readConfig(config = NULL, basisOf = NULL, readDirect = FALSE)
+readConfig(config = NULL, configFolder = NULL, readDirect = FALSE)
 }
 \arguments{
 \item{config}{character, config file, either a path to a yaml file or the
-name of the file in `inst/config/`}
+name of the file in \code{configFolder}}
 
-\item{basisOf}{character, name of other config that is based on this config}
+\item{configFolder}{character, directory to search for configs. If NULL, the
+BRICK-internal config folder is used.}
 
-\item{readDirect}{boolean, specify whether config is a valid path to a config
-file that should be read directly.}
+\item{readDirect}{logical, specify whether \code{config} is a valid path to a
+config file that should be read directly.}
 }
 \value{
 named list with run config

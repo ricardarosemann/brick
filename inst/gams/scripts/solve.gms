@@ -2,7 +2,8 @@
 
 model fullSysLP "full system linear optimisation"
   /
-  q_totSysCost
+  q_totObj
+  q_Obj
   q_SysCost
   q_ConCost
   q_RenCost
@@ -16,6 +17,7 @@ $ifthenE.shell (not(sameas("%ignoreShell%","TRUE")))
   q_buildingShellLifeTime
 $endif.shell
   q_heatingSystemLifeTime
+  q_SysHeteroPref
   q_zeroHeteroPrefCon
   q_zeroHeteroPrefRen
 *  q_minDivConHS
@@ -28,7 +30,8 @@ $endif.shell
 
 model fullSysNLP "full system linear optimisation"
   /
-  q_totSysCost
+  q_totObj
+  q_Obj
   q_SysCost
   q_ConCost
   q_RenCost
@@ -42,6 +45,7 @@ $ifthenE.shell (not(sameas("%ignoreShell%","TRUE")))
   q_buildingShellLifeTime
 $endif.shell
   q_heatingSystemLifeTime
+  q_SysHeteroPref
   q_HeteroPrefCon
   q_HeteroPrefRen
 *  q_maxRenRate
@@ -97,7 +101,7 @@ $macro solveParallel subs(all_subs) = no; \
 fullSysNLP.SolveLink = 3; \
 loop(all_subs, \
   subs(all_subs) = yes; \
-  solve fullSysNLP minimizing v_totSysCost using nlp; \
+  solve fullSysNLP minimizing v_totObj using nlp; \
   subs(all_subs) = no; \
   p_handle(all_subs) = fullSysNLP.handle; \
 ); \
@@ -120,7 +124,7 @@ subs(all_subs) = yes;
 
 $ifThen.targetFunc "%TARGETFUNCTION%" == "minsquare"
 $ifThen.calibTarget "%CALIBRATIONTYPE%" == "flows"
-$macro func sum((state3, tcalib)$renTarAllowed("con", state3), \
+$macro func sum((state3, tcalib)$renTarAllowed("construction", state3), \
   power(p_constructionHist("area", state3, subs, tcalib) - v_construction.l("area", state3, subs, tcalib), 2)) \
   + sum((vin3, state3, stateFull3, tcalib)$renAllowed(state3, stateFull3), \
   power(p_renovationHist("area", state3, stateFull3, vin3, subs, tcalib) - v_renovation.l("area", state3, stateFull3, vin3, subs, tcalib), 2));
@@ -138,7 +142,7 @@ $endIf.calibTarget
 
 $elseIf.targetFunc "%TARGETFUNCTION%" == "maxlikely"
 $ifThen.calibTarget "%CALIBRATIONTYPE%" == "flows"
-$macro func - sum((state3, tcalib)$renTarAllowed("con", state3), \
+$macro func - sum((state3, tcalib)$renTarAllowed("construction", state3), \
   p_constructionHist("area", state3, subs, tcalib) \
   * log(v_construction.l("area", state3, subs, tcalib) \
     / (sum(state4, \
@@ -207,7 +211,7 @@ q("area") = yes;
 * $endif.calibration
 
 $ifthenE.lp (sameas("%SOLVEPROBLEM%","lp"))or(sameas("%SOLVEPROBLEM%","lpnlp"))
-solve fullSysLP minimizing v_totSysCost using lp;
+solve fullSysLP minimizing v_totObj using lp;
 p_repyFullSysLP('solvestat') = fullSysLP.solvestat;
 p_repyFullSysLP('modelstat') = fullSysLP.modelstat;
 p_repyFullSysLP('resusd')    = fullSysLP.resusd;
@@ -224,7 +228,7 @@ solveParallel
 
 $else.parallel
 
-solve fullSysNLP minimizing v_totSysCost using nlp;
+solve fullSysNLP minimizing v_totObj using nlp;
 
 p_repyFullSysNLP(subs,'solvestat') = fullSysNLP.solvestat;
 p_repyFullSysNLP(subs,'modelstat') = fullSysNLP.modelstat;
@@ -250,8 +254,8 @@ q("area") = yes;
 p_alpha(subs) = p_alphaL;
 p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
 
-* p_specCostCon("intangible", bs, hs, subs, t) = p_x("con", bs, hs, "2000-2010", subs);
-* p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_x("ren", stateFull, vinCalib, subs);
+* p_specCostCon("intangible", bs, hs, subs, t) = p_x("construction", bs, hs, "2000-2010", subs);
+* p_specCostRen("intangible", state, stateFull, vinCalib, subs, t) = p_x("renovation", stateFull, vinCalib, subs);
 * v_stock.l(qty,state,vinCalib,subs,t) = p_stockHist(qty,state,vinCalib,subs,t);
 
 solveParallel
@@ -283,17 +287,22 @@ p_repyFullSysNLPIter("0",all_subs,'objval')    = fullSysNLP.objval;
 $ifThen.calPrice "%CALIBRATEPRICESENS%" == "NORMAL"
 
 *** Compute the gradient
-p_xPS(subs) = priceSensHS(subs);
-p_xDiffPS(subs) = p_xPS(subs) + p_diff;
-priceSensHS(subs) = p_xDiffPS(subs);
+p_xPS(flow, subs) = priceSensHS(flow, subs);
 
-solveParallel
+loop(flow2, 
+  p_xDiffPS(flow, subs)$(sameAs(flow, flow2)) = p_xPS(flow, subs) + p_diff;
+  p_xDiffPS(flow, subs)$(not sameAs(flow, flow2)) = p_xPS(flow, subs);
+  priceSensHS(flow, subs) = p_xDiffPS(flow, subs);
 
-p_fDiffPS(subs) = func
+  solveParallel
 
-p_rPS(subs) = (p_fDiffPS(subs) - p_f(subs)) / p_diff;
-p_dPS(subs) = - p_rPS(subs);
-p_deltaPS(subs) = -p_rPS(subs) * p_dPS(subs);
+  p_fDiffPS(flow2, subs) = func
+);
+
+p_rPS(flow, subs) = (p_fDiffPS(flow, subs) - p_f(subs)) / p_diff;
+p_dPS(flow, subs) = - p_rPS(flow, subs);
+p_deltaPS(subs) = sum(flow,
+  -p_rPS(flow, subs) * p_dPS(flow, subs));
 
 execute_unload "calibrationPS_0.gdx";
 
@@ -309,19 +318,20 @@ p_alpha(subs)$(p_deltaPS(subs) le 0.001) = p_alphaL;
 
 loop(iterA,
 *** Solve the model only for the subsets which do not satisfy the Armijo condition yet
-  p_xAPS(subs) = p_xPS(subs) + p_alpha(subs) * p_dPS(subs);
+  p_xAPS(flow, subs) = p_xPS(flow, subs) + p_alpha(subs) * p_dPS(flow, subs);
 
   v_stock.l("area", state, vinCalib, subs, ttot) = 0;
   v_construction.l("area", state, subs, ttot) = 0;
   v_renovation.l("area", state, stateFull, vinCalib, subs, ttot) = 0;
 
-  priceSensHS(subs) = p_xAPS(subs);
+  priceSensHS(flow, subs) = p_xAPS(flow, subs);
 
   solveParallel
 
   p_fA(subs) = func
 
-  p_phiDeriv(subs) = p_rPS(subs) * p_dPS(subs);
+  p_phiDeriv(subs) = sum(flow,
+    p_rPS(flow, subs) * p_dPS(flow, subs));
 
 *** Stopping criterion in all dimensions
   loop((all_subs),
@@ -342,7 +352,7 @@ loop(iterA,
 );
 subs(all_subs) = yes;
 
-p_xPS(subs) = p_xAPS(subs);
+p_xPS(flow, subs) = p_xAPS(flow, subs);
 p_fPrev(subs) = p_f(subs);
 p_f(subs) = p_fA(subs);
 
@@ -359,15 +369,20 @@ p_repyFullSysNLPIter(iteration,all_subs,'resusd')    = fullSysNLP.resusd;
 p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
 
 *** Compute the gradient
-p_xDiffPS(subs) = p_xPS(subs) + p_diff;
-priceSensHS(subs) = p_xDiffPS(subs);
-solveParallel
+loop(flow2, 
+  p_xDiffPS(flow, subs)$(sameAs(flow, flow2)) = p_xPS(flow, subs) + p_diff;
+  p_xDiffPS(flow, subs)$(not sameAs(flow, flow2)) = p_xPS(flow, subs);
+  priceSensHS(flow, subs) = p_xDiffPS(flow, subs);
 
-p_fDiffPS(subs) = func
+  solveParallel
 
-p_rPS(subs) = (p_fDiffPS(subs) - p_f(subs)) / p_diff;
-p_dPS(subs) = - p_rPS(subs);
-p_deltaPS(subs) = -p_rPS(subs) * p_dPS(subs);
+  p_fDiffPS(flow2, subs) = func
+);
+
+p_rPS(flow, subs) = (p_fDiffPS(flow, subs) - p_f(subs)) / p_diff;
+p_dPS(flow, subs) = - p_rPS(flow, subs);
+p_deltaPS(subs) = sum(flow,
+  -p_rPS(flow, subs) * p_dPS(flow, subs));
 
 *** Save results of current iteration
 execute_unload "calibrationPS.gdx";
@@ -384,7 +399,7 @@ execute_unload "calibrationPS_0.gdx";
 
 loop(iteration,
 
-  priceSensHS(subs) = allPriceSensHS(iteration);
+  priceSensHS(flow, subs) = allPriceSensHS(iteration);
 
   solveParallel
 
@@ -416,10 +431,10 @@ $endIf.calPrice
 *** TODO: Fix: For construction I need to vary bs and hs, for renovation, costs primarily depend on bsr and hsr! (Although for more precision, reflecting both makes sens)
 *** TODO: IMPORTANT! The implementation below relies on having constant intangible renovation costs for bs and hs, and assumes that the calibration is solely carried out for 2010!!!
 *** Done (Mostly): Figure out whether we want to calibrate flows or stocks; if they are stocks: Also need to treat p_specCostRen in a similar way! (Then c(p_specCostCon, p_specCostRen) serve the function of x)
-p_xinitCon(state, subs)$renTarAllowed("con", state) = p_specCostCon("intangible", state, subs, "2010");
-p_xinitRen(state, stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = p_specCostRen("intangible", state, stateFull, vinCalib, subs, "2010");
-p_x("con", state, "2000-2010", subs)$renTarAllowed("con", state) = 0;
-p_x("ren", stateFull, vinCalib, subs)$renTarAllowed("ren", stateFull) = 0;
+p_xinitCon(state, subs)$renTarAllowed("construction", state) = p_specCostCon("intangible", state, subs, "2010");
+p_xinitRen(state, stateFull, vinCalib, subs)$renTarAllowed("renovation", stateFull) = p_specCostRen("intangible", state, stateFull, vinCalib, subs, "2010");
+p_x("construction", state, "2000-2010", subs)$renTarAllowed("construction", state) = 0;
+p_x("renovation", stateFull, vinCalib, subs)$renTarAllowed("renovation", stateFull) = 0;
 p_alpha(subs) = p_alphaL;
 p_fPrev(subs) = 0; !! unused initialization to avoid compilation error
 
@@ -427,14 +442,14 @@ p_f0(subs) = p_f(subs);
 
 *** Compute the gradient
 loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
-  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010")))
                                       and (not sameas(bsr, bsr3) or not sameas(hsr, hsr3) or not sameas(flow, flow2) or not sameas(vinCalib, vin2)))
                                       = p_x(flow, bsr, hsr, vinCalib, subs);
-  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
-  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xinitCon(state, subs) + p_xDiff("con", state, "2000-2010", subs);
-  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xDiff("ren", stateFull, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t)$renTarAllowed("construction", state) = p_xinitCon(state, subs) + p_xDiff("construction", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xDiff("renovation", stateFull, vinCalib, subs);
 
   v_stock.l("area", state, vinCalib, subs, ttot) = 0;
   v_construction.l("area", state, subs, ttot) = 0;
@@ -450,8 +465,8 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
   p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
 );
 
-p_r(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
-p_d(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))) = - p_r(flow, stateFull, vinCalib, subs);
+p_r(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010"))) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
+p_d(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010"))) = - p_r(flow, stateFull, vinCalib, subs);
 p_delta(subs) = sum((flow, stateFull, vinCalib)$renTarAllowed(flow, stateFull),
   -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
 
@@ -471,10 +486,10 @@ p_alpha(subs)$(p_delta(subs) le 0.001) = p_alphaL;
 
 loop(iterA,
 *** Solve the model only for the subsets which do not satisfy the Armijo condition yet
-  p_xA(flow, bsr, hsr, vinCalib, subs)$(renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
+  p_xA(flow, bsr, hsr, vinCalib, subs)$(renTarAllowed(flow, bsr, hsr) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010")))
                                   = p_x(flow, bsr, hsr, vinCalib, subs) + p_alpha(subs) * p_d(flow, bsr, hsr, vinCalib, subs);
-  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xinitCon(state, subs) + p_xA("con", state, "2000-2010", subs);
-  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xA("ren", stateFull, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t)$renTarAllowed("construction", state) = p_xinitCon(state, subs) + p_xA("construction", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xA("renovation", stateFull, vinCalib, subs);
 
   v_stock.l("area", state, vinCalib, subs, ttot) = 0;
   v_construction.l("area", state, subs, ttot) = 0;
@@ -506,7 +521,7 @@ loop(iterA,
 );
 subs(all_subs) = yes;
 
-p_x(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
+p_x(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010")))
                                 = p_xA(flow, stateFull, vinCalib, subs);
 p_fPrev(subs) = p_f(subs);
 p_f(subs) = p_fA(subs);
@@ -525,14 +540,14 @@ p_repyFullSysNLPIter(iteration,all_subs,'objval')    = fullSysNLP.objval;
 
 *** Compute the gradient
 loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
-  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010")))
                                       and (not sameas(bsr, bsr3) or not sameas(hsr, hsr3) or not sameas(flow, flow2) or not sameas(vinCalib, vin2)))
                                       = p_x(flow, bsr, hsr, vinCalib, subs);
-  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))
+  p_xDiff(flow, bsr, hsr, vinCalib, subs)$((renTarAllowed(flow, bsr, hsr) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010")))
                                     and (sameas(bsr, bsr3) and sameas(hsr, hsr3) and sameas(flow, flow2) and sameas(vinCalib, vin2)))
                                     = p_x(flow, bsr, hsr, vinCalib, subs) + p_diff;
-  p_specCostCon("intangible", state, subs, t)$renTarAllowed("con", state) = p_xinitCon(state, subs) + p_xDiff("con", state, "2000-2010", subs);
-  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xDiff("ren", stateFull, vinCalib, subs);
+  p_specCostCon("intangible", state, subs, t)$renTarAllowed("construction", state) = p_xinitCon(state, subs) + p_xDiff("construction", state, "2000-2010", subs);
+  p_specCostRen("intangible", state, stateFull, vinCalib, subs, t)$renAllowed(state, stateFull) = p_xinitRen(state, stateFull, vinCalib, subs) + p_xDiff("renovation", stateFull, vinCalib, subs);
 
   v_stock.l("area", state, vinCalib, subs, ttot) = 0;
   v_construction.l("area", state, subs, ttot) = 0;
@@ -548,8 +563,8 @@ loop((flow2, bsr3, hsr3, vin2)$renTarAllowed(flow2, bsr3, hsr3),
   p_fDiff(flow2, bsr3, hsr3, vin2, subs) = func
 );
 
-p_r(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010"))) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
-p_d(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "ren") or sameas(vinCalib, "2000-2010")))= - p_r(flow, stateFull, vinCalib, subs);
+p_r(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010"))) = (p_fDiff(flow, stateFull, vinCalib, subs) - p_f(subs)) / p_diff;
+p_d(flow, stateFull, vinCalib, subs)$(renTarAllowed(flow, stateFull) and (sameas(flow, "renovation") or sameas(vinCalib, "2000-2010")))= - p_r(flow, stateFull, vinCalib, subs);
 p_delta(subs) = sum((flow, stateFull, vinCalib)$renTarAllowed(flow, stateFull),
   -p_r(flow, stateFull, vinCalib, subs) * p_d(flow, stateFull, vinCalib, subs));
 

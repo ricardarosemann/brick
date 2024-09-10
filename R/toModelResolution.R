@@ -15,6 +15,10 @@
 
 toModelResolution <- function(x, m, value = "value") {
 
+  if (!value %in% colnames(x)) {
+    stop("Can't find the value column '", value, "'.")
+  }
+
   # all temporal periods that should be interpolated
   periodDims <- "ttot"
 

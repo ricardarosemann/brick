@@ -13,6 +13,9 @@ vin "construction vintage cohort"
 vinCalib(vin)  "Dynamic vintages in calibration"
 *$endif.calibration
 
+*** energy carriers
+carrier "energy carrier"
+
 *** stock subset dimesions
 reg "regions"
 loc "location of building (rural, urban)"
@@ -40,7 +43,7 @@ varFlow(var) "flow variables of the model"
   / construction, renovation, demolition /
 
 *** For calibration: Flows used in calibration
-flow  "flow variables for calibration"
+flow(var)  "flow variables for calibration"
 
 *** model analytics
 solveinfo	"model and solver stats"
@@ -107,6 +110,7 @@ $load vin
 $ifthen.calibration "%RUNTYPE%" == "calibration"
 $load flow iterationAll iteration
 $endif.calibration
+$load carrier
 $gdxin
 
 * *** Adjust bsr for ignore shell runs
@@ -160,6 +164,7 @@ sameState(bs,hs,bsr,hsr)           "Is the state after the renovation the same a
 renEffective(bs,hs,bsr,hsr)        "Renovations without untouched buildings"
 conAllowed(bsr, hsr, vin)  "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
 refVarExists (ref,refVar,reg,ttot) "There is a value for this combination of reference, variable, region and period"
+hsCarrier(hs,carrier)              "mapping between heating system and energy carrier"
 
 *** Temporary: To check whether the stock calibration uses the right flow
 zeroFlow(bs, hs, bsr, hsr)
@@ -188,6 +193,7 @@ alias(renAllowed,renAllowed2);
 $gdxin input.gdx
 $load renAllowed
 $load vinExists
+$load hsCarrier
 $load hsBan
 $gdxin
 
@@ -210,10 +216,10 @@ loop(tcalib,
 );
 
 loop(renAllowed(bs, hs, bsr, hsr),
-  renTarAllowed("ren", bsr, hsr) = yes;
+  renTarAllowed("renovation", bsr, hsr) = yes;
 );
 loop((bsr, hsr)$(bs(bsr) and hs(hsr)),
-  renTarAllowed("con", bsr, hsr) = yes;
+  renTarAllowed("construction", bsr, hsr) = yes;
 );
 
 ***Determine sets of flows which are included in the stock calibration

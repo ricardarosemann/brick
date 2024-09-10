@@ -26,6 +26,7 @@ calibperiods: NULL
 ### region mapping ###
 # file that maps countries to modelled regions
   # []: country-level resolution
+  # [path]: file path to regionmapping
   # [name, where]: regionmapping via toolGetMapping
 regionmapping: []
 
@@ -58,15 +59,28 @@ minimal: FALSE
 reportingTemplate: onlyRes
 
 ### historic run ###
-# path to run to consider as history before startyear
+# run to consider as history before startyear
   # NULL: no history before this run
+  # <file path>: either directory of model run or path of specific gdx file
+  # <scenario name>: pick most recent run with this name in output folder
 historic: NULL
 
+
+# slurm settings ---------------------------------------------------------------
+
+### slurm quality of service (= QOS)
+slurmQOS: NULL
+
+### tasks per node
+tasksPerNode: NULL
+
+### Whether to use a node with up to 32 tasks
+tasks32: FALSE
 
 # data -------------------------------------------------------------------------
 
 ### input data revision ###
-inputRevision: "0.5"
+inputRevision: "0.6"
 
 ### force download ###
 # force the model to download new input data even though it seems unchanged
@@ -221,8 +235,9 @@ switches:
 
   ### Calibration of price sensitivity
   # Switch to control whether first price sensitivity is calibrated
-    # TRUE
-    # FALSE
+    # NORMAL: Price sensitivity calibration following the general calibration approach
+    # SIMPLE: Use calibration framework to compute Brick results with varying sensitivity
+    # FALSE: Do not calibrate the price sensitivity
   CALIBRATEPRICESENS: FALSE
 
 

@@ -5,11 +5,11 @@ basedOn: "default.yaml"
 periods: [2000, 2010]
 startyear: 2010
 calibperiods: 2010
-regionmapping: "input/regionmappingEUplus.csv"
+regionmapping: ["regionmappingEUplus.csv", "mredgebuildings"]
 regions: DEU
 ignoreShell: TRUE
 minimal: TRUE
-reportingTemplate: "/p/tmp/ricardar/reportbrick-tmpl/ignoreShell_min"
+reportingTemplate: "/p/tmp/ricardar/reportbrick-tmpl/brickSets_ignoreShell_min.yaml"
 # switches
 switches:
   RUNTYPE: calibration

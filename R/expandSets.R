@@ -4,17 +4,18 @@
 #' all set entries as rows
 #'
 #' @param ... gams sets
+#' @param .m gams Container with sets referenced in \code{...}.
 #' @returns data.frame with full crossing of set entries
 #'
 #' @author Robin Hasse
 
-expandSets <- function(...) {
+expandSets <- function(..., .m = NULL) {
 
   lst <- list(...)
 
   # read set elements and dim name from gams objects
-  setElements <- lapply(lst, function(l) as.character(l$getUELs()))[]
-  setNames <- as.character(lapply(lst, function(l) l$name))
+  setElements <- lapply(lst, function(l) as.character(.getSet(l, .m)$getUELs()))[]
+  setNames <- as.character(lapply(lst, function(l) .getSet(l, .m)$name))
 
   # convert elements of temporal dims to numeric
   temporalSets <- c("ttot", "ttot2", "t", "thist")
@@ -33,4 +34,25 @@ expandSets <- function(...) {
   expand.grid(setNames(setElements, setNames),
               stringsAsFactors = FALSE,
               KEEP.OUT.ATTRS = FALSE)
+}
+
+
+
+.getSet <- function(l, .m) {
+  if (is.character(l)) {
+    if (is.null(.m)) {
+      stop("'.m' cannot be NULL if you provide a set as character: ", l)
+    } else {
+      if (l %in% c(.m$listSets(), .m$listAliases())) {
+        return(.m$getSymbols(l)[[1]])
+      } else {
+        stop("Cannot find a set called '", l, "' in '.m'")
+      }
+    }
+  } else if (class(l)[[1]] %in% c("Set", "Alias")) {
+    return(l)
+  } else {
+    stop("Sets can only be passed as gams set or alias object or character, ",
+         "not ", class(l), ".")
+  }
 }

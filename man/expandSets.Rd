@@ -4,10 +4,12 @@
 \alias{expandSets}
 \title{Expand set values to data frame}
 \usage{
-expandSets(...)
+expandSets(..., .m = NULL)
 }
 \arguments{
 \item{...}{gams sets}
+
+\item{.m}{gams Container with sets referenced in \code{...}.}
 }
 \value{
 data.frame with full crossing of set entries

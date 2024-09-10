@@ -2,13 +2,17 @@
 
 $gdxin input.gdx
 $load p_dt p_dtVin t0
-$load p_specCostCon p_specCostRen p_specCostOpe p_specCostDem
-$load p_discountFac priceSensHS allPriceSensHS
+$load priceSensHS allPriceSensHS
+$load p_specCostCon p_specCostRen p_specCostDem
+$load p_carbonPrice p_carrierPrice p_carrierEmi p_ueDemand p_eff
+$load p_interestRate
 $load p_population
 $load p_stockHist
 $ifthen.calibration "%RUNTYPE%" == "calibration"
 $load conAllowed p_alphaL p_diff p_beta p_sigma
+$ifthen.calibrationInp not "%CALIBRATIONINPUT%" == "data" 
 $load p_renovationHist p_constructionHist
+$endif.calibrationInp
 $endif.calibration
 $load p_shareDem p_shareRenBS p_shareRenHS p_shareRenBSinit p_shareRenHSinit
 $load p_floorPerCap
@@ -40,16 +44,48 @@ $if exist "start.gdx" execute_loadpoint "start";
 *** history --------------------------------------------------------------------
 
 $ifthen.history exist "history.gdx"
-execute_load "history", p_stockHist =        v_stock.l
-                        p_constructionHist = v_construction.l
-                        p_renovationHist =   v_renovation.l
-                        p_demolitionHist =   v_demolition.l
-;
+execute_loadpoint "history",
+  p_stockHist        = v_stock.l
+  p_constructionHist = v_construction.l
+  p_renovationHist   = v_renovation.l
+  p_demolitionHist   = v_demolition.l
+  p_carbonPrice
+  p_carrierEmi
+  p_carrierPrice
+  p_eff
+  p_floorPerCap
+  p_interestRate
+  p_population
+  p_probDem
+  p_shareDem
+  p_specCostCon
+  p_specCostOpe
+  p_specCostRen;
 $endif.history
 
 
 
 *** derived parameters ---------------------------------------------------------
+
+* floor-space specific final energy demand
+p_feDemand(hs,bs,vin,reg,typ,ttot) =
+  p_ueDemand(bs,vin,reg,typ)
+  / p_eff(hs,reg,typ,ttot)
+;
+
+* floor-space specific operation cost
+p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot) =
+  p_feDemand(hs,bs,vin,reg,typ,ttot)
+  * sum(hsCarrier(hs,carrier),
+      p_carrierPrice(carrier,reg,ttot)
+      + p_carbonPrice(ttot) * p_carrierEmi(carrier,reg,ttot)
+    )
+;
+
+* discount factor
+p_discountFac(typ,ttot) =
+  1 / (1 + p_interestRate(typ,ttot))**(ttot.val - p_dt(ttot) / 2 - t0)
+;
 
 * LCC of housing related to a construction decision under various assumptions:
 * - discounted to time of construction

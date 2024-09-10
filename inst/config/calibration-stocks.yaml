@@ -8,14 +8,15 @@ calibperiods: 2010
 regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
 regions: EUR
 ignoreShell: TRUE
+reportingTemplate: ignoreShell_onlyRes
 # switches
 switches:
   RUNTYPE: calibration
-  CALIBRATIONTYPE: stockszero
+  CALIBRATIONTYPE: stocks
   CALIBRATIONINPUT: data
   TARGETFUNCTION: minsquare
   CALIBRATIONLOG: TRUE
-  CALIBRATEPRICESENS: NORMAL
+  CALIBRATEPRICESENS: FALSE
 # parameters for calibration
 parameters:
   alpha: 10
