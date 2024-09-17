@@ -9,11 +9,12 @@
 #' @param slurmQOS string, name of the desired QOS (Quality of Service)
 #' @param tasksPerNode numeric, number of tasks per node to be requested
 #' @param tasks32 boolean, specify whether a node with 32 tasks should be requested
+#' @param timeLimit character, time limit of the slurm job given in the format hh:mm:ss
 #' @returns string with SLURM configuration
 #'
 #' @export
 
-setSlurmConfig <- function(slurmQOS, tasksPerNode = 16, tasks32 = FALSE) {
+setSlurmConfig <- function(slurmQOS, tasksPerNode = 16, tasks32 = FALSE, timeLimit = NULL) {
 
   allowedQOS <- c("default", "priority", "standby", "short", "medium", "long")
 
@@ -41,6 +42,7 @@ setSlurmConfig <- function(slurmQOS, tasksPerNode = 16, tasks32 = FALSE) {
     if (is.null(tasksPerNode)) tasksPerNode <- 16
     slurmConfig <- paste0("--qos=", slurmQOS, " --nodes=1 --tasks-per-node=", tasksPerNode)
     message("SLURM QOS is set to ", slurmQOS, " with ", tasksPerNode, " CPUs.")
+    if (!is.null(timeLimit)) slurmConfig <- paste0(slurmConfig, " --time=", timeLimit)
   }
 
   return(slurmConfig)

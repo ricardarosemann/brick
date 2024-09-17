@@ -29,6 +29,7 @@
 #' @param sendToSlurm boolean whether or not the run should be started via SLURM
 #' @param slurmQOS character, slurm QOS to be used
 #' @param tasksPerNode numeric, number of tasks per node to be requested
+#' @param timeLimit character, time limit of the slurm job given in the format hh:mm:ss
 #' @param tasks32 boolean whether or not the SLURM run should be with 32 tasks
 #' @returns path (invisible)
 #'
@@ -45,14 +46,23 @@ initModel <- function(config = NULL,
                       sendToSlurm = NULL,
                       slurmQOS = NULL,
                       tasksPerNode = NULL,
+                      timeLimit = NULL,
                       tasks32 = FALSE) {
 
   if (!dir.exists(outputFolder)) {
     dir.create(outputFolder)
   }
 
-  # Check if SLURM is available. Start via SLURM if available, and directly otherwise.
-  if (is.null(sendToSlurm)) {
+  if (isTRUE(sendToSlurm)) {
+    if (isSlurmAvailable()) {
+      message("Run will be sent to SLURM")
+    } else {
+      stop("sendToSlurm is TRUE, but SLURM is not available. Stopping.")
+    }
+  } else if (isFALSE(sendToSlurm)) {
+    message("Run will be executed directly.")
+  } else {
+    # Check if SLURM is available. Start via SLURM if available, and directly otherwise.
     if (isSlurmAvailable()) {
       message("SLURM is available. Run will be sent to SLURM.")
       sendToSlurm <- TRUE
@@ -60,8 +70,6 @@ initModel <- function(config = NULL,
       message("SLURM is not available. Run will be executed directly.")
       sendToSlurm <- FALSE
     }
-  } else if (isTRUE(sendToSlurm) && !isSlurmAvailable()) {
-    stop("sendToSlurm is TRUE, but SLURM is not available. Stopping.")
   }
 
   # Check if this is a restart run and determine the path to be restarted
@@ -70,9 +78,9 @@ initModel <- function(config = NULL,
       message("Restarting on given path: ", path)
     } else if (is.null(path)) {
       path <- findLastRun(outputFolder)
-      message("No path given or given path does not exist. Restarting on the latest run: ", path)
+      message("Restart: No path given or given path does not exist. Restarting on the latest run: ", path)
     } else {
-      stop("You passed a non-existing path in a restart run. Stopping.")
+      stop("Restart: You passed a non-existing path in a restart run. Stopping.")
     }
     if (isTRUE(restart)) {
       message("No restart options were specified. ",
@@ -115,14 +123,15 @@ initModel <- function(config = NULL,
   }
 
   # Generate SLURM configuration if sending to SLURM
-  if (sendToSlurm) {
+  if (isTRUE(sendToSlurm)) {
     if (is.null(slurmQOS) && !is.null(cfg[["slurmQOS"]])) slurmQOS <- cfg[["slurmQOS"]]
     if (is.null(tasksPerNode) && !is.null(cfg[["tasksPerNode"]])) tasksPerNode <- cfg[["tasksPerNode"]]
     if (isFALSE(tasks32) && isTRUE(cfg[["tasks32"]])) {
       tasks32 <- cfg[["tasks32"]]
       warning("Using 32 tasks as defined in the config file.")
     }
-    slurmConfig <- setSlurmConfig(slurmQOS = slurmQOS, tasksPerNode = tasksPerNode, tasks32 = tasks32)
+    slurmConfig <- setSlurmConfig(slurmQOS = slurmQOS, tasksPerNode = tasksPerNode, tasks32 = tasks32,
+                                  timeLimit = timeLimit)
   }
 
   # Copy gams files if this is not a restart run or if this is specified in restart parameters

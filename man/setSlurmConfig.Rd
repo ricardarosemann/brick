@@ -4,7 +4,7 @@
 \alias{setSlurmConfig}
 \title{Set the SLURM configuration}
 \usage{
-setSlurmConfig(slurmQOS, tasksPerNode = 16, tasks32 = FALSE)
+setSlurmConfig(slurmQOS, tasksPerNode = 16, tasks32 = FALSE, timeLimit = NULL)
 }
 \arguments{
 \item{slurmQOS}{string, name of the desired QOS (Quality of Service)}
@@ -12,6 +12,8 @@ setSlurmConfig(slurmQOS, tasksPerNode = 16, tasks32 = FALSE)
 \item{tasksPerNode}{numeric, number of tasks per node to be requested}
 
 \item{tasks32}{boolean, specify whether a node with 32 tasks should be requested}
+
+\item{timeLimit}{character, time limit of the slurm job given in the format hh:mm:ss}
 }
 \value{
 string with SLURM configuration
