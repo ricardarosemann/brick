@@ -1,5 +1,5 @@
 ---
-title: "calibration-lowEhp1-min-2010"
+title: "calibration-simple-lowEhp1-const-2010-100Iter80A"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
@@ -8,19 +8,18 @@ calibperiods: 2010
 regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
 regions: EUR
 ignoreShell: TRUE
-minimal: TRUE
-reportingTemplate: "/p/tmp/ricardar/reportbrick-tmpl/brickSets_ignoreShell_min.yaml"
+reportingTemplate: ignoreShell_onlyRes
 # switches
 switches:
-  RUNTYPE: calibration
+  RUNTYPE: calibrationSimple
   CALIBRATIONTYPE: flows
   CALIBRATIONINPUT: file
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
-  CALIBRATIONSTEP: adaptive
+  CALIBRATIONSTEP: constant
   CALIBRATEPRICESENS: FALSE
 # parameters for calibration
 parameters:
-  alpha: 10
-  iteration: 3
+  alpha: 80
+  iteration: 100
 ...

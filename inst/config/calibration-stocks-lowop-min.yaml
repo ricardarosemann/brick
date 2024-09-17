@@ -16,7 +16,6 @@ switches:
   CALIBRATIONINPUT: file
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
-  CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
   alpha: 0.1

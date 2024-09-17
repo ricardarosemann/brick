@@ -1,0 +1,11 @@
+---
+title: "noShellEUR-2010"
+basedOn: "default.yaml"
+# scope and resolution
+periods: [2000, 2010]
+regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
+regions: EUR
+ignoreShell: TRUE
+# minimal: TRUE
+reportingTemplate: "/p/tmp/ricardar/reportbrick-tmpl/brickSets_ignoreShell_min.yaml"
+...

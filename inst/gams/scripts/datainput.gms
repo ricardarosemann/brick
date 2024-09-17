@@ -2,17 +2,31 @@
 
 $gdxin input.gdx
 $load p_dt p_dtVin t0
-$load priceSensHS allPriceSensHS
+$load priceSensHS
 $load p_specCostCon p_specCostRen p_specCostDem
 $load p_carbonPrice p_carrierPrice p_carrierEmi p_ueDemand p_eff
 $load p_interestRate
 $load p_population
 $load p_stockHist
 $ifthen.calibration "%RUNTYPE%" == "calibration"
-$load conAllowed p_alphaL p_diff p_beta p_sigma
+$load p_alphaL p_diff p_beta p_sigma
+$load allPriceSensHS
 $ifthen.calibrationInp not "%CALIBRATIONINPUT%" == "data" 
 $load p_renovationHist p_constructionHist
 $endif.calibrationInp
+$ifThen.lowop not "%CALIBRATIONLOWOP%" == "no"
+$load p_specCostOpe
+display "Reading operational costs from input.gdx";
+$endIf.lowop
+$elseif.calibration "%RUNTYPE%" == "calibrationSimple"
+$load p_alphaL p_beta p_sigma
+$ifthen.calibrationInp not "%CALIBRATIONINPUT%" == "data" 
+$load p_renovationHist p_constructionHist
+$endif.calibrationInp
+$ifThen.lowop not "%CALIBRATIONLOWOP%" == "no"
+$load p_specCostOpe
+display "Reading operational costs from input.gdx";
+$endIf.lowop
 $endif.calibration
 $load p_shareDem p_shareRenBS p_shareRenHS p_shareRenBSinit p_shareRenHSinit
 $load p_floorPerCap
@@ -73,6 +87,7 @@ p_feDemand(hs,bs,vin,reg,typ,ttot) =
   / p_eff(hs,reg,typ,ttot)
 ;
 
+$ifThen.lowop "%CALIBRATIONLOWOP%" == "no"
 * floor-space specific operation cost
 p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot) =
   p_feDemand(hs,bs,vin,reg,typ,ttot)
@@ -81,6 +96,8 @@ p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot) =
       + p_carbonPrice(ttot) * p_carrierEmi(carrier,reg,ttot)
     )
 ;
+display "Compute operational costs in GAMS code";
+$endIf.lowop
 
 * discount factor
 p_discountFac(typ,ttot) =
@@ -126,9 +143,7 @@ p_lccCon(cost,var,bs,hs,reg,loc,typ,inc,ttot) =
 
 *** temp -----------------------------------------------------------------------
 
-* calibration speed
-p_calibSpeed("construction") = 1;
-p_calibSpeed("renovation") = 1;
+
 
 $ifthen.matching "%RUNTYPE%" == "matching"
 

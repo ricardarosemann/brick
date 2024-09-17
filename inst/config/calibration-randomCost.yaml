@@ -14,7 +14,6 @@ switches:
   CALIBRATIONTYPE: flows
   CALIBRATIONINPUT: randomCost
   TARGETFUNCTION: minsquare
-  CALIBRATIONLOG: TRUE
 # parameters for calibration
 parameters:
   alpha: 0.1

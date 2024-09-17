@@ -15,7 +15,6 @@ switches:
   CALIBRATIONTYPE: stocks
   CALIBRATIONINPUT: data
   TARGETFUNCTION: minsquare
-  CALIBRATIONLOG: TRUE
   CALIBRATEPRICESENS: FALSE
 # parameters for calibration
 parameters:

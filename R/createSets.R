@@ -30,13 +30,13 @@ createSets <- function(m, config) {
     description = "quantity unit to measure stocks and flows in"
   ))
 
-  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+  flow <- m$addSet(
+    name = "flow",
+    records = c("construction", "renovation"),
+    description = "flow variables for calibration"
+  )
 
-    flow <- m$addSet(
-      name = "flow",
-      records = c("construction", "renovation"),
-      description = "flow variables for calibration"
-    )
+  if (config[["switches"]][["RUNTYPE"]] %in% c("calibration", "calibrationSimple")) {
 
     iterationAll <- m$addSet(
       "iterationAll",
@@ -86,11 +86,13 @@ createSets <- function(m, config) {
     description = "historic time steps"
   ))
 
-  tcalib <- m$addSet(
-    "tcalib",
-    records = periodFromConfig(config, "tcalib"),
-    description = "time steps for calibration"
-  )
+  if (config[["switches"]][["RUNTYPE"]] %in% c("calibration", "calibrationSimple")) {
+    invisible(m$addSet(
+      "tcalib",
+      records = periodFromConfig(config, "tcalib"),
+      description = "time steps for calibration"
+    ))
+  }
 
 
   # Vintages -------------------------------------------------------------------
@@ -285,19 +287,19 @@ createSets <- function(m, config) {
   )
 
   # allowed construction (only required for calibration)
-  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+  # if (config[["switches"]][["RUNTYPE"]] == "calibration") {
 
-    conAllowed <- expandSets("bsr", "hsr", "vin", .m = m) %>%
-      filter(.data[["vin"]] == "2000-2010", .data[["hsr"]] != "0",
-             .data[["bsr"]] != "0")
+  #   conAllowed <- expandSets("bsr", "hsr", "vin", .m = m) %>%
+  #     filter(.data[["vin"]] == "2000-2010", .data[["hsr"]] != "0",
+  #            .data[["bsr"]] != "0")
 
-    conAllowed <- m$addSet(
-      name = "conAllowed",
-      domain = c(bsr, hsr, vin),
-      records = conAllowed,
-      description = "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
-    )
-  }
+  #   conAllowed <- m$addSet(
+  #     name = "conAllowed",
+  #     domain = c(bsr, hsr, vin),
+  #     records = conAllowed,
+  #     description = "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
+  #   )
+  # }
 
 
 

@@ -213,12 +213,6 @@ createParameters <- function(m, config, inputDir) {
       guessColnames(m) %>%
       toModelResolution(m)
   }
-  p_carbonPrice <- m$addParameter(
-    name = "p_carbonPrice",
-    domain = "ttot",
-    records = p_carbonPrice,
-    description = "Carbon price in USD/t_CO2eq"
-  )
 
   ### energy carrier prices and emission intensities ####
   carrierData <- readInput("f_carrierPrices.cs4r",
@@ -236,12 +230,6 @@ createParameters <- function(m, config, inputDir) {
     .filterLevel(carrierEmiLevel, "carrierEmi") %>%
     select("carrier", "reg", "ttot", "value") %>%
     toModelResolution(m)
-  p_carrierEmi <- m$addParameter(
-    name = "p_carrierEmi",
-    domain = c("carrier", "reg", "ttot"),
-    records = p_carrierEmi,
-    description = "energy carrier emission intensity in t_CO2/kWh"
-  )
 
   ### useful energy demand for space heating ####
   p_ueDemand <- readInput("f_ueDemand.cs4r",
@@ -264,19 +252,36 @@ createParameters <- function(m, config, inputDir) {
     hsCarrierMap <- getBrickMapping("heatingSystem.csv") %>%
       select("hs", "carrier")
 
-    p_carrierPrice <- p_carrierPrice %>%
-      left_join(hsCarrierMap, by = c("carrier")) %>%
+    p_specCostOpe <- expandSets("bs", "hs", "vin", "reg", "loc", "typ", ttot = "t", .m = m) %>%
+      left_join(hsCarrierMap, by = c("hs")) %>%
+      left_join(p_carrierPrice %>%
+                  rename(price = "value"),
+                by = c("carrier", "reg", "ttot")) %>%
+      left_join(p_carrierEmi %>%
+                  rename(emi = "value"),
+                by = c("carrier", "reg", "ttot")) %>%
+      mutate(emi = ifelse(.data[["carrier"]] == "h2", 0, .data[["emi"]])) %>%
+      left_join(p_carbonPrice %>%
+                  rename(carbonPrice = "value"),
+                by = c("ttot")) %>%
       left_join(p_ueDemand %>%
-                  rename(ue = "value"),
-                by = c("reg")) %>%
+                  rename(ueDem = "value"),
+                by = c("bs", "vin", "reg", "typ")) %>%
       left_join(p_eff %>%
                   rename(eff = "value"),
                 by = c("hs", "reg", "typ", "ttot")) %>%
       mutate(value = ifelse(.data[["hs"]] == config[["switches"]][["CALIBRATIONLOWOP"]],
-                            0.001 * .data[["eff"]] / .data[["ue"]],
-                            .data[["value"]])) %>%
-      group_by(across(all_of(c("carrier", "reg", "ttot")))) %>%
-      summarise(value = mean(.data[["value"]], na.rm = TRUE), .groups = "drop")
+                            0.001,
+                            (.data[["price"]] + .data[["carbonPrice"]] * .data[["emi"]])
+                            * .data[["ueDem"]] / .data[["eff"]])) %>%
+      select(-"price", -"ueDem", -"eff", -"carbonPrice", -"emi", -"carrier")
+
+    p_specCostOpe <- m$addParameter(
+      name = "p_specCostOpe",
+      domain = c("bs", "hs", "vin", "reg", "loc", "typ", "ttot"),
+      records = p_specCostOpe,
+      description = "floor-space specific operation cost [EUR/(m2.yr)]"
+    )
   }
 
   # Store operational cost related parameters in the gamstransfer object
@@ -285,6 +290,13 @@ createParameters <- function(m, config, inputDir) {
     domain = c("carrier", "reg", "ttot"),
     records = p_carrierPrice,
     description = "final energy carrier price in USD/kWh"
+  )
+
+  p_carbonPrice <- m$addParameter(
+    name = "p_carbonPrice",
+    domain = "ttot",
+    records = p_carbonPrice,
+    description = "Carbon price in USD/t_CO2eq"
   )
 
   p_ueDemand <- m$addParameter(
@@ -299,6 +311,13 @@ createParameters <- function(m, config, inputDir) {
     domain = c("hs", "reg", "typ", "ttot"),
     records = p_eff,
     description = "technical efficiency of space heating technologies"
+  )
+
+  p_carrierEmi <- m$addParameter(
+    name = "p_carrierEmi",
+    domain = c("carrier", "reg", "ttot"),
+    records = p_carrierEmi,
+    description = "energy carrier emission intensity in t_CO2/kWh"
   )
 
 
@@ -616,7 +635,7 @@ createParameters <- function(m, config, inputDir) {
   }
 
   # flows (for calibration)
-  if (config[["switches"]][["RUNTYPE"]] == "calibration"
+  if (config[["switches"]][["RUNTYPE"]] %in% c("calibration", "calibrationSimple")
       && config[["switches"]][["CALIBRATIONINPUT"]] != "data") {
 
     fileNameHist <- paste0("inputHist", ifelse(config[["minimal"]], "Min", ""), as.character(max(ttotNum)), ".gdx")
@@ -720,17 +739,19 @@ createParameters <- function(m, config, inputDir) {
 
 
   # Price sensitivity ---------------------------------------------------
-  allPriceSensHS <- c(seq(200, 1000, 100), seq(2000, 10000, 1000))
+  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+    allPriceSensHS <- c(seq(200, 1000, 100), seq(2000, 10000, 1000))
 
-  allPriceSensHS <- expandSets("iteration", .m = m) %>%
-    mutate(value = allPriceSensHS[1:config[["parameters"]][["iteration"]]])
+    allPriceSensHS <- expandSets("iteration", .m = m) %>%
+      mutate(value = allPriceSensHS[1:config[["parameters"]][["iteration"]]])
 
-  allPriceSensHS <- m$addParameter(
-    "allPriceSensHS",
-    "iteration",
-    records = allPriceSensHS,
-    description = "Different price sensitivities"
-  )
+    allPriceSensHS <- m$addParameter(
+      "allPriceSensHS",
+      "iteration",
+      records = allPriceSensHS,
+      description = "Different price sensitivities"
+    )
+  }
 
   priceSensHS <- expandSets("flow", "reg", "loc", "typ", "inc", .m = m) %>%
     mutate(value = ifelse(.data[["flow"]] == "construction", 0.01, 0.008))
@@ -743,17 +764,27 @@ createParameters <- function(m, config, inputDir) {
   )
 
   # Calibration parameters ------------------------------------------------
-  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
-    alpha <- config[["parameters"]][["alpha"]]
+  if (config[["switches"]][["RUNTYPE"]] %in% c("calibration", "calibrationSimple")) {
+    alphaInp <- config[["parameters"]][["alpha"]]
+
+    alpha <- expandSets("flow", "reg", "loc", "typ", "inc", .m = m)
+
+    if (is.character(alphaInp) && file.exists(alphaInp)) {
+      alpha <- read.csv(alphaInp) %>%
+        right_join(alpha, by = c("flow", "reg", "loc", "typ", "inc"))
+    } else {
+      alpha <- mutate(alpha, value = alphaInp)
+    }
 
     p_alphaL <- m$addParameter(
       "p_alphaL",
       records = alpha,
+      domain = c("flow", "reg", "loc", "typ", "inc"),
       description = "Lower bound of alpha before Armijo backtracking in calibration"
     )
 
     if (is.null(config[["parameters"]][["diff"]])) {
-      p_diff <- alpha / 100
+      p_diff <- min(alpha[["value"]]) / 100
     } else {
       p_diff <- config[["parameters"]][["diff"]]
     }

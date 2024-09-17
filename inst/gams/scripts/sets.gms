@@ -43,6 +43,7 @@ varFlow(var) "flow variables of the model"
   / construction, renovation, demolition /
 
 *** For calibration: Flows used in calibration
+all_flow(var)  "flow variables for calibration"
 flow(var)  "flow variables for calibration"
 
 *** model analytics
@@ -85,6 +86,10 @@ refMap_IDEES_heatingShare(refVar,hs)
 refMap_EUBDB_stock(refVar,hs,typ,qty)
 refMap_EUBDB_vintage(refVar,vin,typ)
 refMap_EuropeanCommissionRenovation(refVar,typ)
+
+*** for calibration: renovation types (identical replacement, new system, 0)
+renType "Renovation types"
+  / identRepl, newSys, 0 /
 ;
 
 *** aliases
@@ -96,6 +101,7 @@ alias(vin,vin2,vin3)
 alias(ttot,ttot2)
 alias(t,t2)
 alias(flow, flow2)
+alias(renType, renType2)
 ;
 
 
@@ -108,6 +114,8 @@ $load reg loc typ inc
 $load tall ttot t thist tinit tcalib
 $load vin
 $ifthen.calibration "%RUNTYPE%" == "calibration"
+$load flow iterationAll iteration
+$elseif.calibration "%RUNTYPE%" == "calibrationSimple"
 $load flow iterationAll iteration
 $endif.calibration
 $load carrier
@@ -162,7 +170,8 @@ renAllowed(bs,hs,bsr,hsr)          "Is this renovation transition allowed"
 renTarAllowed(flow, bsr, hsr)      "Is this renovation/construction target allowed"
 sameState(bs,hs,bsr,hsr)           "Is the state after the renovation the same as before"
 renEffective(bs,hs,bsr,hsr)        "Renovations without untouched buildings"
-conAllowed(bsr, hsr, vin)  "Is this construcion allowed, i.e. exclude zero status and vintages other than the default"
+gradientVars(flow, renType, bsr, hsr, vin)                       "Combinations to loop over to compute the gradient in the calibration"
+simpleCalibVars(flow, bs, hs, bsr, hsr, vin)  "Is this a valid configuration for specific installation costs?"
 refVarExists (ref,refVar,reg,ttot) "There is a value for this combination of reference, variable, region and period"
 hsCarrier(hs,carrier)              "mapping between heating system and energy carrier"
 
@@ -232,6 +241,26 @@ loop((bs,hs,bsr,hsr),
    zeroFlow(bs,hs,bsr,hsr)$(renAllowed(bs,hs, bsr, hsr) and (sameas(bsr, "0") or sameas(hsr,"0"))) = YES;
  );
 $endIf.shell
+
+*** Determine the combinations to loop over in the calibration
+loop((renAllowed(bs, hs, bsr, hsr), vin),
+  gradientVars("renovation", "identRepl", bsr, hsr, vin)$sameas(hs, hsr) = YES;
+  gradientVars("renovation", "newSys", bsr, hsr, vin)$(not sameas(hs, hsr) and not sameas(hsr, "0")) = YES;
+  gradientVars("renovation", "0", bsr, hsr, vin)$(sameas(hsr, "0")) = YES;
+);
+loop(renTarAllowed(flow, bsr, hsr)$sameas("construction", flow),
+  gradientVars("construction", "newSys", bsr, hsr, "2000-2010") = YES;
+);
+$elseIf.calibration "%RUNTYPE%" == "calibrationSimple"
+simpleCalibVars("construction", state, "0", "0", "2000-2010") = YES;
+simpleCalibVars("renovation", ren, vin)$renAllowed(ren) = YES;
+
+loop(renAllowed(bs, hs, bsr, hsr),
+  renTarAllowed("renovation", bsr, hsr) = yes;
+);
+loop((bsr, hsr)$(bs(bsr) and hs(hsr)),
+  renTarAllowed("construction", bsr, hsr) = yes;
+);
 $endif.calibration
 * sets
 * vinCalib(vin)  "Dynamic vintages in calibration"

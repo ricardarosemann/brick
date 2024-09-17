@@ -1,13 +1,14 @@
 ---
-title: "calibration-lowEhp1-2010"
+title: "calibration-lowEhp1-const-2010"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
 startyear: 2010
 calibperiods: 2010
-regionmapping: "input/regionmappingEUplus.csv"
-regions: DEU
+regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
+regions: EUR
 ignoreShell: TRUE
+reportingTemplate: ignoreShell_onlyRes
 # switches
 switches:
   RUNTYPE: calibration
@@ -15,10 +16,10 @@ switches:
   CALIBRATIONINPUT: file
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
-  CALIBRATIONLOG: TRUE
-  CALIBRATEPRICESENS: NORMAL
+  CALIBRATIONSTEP: constant
+  CALIBRATEPRICESENS: FALSE
 # parameters for calibration
 parameters:
   alpha: 10
-  iteration: 30
+  iteration: 10
 ...

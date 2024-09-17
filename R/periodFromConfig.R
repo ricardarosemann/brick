@@ -20,7 +20,7 @@ periodFromConfig <- function(config, periodType) {
 
   t <- ttot[which(ttot >= startyear)]
 
-  if (config[["switches"]][["RUNTYPE"]] == "calibration") {
+  if (periodType == "tcalib") {
     calibperiods <- config[["calibperiods"]]
     #TODO: Add check that calibration periods are consistent with t
   } else {

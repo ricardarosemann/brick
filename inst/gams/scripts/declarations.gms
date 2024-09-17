@@ -52,23 +52,23 @@ p_refVals(ref,refVar,reg,ttot) "reference values to match"
 p_refValsMed(ref,reg)          "median non-zero reference value to normalise deviations"
 
 p_diff
-p_x(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_x(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
 p_xinitCon(bs, hs, reg, loc, typ, inc)
 p_xinitRen(bs, hs, bsr, hsr, vin, reg, loc, typ, inc)
-p_xDiff(flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_xA(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_xDiff(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
+p_xA(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
 
 p_f(reg, loc, typ, inc)
 p_f0(reg, loc, typ, inc)
 p_fPrev(reg, loc, typ, inc)
-p_fDiff(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_fDiff(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
 p_fA(reg, loc, typ, inc)
 
-p_r(flow, bsr, hsr, vin, reg, loc, typ, inc)
-p_d(flow, bsr, hsr, vin, reg, loc, typ, inc)
+p_r(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
+p_d(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
 p_delta(reg, loc, typ, inc)
-p_alpha(reg, loc, typ, inc)
-p_alphaL
+p_alpha(flow, reg, loc, typ, inc)
+p_alphaL(flow, reg, loc, typ, inc)
 p_beta
 p_sigma
 p_phiDeriv(reg, loc, typ, inc)
@@ -78,9 +78,9 @@ p_construction(qty,bs,hs,reg,loc,typ,inc,ttot)
 p_stock(qty, bs, hs, vin, reg, loc, typ, inc, ttot)
 
 p_iterA(reg, loc, typ, inc)
-p_alphaIterA(iterA, reg, loc, typ, inc)
+p_alphaIterA(iterA, flow, reg, loc, typ, inc)
 p_fAIterA(iterA, reg, loc, typ, inc)
-p_fArmijoRHIterA(iterA, reg, loc, typ, inc)
+p_fArmijoRHIterA(iterA, flow, reg, loc, typ, inc)
 
 p_xPS(var, reg, loc, typ, inc)
 p_xDiffPS(var, reg, loc, typ, inc)
@@ -90,6 +90,10 @@ p_rPS(var, reg, loc, typ, inc)
 p_dPS(var, reg, loc, typ, inc)
 p_deltaPS(reg, loc, typ, inc)
 
+p_dSimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+p_xSimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+p_xASimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+
 allPriceSensHS(iteration)
 
 
@@ -97,7 +101,6 @@ allPriceSensHS(iteration)
 p_constructionDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, reg, loc, typ, inc, ttot)
 p_renovationDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
 
-p_calibSpeed(varFLow)                                                 "Control of the step size in the calibration iteration"
 p_calibDeviationCon(iterationAll,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
 p_calibDeviationRen(iterationAll,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
 
