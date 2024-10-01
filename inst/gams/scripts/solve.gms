@@ -254,6 +254,8 @@ p_xinitRen(ren, vin, subs)$renAllowed(ren) = p_specCostRen("intangible", ren, vi
 p_xSimp("construction", state, "0", "0", "2000-2010", subs, t) = 0;
 p_xSimp("renovation", state, stateFull, vin, subs, t)$renAllowed(state, stateFull) = 0;
 
+p_fPrev(subs) = 0; !! Unused initialisation to avoid compilation error
+
 loop(iteration,
 $ifthen.parallel "%PARALLEL%" == "TRUE"
 
@@ -275,15 +277,6 @@ p_f(subs) = func
 p_renovation("area", state, stateFull, vin, subs, ttot) = v_renovation.l("area", state, stateFull, vin, subs, ttot);
 p_construction("area", state, subs, ttot) = v_construction.l("area", state, subs, ttot);
 p_stock("area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
-
-*** Set the step size
-$ifThen.stepSize "%CALIBRATIONSTEP%" == "priceSensHS"
-p_alpha(flow, subs) = 1 /priceSensHS(flow, subs);
-$elseIf.stepSize "%CALIBRATIONSTEP%" == "adaptive"
-p_alpha(flow, subs) = p_alphaL(flow, subs);
-$else.stepSize
-p_alpha(flow, subs) = p_alphaL(flow, subs);
-$endIf.stepSize
 
 *** check calibration deviation
 p_calibDeviationCon(iteration,state,subs,t)$(abs(p_constructionHist("area",state,subs,t)) > eps) =
@@ -326,9 +319,56 @@ p_dSimp("construction", state, "0", "0", "2000-2010", subs, t)$(    (p_construct
 p_dSimp("renovation", ren, vin, subs, t)$(    (p_renovationHist("area",ren,vin,subs,t) <= eps)
                                             and (v_renovation.l("area",ren,vin,subs,t) <= eps)) = 0;
 
+p_delta(subs) = sum(simpleCalibVars(flow, ren, vin),
+  p_dSimp(flow, ren, vin, subs, "2010") * p_dSimp(flow, ren, vin, subs, "2010")
+);
+
+*** Set the step size
+$ifThen.stepSize "%CALIBRATIONSTEP%" == "priceSensHS"
+p_alpha(flow, subs) = 1 /priceSensHS(flow, subs);
+$elseIf.stepSize "%CALIBRATIONSTEP%" == "adaptive"
+p_alpha(flow, subs)$(iteration.val > 1 and p_delta(subs) > 0.001)
+  = max(p_alphaL(flow, subs),
+    (p_fPrev(subs) - p_f(subs))
+      / p_delta(subs));
+p_alpha(flow, subs)$(iteration.val = 1 or p_delta(subs) le 0.001) = p_alphaL(flow, subs);
+$else.stepSize
+p_alpha(flow, subs) = p_alphaL(flow, subs);
+$endIf.stepSize
+
+
 $ifThen.stepSize "%CALIBRATIONSTEP%" == "adaptive"
 
+*** Compute the derivative of the step functional
+p_phiDeriv(subs) = sum(simpleCalibVars(flow, ren, vin),
+    - p_dSimp(flow, ren, vin, subs, "2010") * p_dSimp(flow, ren, vin, subs, "2010"));
+
+*** Test the Armijo-condition for a very small step size and follow a different heuristic if this is not satisfied
+p_xMin(flow, ren, vin, subs, t)$simpleCalibVars(flow, ren, vin)
+       = p_xSimp(flow, ren, vin, subs, t) + 1/1000 * p_alpha(flow, subs) * p_dSimp(flow, ren, vin, subs, t);
+
+v_stock.l("area", state, vin, subs, ttot) = 0;
+v_construction.l("area", state, subs, ttot) = 0;
+v_renovation.l("area", state, stateFull, vin, subs, ttot) = 0;
+
+p_specCostCon("intangible", state, subs, t) = p_xinitCon(state, subs) + p_xMin("construction", state, "0", "0", "2000-2010", subs, t);
+p_specCostRen("intangible", ren, vin, subs, t) = p_xinitRen(ren, vin, subs) + p_xMin("renovation", ren, vin, subs, t);
+
+solveParallel
+
+p_fMin(subs) = func
+
+p_fArmijoRHMin(flow, subs) = p_f(subs) + p_sigma * 1/1000 * p_alpha(flow, subs) * p_phiDeriv(subs);
+
+*** Quick fix: Long term alpha should not depend on the flow (maybe?)
+armijoStep(subs)$(p_fMin(subs) le p_f(subs) + p_sigma * 1/1000 * p_alpha("construction", subs) * p_phiDeriv(subs)) = yes;
+heuristicStep(subs)$(not armijoStep(subs)) = yes;
+
+armijoStepIter(iteration, subs)$armijoStep(subs) = yes;
+heuristicStepIter(iteration, subs)$heuristicStep(subs) = yes;
+
 loop(iterA,
+
 *** Solve the model only for the subsets which do not satisfy the Armijo condition yet
   p_xASimp(flow, state, stateFull, vin, subs, t)$simpleCalibVars(flow, state, stateFull, vin)
            = p_xSimp(flow, state, stateFull, vin, subs, t) + p_alpha(flow, subs) * p_dSimp(flow, state, stateFull, vin, subs, t);
@@ -344,30 +384,36 @@ loop(iterA,
 
   p_fA(subs) = func
 
-  p_phiDeriv(subs) = sum(simpleCalibVars(flow, ren, vin),
-    - p_dSimp(flow, ren, vin, subs, "2010"))**2;
-
 *** Stopping criterion in all dimensions
-  loop((flow, all_subs),
+  loop((flow, all_subs)$armijoStep(all_subs),
     if (p_fA(all_subs) le p_f(all_subs) + p_sigma * p_alpha(flow, all_subs) * p_phiDeriv(all_subs),
-      subs(all_subs) = no;
+      armijoStep(all_subs) = no;
       p_iterA(all_subs) = iterA.val;
       );
-    p_fAIterA(iterA, all_subs) = p_fA(all_subs);
-    p_fArmijoRHIterA(iterA, flow, all_subs) = p_f(all_subs) + p_sigma * p_alpha(flow, all_subs) * p_phiDeriv(all_subs);
   );
+  loop((flow, all_subs)$heuristicStep(all_subs),
+    if (p_fA(all_subs) le p_f(all_subs),
+      heuristicStep(all_subs) = no;
+      p_iterA(all_subs) = iterA.val;
+    );
+  );
+  subs(all_subs)$(not heuristicStep(all_subs) and not armijoStep(all_subs)) = no;
   if(card(subs) = 0,
     p_alphaIterA(iterA, flow, all_subs) = p_alpha(flow, all_subs);
     break;
   );
 *** Update alpha
-  p_alpha(flow, subs) = p_alpha(flow, subs) * p_beta;
-  p_alphaIterA(iterA, flow, all_subs) = p_alpha(flow, all_subs);
+  p_alpha(flow, subs)$(armijoStep(subs) or heuristicStep(subs)) = p_alpha(flow, subs) * p_beta;
+  p_alphaIterA(iterA, flow, subs)$(armijoStep(subs) or heuristicStep(subs)) = p_alpha(flow, subs);
+
+  p_fAIterA(iterA, subs) = p_fA(subs);
+  p_fArmijoRHIterA(iterA, flow, subs) = p_f(subs) + p_sigma * p_alpha(flow, subs) * p_phiDeriv(subs);
 );
 subs(all_subs) = yes;
 
 p_xSimp(flow, ren, vin, subs, "2010")$simpleCalibVars(flow, ren, vin) = p_xASimp(flow, ren, vin, subs, "2010");
 * p_f(subs) = p_fA(subs);
+p_fPrev(subs) = p_f(subs);
 
 p_specCostCon("intangible", state, subs, t)$(p_constructionHist("area",state,subs,t) > eps
                                           and p_calibDeviationCon(iteration,state,subs,t) > eps)
@@ -676,11 +722,10 @@ loop(iteration,
 
 $ifThen.stepSize "%CALIBRATIONSTEP%" == "adaptive"
 *** Armijo backtracking method
-p_alpha(flow, subs)$(iteration.val > 1 and p_delta(subs) > 0.001) = min(abs(0.5 * p_f(subs)),
-  max(p_alphaL(flow, subs),
+p_alpha(flow, subs)$(iteration.val > 1 and p_delta(subs) > 0.001) 
+  = max(p_alphaL(flow, subs),
     (p_fPrev(subs) - p_f(subs))
-      / p_delta(subs))
-  );
+      / p_delta(subs));
 p_alpha(flow, subs)$(p_delta(subs) le 0.001) = p_alphaL(flow, subs);
 
 loop(iterA,

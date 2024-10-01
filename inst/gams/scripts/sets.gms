@@ -111,12 +111,12 @@ alias(renType, renType2)
 $gdxin input.gdx
 $load bsr hsr bs hs
 $load reg loc typ inc
-$load tall ttot t thist tinit tcalib
+$load tall ttot t thist tinit
 $load vin
 $ifthen.calibration "%RUNTYPE%" == "calibration"
-$load flow iterationAll iteration
+$load flow iterationAll iteration tcalib
 $elseif.calibration "%RUNTYPE%" == "calibrationSimple"
-$load flow iterationAll iteration
+$load flow iterationAll iteration tcalib
 $endif.calibration
 $load carrier
 $gdxin
@@ -158,6 +158,12 @@ sets
 *** building subset
 all_subs(reg,loc,typ,inc) "all building stock subsets"
 subs(reg,loc,typ,inc)     "building stock subsets in the solution process"
+armijoStep(reg, loc, typ, inc) "Stock subsets on which to apply the Armijo step size algorithm"
+heuristicStep(reg, loc, typ, inc) "Stock subsets on which to apply a heuristic to determine the step size"
+
+*** Temporary: Save step size type across iterations
+armijoStepIter(iterationAll, reg, loc, typ, inc)
+heuristicStepIter(iterationAll, reg, loc, typ, inc)
 
 *** building state
 stateFull(bsr,hsr)      "building state incl 0 for no renovation"

@@ -119,7 +119,7 @@ q_DemCost(subs,t)..
 q_HeteroPrefCon(subs,t)..
   v_HeteroPrefCon(subs,t)
   =e=
-  1 / priceSensBS("construction")
+  1 / priceSensBS("construction", subs)
   * sum(bs,
       sum(hs, v_construction("area",bs,hs,subs,t))
       * (
@@ -168,7 +168,7 @@ q_HeteroPrefRen(subs,t)..
   v_HeteroPrefRen(subs,t)
   =e=
   sum(state, sum(vin$vinExists(t,vin),
-    1 / priceSensBS("renovation")
+    1 / priceSensBS("renovation", subs)
     * sum(bsr,
         sum(hsr$renAllowed(state,bsr,hsr),
           v_renovation("area",state,bsr,hsr,vin,subs,t)

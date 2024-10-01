@@ -1,8 +1,9 @@
 ---
-title: "fastTestRun"
+title: "fastTestRun-2010"
 basedOn: "default.yaml"
 # scope and resolution
-periods: [2000, 2010, 2020, 2030, 2040, 2050]
+periods: [2000, 2010]
 regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
 regions: EUR
+reportingTemplate: "onlyRes"
 ...

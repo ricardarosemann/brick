@@ -1,0 +1,24 @@
+---
+title: "calibration-lowEhp1-shell-const-2010-10Iter-20A"
+basedOn: "default.yaml"
+# scope and resolution
+periods: [2000, 2010]
+startyear: 2010
+calibperiods: 2010
+regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
+regions: EUR
+reportingTemplate: onlyRes
+# switches
+switches:
+  RUNTYPE: calibration
+  CALIBRATIONTYPE: flows
+  CALIBRATIONINPUT: file
+  CALIBRATIONLOWOP: "ehp1"
+  TARGETFUNCTION: minsquare
+  CALIBRATIONSTEP: constant
+  CALIBRATEPRICESENS: FALSE
+# parameters for calibration
+parameters:
+  alpha: 20
+  iteration: 10
+...

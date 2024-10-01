@@ -219,7 +219,7 @@ switches:
 
     ### Artificial (and extreme) decrease of OPEX ###
   # Pass the HS that should have decreased OPEX
-  CALIBRATIONLOWOP: no
+  CALIBRATIONLOWOP: FALSE
 
   ### Target function ###
   # Target function of the calibration

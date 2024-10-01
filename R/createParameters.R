@@ -601,9 +601,20 @@ createParameters <- function(m, config, inputDir) {
         select(-"pop", -"floor", -"dem", -"stock", -"scale")
     }
   } else {
-    fileNameHist <- paste0("inputHist", ifelse(config[["minimal"]], "Min", ""), as.character(max(ttotNum)), ".gdx")
-    fileNameRandHist <- paste0("inputRandHist", ifelse(config[["minimal"]], "Min", ""),
-                               as.character(max(ttotNum)), ".gdx")
+    fileNameHist <- paste0(
+      "inputHist",
+      ifelse(config[["minimal"]], "Min", ""),
+      ifelse(config[["ignoreShell"]], "IgnSh", ""),
+      as.character(max(ttotNum)),
+      ".gdx"
+    )
+    fileNameRandHist <- paste0(
+      "inputRandHist",
+      ifelse(config[["minimal"]], "Min", ""),
+      ifelse(config[["ignoreShell"]], "IgnSh", ""),
+      as.character(max(ttotNum)),
+      ".gdx"
+    )
     input <- gamstransfer::Container$new()
 
     if (file.exists(fileNameHist)) {
@@ -638,9 +649,20 @@ createParameters <- function(m, config, inputDir) {
   if (config[["switches"]][["RUNTYPE"]] %in% c("calibration", "calibrationSimple")
       && config[["switches"]][["CALIBRATIONINPUT"]] != "data") {
 
-    fileNameHist <- paste0("inputHist", ifelse(config[["minimal"]], "Min", ""), as.character(max(ttotNum)), ".gdx")
-    fileNameRandHist <- paste0("inputRandHist", ifelse(config[["minimal"]], "Min", ""),
-                               as.character(max(ttotNum)), ".gdx")
+    fileNameHist <- paste0(
+      "inputHist",
+      ifelse(config[["minimal"]], "Min", ""),
+      ifelse(config[["ignoreShell"]], "IgnSh", ""),
+      as.character(max(ttotNum)),
+      ".gdx"
+    )
+    fileNameRandHist <- paste0(
+      "inputRandHist",
+      ifelse(config[["minimal"]], "Min", ""),
+      ifelse(config[["ignoreShell"]], "IgnSh", ""),
+      as.character(max(ttotNum)),
+      ".gdx"
+    )
 
     if (file.exists(fileNameRandHist)
         && config[["switches"]][["CALIBRATIONINPUT"]] == "randomTarget"
@@ -756,11 +778,25 @@ createParameters <- function(m, config, inputDir) {
   priceSensHS <- expandSets("flow", "reg", "loc", "typ", "inc", .m = m) %>%
     mutate(value = ifelse(.data[["flow"]] == "construction", 0.01, 0.008))
 
+  priceSensBS <- expandSets("flow", "reg", "loc", "typ", "inc", .m = m) %>%
+    left_join(priceSensHS %>%
+                rename(psHS = "value"),
+              by = c("flow", "reg", "loc", "typ", "inc")) %>%
+    mutate(value = 0.8 * .data[["psHS"]]) %>%
+    select(-"psHS")
+
   priceSensHS <- m$addParameter(
     "priceSensHS",
     c("flow", "reg", "loc", "typ", "inc"),
     priceSensHS,
     description = "price sensitivity of heating system choice"
+  )
+
+  priceSensBS <- m$addParameter(
+    "priceSensBS",
+    c("flow", "reg", "loc", "typ", "inc"),
+    priceSensBS,
+    description = "price sensitivity of building shell choice"
   )
 
   # Calibration parameters ------------------------------------------------
@@ -803,7 +839,7 @@ createParameters <- function(m, config, inputDir) {
 
     p_sigma <- m$addParameter(
       "p_sigma",
-      records = 0.01,
+      records = if (is.null(config[["parameters"]][["sigma"]])) 0.01 else config[["parameters"]][["sigma"]],
       description = "Factor in Armijo condition"
     )
   }

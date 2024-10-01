@@ -2,7 +2,7 @@
 
 $gdxin input.gdx
 $load p_dt p_dtVin t0
-$load priceSensHS
+$load priceSensHS priceSensBS
 $load p_specCostCon p_specCostRen p_specCostDem
 $load p_carbonPrice p_carrierPrice p_carrierEmi p_ueDemand p_eff
 $load p_interestRate
@@ -14,7 +14,7 @@ $load allPriceSensHS
 $ifthen.calibrationInp not "%CALIBRATIONINPUT%" == "data" 
 $load p_renovationHist p_constructionHist
 $endif.calibrationInp
-$ifThen.lowop not "%CALIBRATIONLOWOP%" == "no"
+$ifThen.lowop not "%CALIBRATIONLOWOP%" == "FALSE"
 $load p_specCostOpe
 display "Reading operational costs from input.gdx";
 $endIf.lowop
@@ -23,7 +23,7 @@ $load p_alphaL p_beta p_sigma
 $ifthen.calibrationInp not "%CALIBRATIONINPUT%" == "data" 
 $load p_renovationHist p_constructionHist
 $endif.calibrationInp
-$ifThen.lowop not "%CALIBRATIONLOWOP%" == "no"
+$ifThen.lowop not "%CALIBRATIONLOWOP%" == "FALSE"
 $load p_specCostOpe
 display "Reading operational costs from input.gdx";
 $endIf.lowop
@@ -87,7 +87,7 @@ p_feDemand(hs,bs,vin,reg,typ,ttot) =
   / p_eff(hs,reg,typ,ttot)
 ;
 
-$ifThen.lowop "%CALIBRATIONLOWOP%" == "no"
+$ifThen.lowop "%CALIBRATIONLOWOP%" == "FALSE"
 * floor-space specific operation cost
 p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot) =
   p_feDemand(hs,bs,vin,reg,typ,ttot)

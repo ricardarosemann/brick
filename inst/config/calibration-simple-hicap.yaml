@@ -1,0 +1,24 @@
+---
+title: "calibration-simple-highGabo-adapt-2010-100Iter20A"
+basedOn: "default.yaml"
+# scope and resolution
+periods: [2000, 2010]
+startyear: 2010
+calibperiods: 2010
+regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
+regions: EUR
+ignoreShell: TRUE
+reportingTemplate: ignoreShell_onlyRes
+# switches
+switches:
+  RUNTYPE: calibrationSimple
+  CALIBRATIONTYPE: flows
+  CALIBRATIONINPUT: file
+  CALIBRATIONHICAP: "gabo"
+  TARGETFUNCTION: minsquare
+  CALIBRATIONSTEP: adaptive
+# parameters for calibration
+parameters:
+  alpha: 20
+  iteration: 100
+...

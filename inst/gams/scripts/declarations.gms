@@ -63,6 +63,7 @@ p_f0(reg, loc, typ, inc)
 p_fPrev(reg, loc, typ, inc)
 p_fDiff(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
 p_fA(reg, loc, typ, inc)
+p_fMin(reg, loc, typ, inc)
 
 p_r(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
 p_d(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
@@ -81,6 +82,7 @@ p_iterA(reg, loc, typ, inc)
 p_alphaIterA(iterA, flow, reg, loc, typ, inc)
 p_fAIterA(iterA, reg, loc, typ, inc)
 p_fArmijoRHIterA(iterA, flow, reg, loc, typ, inc)
+p_fArmijoRHMin(flow, reg, loc, typ, inc)
 
 p_xPS(var, reg, loc, typ, inc)
 p_xDiffPS(var, reg, loc, typ, inc)
@@ -93,6 +95,7 @@ p_deltaPS(reg, loc, typ, inc)
 p_dSimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
 p_xSimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
 p_xASimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+p_xMin(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
 
 allPriceSensHS(iteration)
 
@@ -104,7 +107,7 @@ p_renovationDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, bsr, hsr, vin, r
 p_calibDeviationCon(iterationAll,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
 p_calibDeviationRen(iterationAll,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
 
-priceSensBS(var) "price sensitivity of building shell choice" / construction 10000, renovation 10000 /
+priceSensBS(var, reg, loc, typ, inc) "price sensitivity of building shell choice"
 priceSensHS(var, reg, loc, typ, inc) "price sensitivity of heating system choice"
 ;
 
