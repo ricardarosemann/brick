@@ -109,7 +109,7 @@ initModel <- function(config = NULL,
                       configFolder = configFolder)
     title <- paste(cfg[["title"]], nameAdd, sep = "-")
 
-    if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
+    if (cfg[["switches"]][["RUNTYPE"]] %in% c("calibration", "calibrationSimple")) {
       title <- paste0(title, cfg[["parameters"]][["iteration"]], "Iter",
                       cfg[["parameters"]][["alpha"]], "A")
     }

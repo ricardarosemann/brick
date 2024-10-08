@@ -251,8 +251,8 @@ q("area") = yes;
 * Write initial specific costs to variable xinit, initialise x as 0
 p_xinitCon(state, subs) = p_specCostCon("intangible", state, subs, "2010");
 p_xinitRen(ren, vin, subs)$renAllowed(ren) = p_specCostRen("intangible", ren, vin ,subs, "2010");
-p_xSimp("construction", state, "0", "0", "2000-2010", subs, t) = 0;
-p_xSimp("renovation", state, stateFull, vin, subs, t)$renAllowed(state, stateFull) = 0;
+p_xSimp("construction", state, "0", "0", "2000-2010", subs, tcalib) = 0;
+p_xSimp("renovation", state, stateFull, vin, subs, tcalib)$renAllowed(state, stateFull) = 0;
 
 p_fPrev(subs) = 0; !! Unused initialisation to avoid compilation error
 
@@ -279,45 +279,76 @@ p_construction("area", state, subs, ttot) = v_construction.l("area", state, subs
 p_stock("area", state, vin, subs, t) = v_stock.l("area", state, vin, subs, t);
 
 *** check calibration deviation
-p_calibDeviationCon(iteration,state,subs,t)$(abs(p_constructionHist("area",state,subs,t)) > eps) =
-  v_construction.l("area",state,subs,t)
-  / p_constructionHist("area",state,subs,t)
+p_calibDeviationCon(iteration,state,subs,tcalib)$(abs(p_constructionHist("area",state,subs,tcalib)) > eps) =
+  v_construction.l("area",state,subs,tcalib)
+  / p_constructionHist("area",state,subs,tcalib)
 ;
-p_calibDeviationRen(iteration,ren,vin,subs,t)$(abs(p_renovationHist("area",ren,vin,subs,t)) > eps) =
-  v_renovation.l("area",ren,vin,subs,t)
-  / p_renovationHist("area",ren,vin,subs,t)
+$ifThen.aggPrev "%CALIBRATIONRESOLUTION%" == "aggregate"
+p_calibDeviationRenTest(iteration,state, stateFull,vin,subs,tcalib)$(abs(p_renovationHist("area",state, stateFull,vin,subs,tcalib)) > eps
+                                                                 and renAllowed(state, stateFull)) =
+  sum(state2$renAllowed(state2, stateFull), p_renovationHist("area",state2, stateFull,vin,subs,tcalib));
+p_calibDeviationRen(iteration,state, stateFull,vin,subs,tcalib)$(abs(sum(state2$renAllowed(state2, stateFull), p_renovationHist("area",state2, stateFull,vin,subs,tcalib))) > eps
+                                                                 and renAllowed(state, stateFull)) =
+  sum(state2$renAllowed(state2, stateFull), v_renovation.l("area",state2, stateFull,vin,subs,tcalib))
+  / sum(state2$renAllowed(state2, stateFull), p_renovationHist("area",state2, stateFull,vin,subs,tcalib))
 ;
+execute_unload "test.gdx";
+$elseIf.aggPrev "%CALIBRATIONRESOLUTION%" == "identicalRep"
+p_calibDeviationRen(iteration,state(bs,hs),stateFull(bsr,hsr),vin,subs,tcalib)$(sameas(hs, hsr)
+                                                              and (abs(sum(state2$renAllowed(state2, stateFull), p_renovationHist("area",state2, stateFull,vin,subs,tcalib))) > eps)
+                                                              and renAllowed(state, stateFull)) =
+  sum((bs2, hs2)$(renAllowed(bs2, hs2, bsr, hsr) and sameas(hs2, hsr)), v_renovation.l("area",bs2, hs2, bsr, hsr,vin,subs,tcalib))
+  / sum((bs2, hs2)$(renAllowed(bs2, hs2, bsr, hsr) and sameas(hs2, hsr)), p_renovationHist("area",bs2, hs2, bsr, hsr,vin,subs,tcalib))
+;
+p_calibDeviationRen(iteration,state(bs,hs),stateFull(bsr,hsr),vin,subs,tcalib)$(not sameas(hs, hsr) and not sameas(hsr, "0")
+                                                              and (abs(sum(state2$renAllowed(state2, stateFull), p_renovationHist("area",state2, stateFull,vin,subs,tcalib))) > eps)
+                                                              and renAllowed(state, stateFull)) =
+  sum((bs2, hs2)$(renAllowed(bs2, hs2, bsr, hsr) and not sameas(hs2, hsr) and not sameas(hsr, "0")), v_renovation.l("area",bs2, hs2, bsr, hsr,vin,subs,tcalib))
+  / sum((bs2, hs2)$(renAllowed(bs2, hs2, bsr, hsr) and not sameas(hs2, hsr) and not sameas(hsr, "0")), p_renovationHist("area",bs2, hs2, bsr, hsr,vin,subs,tcalib))
+;
+p_calibDeviationRen(iteration,state(bs,hs),stateFull(bsr,hsr),vin,subs,tcalib)$(sameas("0", hsr)
+                                                              and (abs(sum(state2$renAllowed(state2, stateFull), p_renovationHist("area",state2, stateFull,vin,subs,tcalib))) > eps)
+                                                              and renAllowed(state, stateFull)) =
+  sum((bs2, hs2)$(renAllowed(bs2, hs2, bsr, hsr) and sameas("0", hsr)), v_renovation.l("area",bs2, hs2, bsr, hsr,vin,subs,tcalib))
+  / sum((bs2, hs2)$(renAllowed(bs2, hs2, bsr, hsr) and sameas("0", hsr)), p_renovationHist("area",bs2, hs2, bsr, hsr,vin,subs,tcalib))
+;
+$else.aggPrev
+p_calibDeviationRen(iteration,ren,vin,subs,tcalib)$(abs(p_renovationHist("area",ren,vin,subs,tcalib)) > eps) =
+  v_renovation.l("area",ren,vin,subs,tcalib)
+  / p_renovationHist("area",ren,vin,subs,tcalib)
+;
+$endIf.aggPrev
 
 *** Calculate the change in intangible costs: Sufficiently large deviation and data
-p_dSimp("construction", state, "0", "0", "2000-2010", subs, t)$(p_constructionHist("area",state,subs,t) > eps
-                                          and p_calibDeviationCon(iteration,state,subs,t) > eps)
-                                          = log(p_calibDeviationCon(iteration,state,subs,t));
-p_dSimp("renovation", ren, vin, subs, t)$(p_renovationHist("area",ren,vin,subs,t) > eps
-                                          and p_calibDeviationRen(iteration,ren,vin,subs,t) > eps)
-                                          = log(p_calibDeviationRen(iteration,ren,vin,subs,t));
+p_dSimp("construction", state, "0", "0", "2000-2010", subs, tcalib)$(p_constructionHist("area",state,subs,tcalib) > eps
+                                          and p_calibDeviationCon(iteration,state,subs,tcalib) > eps)
+                                          = log(p_calibDeviationCon(iteration,state,subs,tcalib));
+p_dSimp("renovation", ren, vin, subs, tcalib)$(p_renovationHist("area",ren,vin,subs,tcalib)$(p_renovationHist("area",ren,vin,subs,tcalib) ne NA) > eps
+                                               and p_calibDeviationRen(iteration,ren,vin,subs,tcalib) > eps)
+                                          = log(p_calibDeviationRen(iteration,ren,vin,subs,tcalib));
 
 *** Calculate the change in intangible costs: Deviation or data - but not both - is close to zero
-p_dSimp("construction", state, "0", "0", "2000-2010", subs, t)$(    (p_constructionHist("area",state,subs,t) <= eps)
-                                          xor (v_construction.l("area",state,subs,t) <= eps))
-  = sign(p_calibDeviationCon(iteration,state,subs,t) - 1)
+p_dSimp("construction", state, "0", "0", "2000-2010", subs, tcalib)$(    (p_constructionHist("area",state,subs,tcalib) <= eps)
+                                          xor (v_construction.l("area",state,subs,tcalib) <= eps))
+  = sign(p_calibDeviationCon(iteration,state,subs,tcalib) - 1)
   * (
-      0.5 * abs(p_specCostCon("intangible",state,subs,t))
-      + 0.1 * p_specCostCon("tangible",state,subs,t)$(abs(p_specCostCon("intangible",state,subs,t)) <= eps)
+      0.5 * abs(p_specCostCon("intangible",state,subs,tcalib))
+      + 0.1 * p_specCostCon("tangible",state,subs,tcalib)$(abs(p_specCostCon("intangible",state,subs,tcalib)) <= eps)
     );
-p_dSimp("renovation", ren, vin, subs, t)$(    (p_renovationHist("area",ren,vin,subs,t) <= eps)
-                                            xor (v_renovation.l("area",ren,vin,subs,t) <= eps))
-  = sign(p_calibDeviationRen(iteration,ren,vin,subs,t) - 1)
+p_dSimp("renovation", ren, vin, subs, tcalib)$(    (p_renovationHist("area",ren,vin,subs,tcalib) <= eps)
+                                            xor (v_renovation.l("area",ren,vin,subs,tcalib) <= eps))
+  = sign(p_calibDeviationRen(iteration,ren,vin,subs,tcalib) - 1)
   * (
-      0.5 * abs(p_specCostRen("intangible",ren,vin,subs,t))
-      + 0.1 * p_specCostRen("tangible",ren,vin,subs,t)$(abs(p_specCostRen("intangible",ren,vin,subs,t)) <= eps)
+      0.5 * abs(p_specCostRen("intangible",ren,vin,subs,tcalib))
+      + 0.1 * p_specCostRen("tangible",ren,vin,subs,tcalib)$(abs(p_specCostRen("intangible",ren,vin,subs,tcalib)) <= eps)
     )
 ;
 
 *** If both the deviation and the data are small: Set change in intangible costs to zero (Possibly not necessary?)
-p_dSimp("construction", state, "0", "0", "2000-2010", subs, t)$(    (p_constructionHist("area",state,subs,t) <= eps)
-                                          and (v_construction.l("area",state,subs,t) <= eps)) = 0;
-p_dSimp("renovation", ren, vin, subs, t)$(    (p_renovationHist("area",ren,vin,subs,t) <= eps)
-                                            and (v_renovation.l("area",ren,vin,subs,t) <= eps)) = 0;
+p_dSimp("construction", state, "0", "0", "2000-2010", subs, tcalib)$(    (p_constructionHist("area",state,subs,tcalib) <= eps)
+                                          and (v_construction.l("area",state,subs,tcalib) <= eps)) = 0;
+p_dSimp("renovation", ren, vin, subs, tcalib)$(    (p_renovationHist("area",ren,vin,subs,tcalib) <= eps)
+                                            and (v_renovation.l("area",ren,vin,subs,tcalib) <= eps)) = 0;
 
 p_delta(subs) = sum(simpleCalibVars(flow, ren, vin),
   p_dSimp(flow, ren, vin, subs, "2010") * p_dSimp(flow, ren, vin, subs, "2010")
@@ -344,15 +375,21 @@ p_phiDeriv(subs) = sum(simpleCalibVars(flow, ren, vin),
     - p_dSimp(flow, ren, vin, subs, "2010") * p_dSimp(flow, ren, vin, subs, "2010"));
 
 *** Test the Armijo-condition for a very small step size and follow a different heuristic if this is not satisfied
-p_xMin(flow, ren, vin, subs, t)$simpleCalibVars(flow, ren, vin)
-       = p_xSimp(flow, ren, vin, subs, t) + 1/1000 * p_alpha(flow, subs) * p_dSimp(flow, ren, vin, subs, t);
+p_xMin(flow, ren, vin, subs, tcalib)$simpleCalibVars(flow, ren, vin)
+       = p_xSimp(flow, ren, vin, subs, tcalib) + 1/1000 * p_alpha(flow, subs) * p_dSimp(flow, ren, vin, subs, tcalib);
 
 v_stock.l("area", state, vin, subs, ttot) = 0;
 v_construction.l("area", state, subs, ttot) = 0;
 v_renovation.l("area", state, stateFull, vin, subs, ttot) = 0;
 
-p_specCostCon("intangible", state, subs, t) = p_xinitCon(state, subs) + p_xMin("construction", state, "0", "0", "2000-2010", subs, t);
-p_specCostRen("intangible", ren, vin, subs, t) = p_xinitRen(ren, vin, subs) + p_xMin("renovation", ren, vin, subs, t);
+p_specCostConFut(state, subs) = sum(tcalib, p_xMin("construction", state, "0", "0", "2000-2010", subs, tcalib) / card(tcalib));
+p_specCostRenFut(ren, vin, subs) = sum(tcalib, p_xMin("renovation", ren, vin, subs, tcalib) / card(tcalib));
+
+*TODO: Handle time dimension here
+p_specCostCon("intangible", state, subs, t)$tcalib(t) = p_xinitCon(state, subs) + p_xMin("construction", state, "0", "0", "2000-2010", subs, t);
+p_specCostRen("intangible", ren, vin, subs, t)$tcalib(t) = p_xinitRen(ren, vin, subs) + p_xMin("renovation", ren, vin, subs, t);
+p_specCostCon("intangible", state, subs, t)$(not tcalib(t)) = p_xinitCon(state, subs) + p_specCostConFut(state, subs);
+p_specCostRen("intangible", ren, vin, subs, t)$(not tcalib(t)) = p_xinitRen(ren, vin, subs) + p_specCostRenFut(ren, vin, subs);
 
 solveParallel
 
@@ -370,15 +407,20 @@ heuristicStepIter(iteration, subs)$heuristicStep(subs) = yes;
 loop(iterA,
 
 *** Solve the model only for the subsets which do not satisfy the Armijo condition yet
-  p_xASimp(flow, state, stateFull, vin, subs, t)$simpleCalibVars(flow, state, stateFull, vin)
-           = p_xSimp(flow, state, stateFull, vin, subs, t) + p_alpha(flow, subs) * p_dSimp(flow, state, stateFull, vin, subs, t);
+  p_xASimp(flow, state, stateFull, vin, subs, tcalib)$simpleCalibVars(flow, state, stateFull, vin)
+           = p_xSimp(flow, state, stateFull, vin, subs, tcalib) + p_alpha(flow, subs) * p_dSimp(flow, state, stateFull, vin, subs, tcalib);
 
   v_stock.l("area", state, vin, subs, ttot) = 0;
   v_construction.l("area", state, subs, ttot) = 0;
   v_renovation.l("area", state, stateFull, vin, subs, ttot) = 0;
 
-  p_specCostCon("intangible", state, subs, t) = p_xinitCon(state, subs) + p_xASimp("construction", state, "0", "0", "2000-2010", subs, t);
-  p_specCostRen("intangible", ren, vin, subs, t) = p_xinitRen(ren, vin, subs) + p_xASimp("renovation", ren, vin, subs, t);
+  p_specCostConFut(state, subs) = sum(tcalib, p_xASimp("construction", state, "0", "0", "2000-2010", subs, tcalib) / card(tcalib));
+  p_specCostRenFut(ren, vin, subs) = sum(tcalib, p_xASimp("renovation", ren, vin, subs, tcalib) / card(tcalib));
+
+  p_specCostCon("intangible", state, subs, t)$tcalib(t) = p_xinitCon(state, subs) + p_xASimp("construction", state, "0", "0", "2000-2010", subs, t);
+  p_specCostRen("intangible", ren, vin, subs, t)$tcalib(t) = p_xinitRen(ren, vin, subs) + p_xASimp("renovation", ren, vin, subs, t);
+  p_specCostCon("intangible", state, subs, t)$(not tcalib(t)) = p_xinitCon(state, subs) + p_specCostConFut(state, subs);
+  p_specCostRen("intangible", ren, vin, subs, t)$(not tcalib(t)) = p_xinitRen(ren, vin, subs) + p_specCostRenFut(ren, vin, subs);
 
   solveParallel
 
@@ -425,36 +467,84 @@ p_specCostRen("intangible", ren, vin, subs, t)$(p_renovationHist("area",ren,vin,
 
 $else.stepSize
 *** Update p_x
-p_xSimp(flow, state, stateFull, vin, subs, t)$simpleCalibVars(flow, state, stateFull, vin)
-           = p_xSimp(flow, state, stateFull, vin, subs, t) + p_alpha(flow, subs) * p_dSimp(flow, state, stateFull, vin, subs, t);
+p_xSimp(flow, state, stateFull, vin, subs, tcalib)$simpleCalibVars(flow, state, stateFull, vin)
+           = p_xSimp(flow, state, stateFull, vin, subs, tcalib) + p_alpha(flow, subs) * p_dSimp(flow, state, stateFull, vin, subs, tcalib);
+
+
+p_specCostConFut(state, subs) = sum(tcalib, p_xSimp("construction", state, "0", "0", "2000-2010", subs, tcalib) / card(tcalib));
+p_specCostRenFut(ren, vin, subs) = sum(tcalib, p_xSimp("renovation", ren, vin, subs, tcalib) / card(tcalib));
+
 * finite deviation
 p_specCostCon("intangible",state,subs,t)$(    p_constructionHist("area",state,subs,t) > eps
-                                          and p_calibDeviationCon(iteration,state,subs,t) > eps) =
+                                          and p_calibDeviationCon(iteration,state,subs,t) > eps
+                                          and tcalib(t)) =
   p_xinitCon(state, subs)
   +
   p_xSimp("construction", state, "0", "0", "2000-2010", subs, t)
 ;
 
 p_specCostRen("intangible",ren,vin,subs,t)$(    p_renovationHist("area",ren,vin,subs,t) > eps
-                                            and p_calibDeviationRen(iteration,ren,vin,subs,t) > eps) =
+                                            and p_calibDeviationRen(iteration,ren,vin,subs,t) > eps
+                                            and tcalib(t)) =
   p_xinitRen(ren, vin, subs)
   +
   p_xSimp("renovation", ren, vin, subs, t)
 ;
+
+p_specCostCon("intangible",state,subs,t)$(    p_constructionHist("area",state,subs,t) > eps
+                                          and p_calibDeviationCon(iteration,state,subs,t) > eps
+                                          and not tcalib(t)) =
+  p_xinitCon(state, subs)
+  +
+  p_specCostConFut(state, subs)
+;
+
+p_specCostRen("intangible",ren,vin,subs,t)$(    p_renovationHist("area",ren,vin,subs,t) > eps
+                                            and p_calibDeviationRen(iteration,ren,vin,subs,t) > eps
+                                            and not tcalib(t)) =
+  p_xinitRen(ren, vin, subs)
+  +
+  p_specCostRenFut(ren, vin, subs)
+;
+
+
 $endIf.stepSize
 
+* might need to adapt this for tcalib of more than one time step
+p_specCostConFutZero(state, subs) = sum(tcalib, p_dSimp("construction", state, "0", "0", "2000-2010", subs, tcalib) / card(tcalib));
+p_specCostRenFutZero(ren, vin, subs) = sum(tcalib, p_dSimp("renovation", ren, vin, subs, tcalib) / card(tcalib));
+
 * zero targets or zero actual value-
-p_specCostCon("intangible",state,subs,t)$(    (p_constructionHist("area",state,subs,t) <= eps)
+p_specCostCon("intangible",state,subs,t)$((    (p_constructionHist("area",state,subs,t) <= eps)
                                           xor (v_construction.l("area",state,subs,t) <= eps))
+                                          and tcalib(t))
   =
   p_specCostCon("intangible",state,subs,t)
   + p_dSimp("construction", state, "0", "0", "2000-2010", subs, t)
 ;
 
-p_specCostRen("intangible",ren,vin,subs,t)$(    (p_renovationHist("area",ren,vin,subs,t) <= eps)
-                                            xor (v_renovation.l("area",ren,vin,subs,t) <= eps)) =
+p_specCostRen("intangible",ren,vin,subs,t)$((    (p_renovationHist("area",ren,vin,subs,t) <= eps)
+                                            xor (v_renovation.l("area",ren,vin,subs,t) <= eps))
+                                            and tcalib(t))
+  =
   p_specCostRen("intangible",ren,vin,subs,t)
   + p_dSimp("renovation", ren, vin, subs, t)
+;
+
+p_specCostCon("intangible",state,subs,t)$((    (p_constructionHist("area",state,subs,t) <= eps)
+                                          xor (v_construction.l("area",state,subs,t) <= eps))
+                                          and not tcalib(t))
+  =
+  p_specCostCon("intangible",state,subs,t)
+  + p_specCostConFutZero(state, subs)
+;
+
+p_specCostRen("intangible",ren,vin,subs,t)$((    (p_renovationHist("area",ren,vin,subs,t) <= eps)
+                                            xor (v_renovation.l("area",ren,vin,subs,t) <= eps))
+                                            and not tcalib(t))
+  =
+  p_specCostRen("intangible",ren,vin,subs,t)
+  + p_specCostRenFutZero(ren, vin, subs)
 ;
 
 *** Save results of current iteration

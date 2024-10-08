@@ -203,7 +203,16 @@ switches:
     # stocks
     # stockszero
     # flows
+    # aggregate (for simple calibration)
+    # detailed (for simple calibration)
   CALIBRATIONTYPE: NULL
+
+  ### Calibration resolution ###
+  # Whether to aggregate previous state in simple calibration
+    # aggregate
+    # detailed
+    # identicalRep
+  CALIBRATIONRESOLUTION: detailed
 
   ### Calibration input ###
   # Input source for the calibration target; probably deleted in the future

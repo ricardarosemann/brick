@@ -106,6 +106,12 @@ p_renovationDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, bsr, hsr, vin, r
 
 p_calibDeviationCon(iterationAll,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
 p_calibDeviationRen(iterationAll,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
+p_calibDeviationRenTest(iterationAll,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
+
+p_specCostConFut(bs, hs, reg, loc, typ, inc)
+p_specCostRenFut(bs, hs, bsr, hsr, vin, reg, loc, typ, inc)
+p_specCostConFutZero(bs, hs, reg, loc, typ, inc)
+p_specCostRenFutZero(bs, hs, bsr, hsr, vin, reg, loc, typ, inc)
 
 priceSensBS(var, reg, loc, typ, inc) "price sensitivity of building shell choice"
 priceSensHS(var, reg, loc, typ, inc) "price sensitivity of heating system choice"

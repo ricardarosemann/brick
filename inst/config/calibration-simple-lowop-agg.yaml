@@ -1,8 +1,8 @@
 ---
-title: "calibration-simple-lowEhp1-adapt-2010"
+title: "calibration-simple-lowEhp1-const-agg-2040"
 basedOn: "default.yaml"
 # scope and resolution
-periods: [2000, 2010]
+periods: [2000, 2010, 2020, 2030, 2040]
 startyear: 2010
 calibperiods: 2010
 regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
@@ -13,10 +13,11 @@ reportingTemplate: ignoreShell_onlyRes
 switches:
   RUNTYPE: calibrationSimple
   CALIBRATIONTYPE: flows
+  CALIBRATIONRESOLUTION: aggregate
   CALIBRATIONINPUT: file
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
-  CALIBRATIONSTEP: adaptive
+  CALIBRATIONSTEP: constant
   CALIBRATEPRICESENS: FALSE
 # parameters for calibration
 parameters:
