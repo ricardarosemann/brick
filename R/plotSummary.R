@@ -25,7 +25,7 @@
 plotSummary <- function(path, facet = "typ", showHistStock = FALSE,
                         splitRen = FALSE) {
 
-  config <- readConfig(file.path(path, "config", "config.yaml"), readDirect = TRUE)
+  config <- readConfig(file.path(path, "config", "config_COMPILED.yaml"), readDirect = TRUE)
   endyear <- config[["endyear"]]
 
 

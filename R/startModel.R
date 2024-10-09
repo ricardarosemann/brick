@@ -14,7 +14,7 @@
 #'
 startModel <- function(path) {
 
-  cfg <- readConfig(file.path(path, "config", "config.yaml"), readDirect = TRUE)
+  cfg <- readConfig(file.path(path, "config", "config_COMPILED.yaml"), readDirect = TRUE)
 
   if (file.exists(file.path(path, "config", "restartOptions.csv"))) {
     restart <- read.csv2(file.path(path, "config", "restartOptions.csv"))[["restart"]]
@@ -31,6 +31,14 @@ startModel <- function(path) {
       createMatchingData(path, cfg, overwrite = !isFALSE(restart))
     } else if (cfg[["switches"]][["RUNTYPE"]] == "calibration") {
       # aggregateMatching(path, cfg, overwrite = !isFALSE(restart))
+    }
+  }
+
+  if (cfg[["switches"]][["SOLVEPROBLEM"]] == "auto") {
+    cfg[["switches"]][["SOLVEPROBLEM"]]  <- if (is.null(cfg[["startingPoint"]])) {
+      "lpnlp"
+    } else {
+      "nlp"
     }
   }
 

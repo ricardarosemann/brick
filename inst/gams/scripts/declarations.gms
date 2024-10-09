@@ -16,6 +16,7 @@ p_carrierEmi(carrier,reg,ttot)     "energy carrier emission intensity in t_CO2/k
 p_ueDemand(bs,vin,reg,typ)         "floor-space specific useful energy demand for space heating in kWh/yr/m2"
 p_feDemand(hs,bs,vin,reg,typ,ttot) "floor-space specific final energy demand for space heating in kWh/yr/m2"
 p_eff(hs,reg,typ,ttot)             "technical efficiency of space heating technologies"
+p_renDepth(bs,bsr)                 "renovation depth"
 
 p_lccCon(cost,var,bs,hs,reg,loc,typ,inc,ttot) "Estimate of life cycle cost of constructed housing in USD/m2"
 p_probDem(reg,typ,ttot2,ttot)                 "probability of a building having reached its end of life"

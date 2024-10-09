@@ -11,6 +11,7 @@
 #' @author Robin Hasse
 #'
 #' @importFrom yaml write_yaml
+#' @importFrom reportbrick readBrickSets
 
 createRunFolder <- function(path,
                             config = NULL,
@@ -44,6 +45,12 @@ createRunFolder <- function(path,
   if (file.exists(configFile)) {
     file.copy(configFile, configFolder, overwrite = overwrite)
   }
-  write_yaml(config, file.path(configFolder, "config.yaml"))
+  write_yaml(config, file.path(configFolder, "config_COMPILED.yaml"))
+
+
+  ## reporting template ====
+
+  brickSets <- readBrickSets(config[["reportingTemplate"]])
+  write_yaml(brickSets, file.path(configFolder, "brickSets_COMPILED.yaml"))
 
 }

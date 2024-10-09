@@ -26,7 +26,7 @@ readConfig <- function(config = NULL, configFolder = NULL, readDirect = FALSE) {
   # Directly read the file without considering basis configs
   if (readDirect) {
     if (!file.exists(config)) {
-      stop("The config", config, "that you want read directly does not exist. ",
+      stop("The config ", config, " that you want read directly does not exist. ",
            "If this is a restart run, your run folder likely misses the config file.")
     }
     if (!is.null(configFolder)) {

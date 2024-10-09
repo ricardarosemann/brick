@@ -12,6 +12,10 @@
 
 addAssump <- function(df, assumpFile) {
 
+  if (!file.exists(assumpFile)) {
+    stop("This assumption file doesn't exist: ", assumpFile)
+  }
+
   assump <- read.csv2(assumpFile, stringsAsFactors = TRUE, na.strings = "", comment.char = "#")
   assump[["value"]] <- as.numeric(as.character(assump[["value"]]))
 

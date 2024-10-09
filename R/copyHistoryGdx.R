@@ -8,7 +8,7 @@
 #'
 #' @author Robin Hasse
 #'
-#' @importFrom gamstransfer Container SpecialValues
+#' @importFrom gamstransfer Container
 
 copyHistoryGdx <- function(path,
                            outputFolder = NULL,
@@ -132,10 +132,7 @@ copyHistoryGdx <- function(path,
     }
     param$records <- param$records %>%
       filter(.data[["ttot"]] %in% thist) %>%
-      # make zeros explicit so gams saves them
-      mutate(value = ifelse(.data[["value"]] == 0,
-                            SpecialValues[["EPS"]],
-                            .data[["value"]]))
+      .explicitZero()
   }
   m$write(gdx, compress = TRUE)
 

@@ -88,7 +88,7 @@ q_OpeCost(subs(reg,loc,typ,inc),ttot)$(t(ttot))..
   v_OpeCost(subs,ttot)
   =e=
   sum((state,vinExists(ttot,vin)),
-    sum(ttot2$(sameas(ttot2,ttot) or sameas(ttot2,ttot-1)),
+    sum(ttot2$((sameas(ttot2,ttot) or sameas(ttot2,ttot-1)) and vinExists(ttot2,vin)),
       v_stock("area",state,vin,subs,ttot2)
     ) / 2
     * p_specCostOpe(state,vin,reg,loc,typ,ttot)
@@ -510,7 +510,7 @@ q_flowVariationTot..
     sum(subs,
       sum(t$((ord(t) lt card(t))),
           v_flowVariation(varFlow,"area",subs,t)
-      )  
+      )
     )
   )
 ;

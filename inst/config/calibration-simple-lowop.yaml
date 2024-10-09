@@ -1,5 +1,5 @@
 ---
-title: "calibration-simple-lowEhp1-adapt-2010"
+title: "calibration-simple-lowEhp1-const-2010"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
@@ -16,10 +16,10 @@ switches:
   CALIBRATIONINPUT: file
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
-  CALIBRATIONSTEP: adaptive
+  CALIBRATIONSTEP: constant
   CALIBRATEPRICESENS: FALSE
 # parameters for calibration
 parameters:
   alpha: 80
-  iteration: 100
+  iteration: 10
 ...

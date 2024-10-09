@@ -31,12 +31,13 @@ reportMif <- function(path, file = NULL, tmpl = NULL) {
   }
 
   # read config
-  configFile <- file.path(path, "config", "config.yaml")
+  configFile <- file.path(path, "config", "config_COMPILED.yaml")
   config <- readConfig(configFile, readDirect = TRUE)
-  missingConfigParams <- setdiff(
-    c(if (is.null(tmpl)) "reportingTemplate" else NULL, "title", "periods"),
-    names(config)
-  )
+  neededConfigParams <- c("title", "periods")
+  if (is.null(tmpl)) {
+    neededConfigParams <- c(neededConfigParams, "reportingTemplate")
+  }
+  missingConfigParams <- setdiff(neededConfigParams, names(config))
   if (length(missingConfigParams) > 0) {
     stop("The settings ", paste(missingConfigParams, collapse = ", "),
          " are missing in the config: ", configFile)
@@ -53,7 +54,12 @@ reportMif <- function(path, file = NULL, tmpl = NULL) {
 
   # reporting template
   if (is.null(tmpl)) {
-    tmpl <- config[["reportingTemplate"]]
+    tmplFile <- file.path(path, "config", "brickSets_COMPILED.yaml")
+    tmpl <- if (file.exists(tmplFile)) {
+      tmplFile
+    } else {
+      config[["reportingTemplate"]]
+    }
   }
 
   # write mif

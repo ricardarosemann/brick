@@ -49,6 +49,14 @@ ignoreShell: FALSE
 ### Create minimal version with reduced run time ###
 minimal: FALSE
 
+### calibration ###
+# intangible cost assumption files
+# paths to csv files with assumptions on the intangible cost for construction
+#  and renovation.
+  # []: default files stored internally in inst/assump/
+  # {con: 'path/to/file1.csv', ren: 'path/to/file2.csv'}
+intangCostFiles: []
+
 ### reporting template ###
 # alternative reporting mapping
 # There has to be a mapping in the package reportbrick named with the same
@@ -80,7 +88,7 @@ tasks32: FALSE
 # data -------------------------------------------------------------------------
 
 ### input data revision ###
-inputRevision: "0.6"
+inputRevision: "0.7"
 
 ### force download ###
 # force the model to download new input data even though it seems unchanged
@@ -177,6 +185,7 @@ switches:
     # lp:    linear problem (incomplete)
     # nlp:   non-linear problem
     # lpnlp: first lp then start nlp from there
+    # auto:  nlp if startingPoint is set, else lpnlp
   SOLVEPROBLEM: lpnlp
 
   ### Parallel solving ###
