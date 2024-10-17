@@ -78,7 +78,7 @@ loadMadratData <- function(config) {
 
 .findRegionMapping <- function(regionmapping) {
 
-  if (is.null(regionmapping)) {
+  if (length(regionmapping) == 0) {
     # missing region mapping -> national resolution
     name <- "regionmappingNational.csv"
     where <- "mredgebuildings"

@@ -8,11 +8,12 @@ $load p_carbonPrice p_carrierPrice p_carrierEmi p_ueDemand p_eff p_renDepth
 $load p_interestRate
 $load p_population
 $load p_stockHist
+$load p_renovationTarget
 $ifthen.calibration "%RUNTYPE%" == "calibration"
 $load p_alphaL p_diff p_beta p_sigma
 $load allPriceSensHS
 $ifthen.calibrationInp not "%CALIBRATIONINPUT%" == "data" 
-$load p_renovationHist p_constructionHist
+$load p_renovationHist p_constructionHist 
 $endif.calibrationInp
 $ifThen.lowop not "%CALIBRATIONLOWOP%" == "FALSE"
 $load p_specCostOpe
