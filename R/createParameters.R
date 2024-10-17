@@ -828,11 +828,11 @@ createParameters <- function(m, config, inputDir) {
   if (config[["switches"]][["RUNTYPE"]] %in% c("calibration", "calibrationSimple")) {
     alphaInp <- config[["parameters"]][["alpha"]]
 
-    alpha <- expandSets("flow", "reg", "loc", "typ", "inc", .m = m)
+    alpha <- expandSets("reg", "loc", "typ", "inc", .m = m)
 
     if (is.character(alphaInp) && file.exists(alphaInp)) {
       alpha <- read.csv(alphaInp) %>%
-        right_join(alpha, by = c("flow", "reg", "loc", "typ", "inc"))
+        right_join(alpha, by = c("reg", "loc", "typ", "inc"))
     } else {
       alpha <- mutate(alpha, value = alphaInp)
     }
@@ -840,7 +840,7 @@ createParameters <- function(m, config, inputDir) {
     p_alphaL <- m$addParameter(
       "p_alphaL",
       records = alpha,
-      domain = c("flow", "reg", "loc", "typ", "inc"),
+      domain = c("reg", "loc", "typ", "inc"),
       description = "Lower bound of alpha before Armijo backtracking in calibration"
     )
 

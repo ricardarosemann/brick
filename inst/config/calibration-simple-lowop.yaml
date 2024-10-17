@@ -1,5 +1,5 @@
 ---
-title: "calibration-simple-lowEhp1-const-2010"
+title: "calibration-simple-lowEhp1-adapt-2010"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2010]
@@ -9,6 +9,7 @@ regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
 regions: EUR
 ignoreShell: TRUE
 reportingTemplate: ignoreShell_onlyRes
+inputRevision: "0.6"
 # switches
 switches:
   RUNTYPE: calibrationSimple
@@ -16,7 +17,7 @@ switches:
   CALIBRATIONINPUT: file
   CALIBRATIONLOWOP: "ehp1"
   TARGETFUNCTION: minsquare
-  CALIBRATIONSTEP: constant
+  CALIBRATIONSTEP: adaptive
   CALIBRATEPRICESENS: FALSE
 # parameters for calibration
 parameters:

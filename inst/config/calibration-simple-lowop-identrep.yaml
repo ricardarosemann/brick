@@ -9,6 +9,8 @@ regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
 regions: EUR
 ignoreShell: TRUE
 reportingTemplate: ignoreShell_onlyRes
+inputRevision: "0.6"
+intangCostFiles: {ren: '/p/tmp/ricardar/aux/brickAssump/costIntangRen-noStatQuo.csv'}
 # switches
 switches:
   RUNTYPE: calibrationSimple

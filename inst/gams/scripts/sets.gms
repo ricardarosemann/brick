@@ -2,13 +2,17 @@
 
 sets
 *** building state dimensions
-bsr     "renovated building shell"
-hsr     "renovated heating system"
+bsAll
+hsAll
+bsr(bsAll)     "renovated building shell"
+hsr(hsAll)     "renovated heating system"
 bs(bsr) "building shell"
 hs(hsr) "heating system"
 
 *** vintages
-vin "construction vintage cohort"
+vinAll
+vin(vinAll) "construction vintage cohort"
+vinVar(vinAll)  "Dynamic vintages that can be aggregated"
 *$ifthen.calibration "%RUNTYPE%" == "calibration"
 vinCalib(vin)  "Dynamic vintages in calibration"
 *$endif.calibration
@@ -100,6 +104,7 @@ alias(hs,hs2)
 alias(vin,vin2,vin3)
 alias(ttot,ttot2)
 alias(t,t2)
+alias(tcalib, tcalib2)
 alias(flow, flow2)
 alias(renType, renType2)
 ;
@@ -109,10 +114,10 @@ alias(renType, renType2)
 
 *** load fundamental sets
 $gdxin input.gdx
-$load bsr hsr bs hs
+$load bsAll hsAll bsr hsr bs hs
 $load reg loc typ inc
 $load tall ttot t thist tinit
-$load vin
+$load vinAll vin
 $ifthen.calibration "%RUNTYPE%" == "calibration"
 $load flow iterationAll iteration tcalib
 $elseif.calibration "%RUNTYPE%" == "calibrationSimple"
@@ -158,16 +163,19 @@ sets
 *** building subset
 all_subs(reg,loc,typ,inc) "all building stock subsets"
 subs(reg,loc,typ,inc)     "building stock subsets in the solution process"
-armijoStep(reg, loc, typ, inc) "Stock subsets on which to apply the Armijo step size algorithm"
-heuristicStep(reg, loc, typ, inc) "Stock subsets on which to apply a heuristic to determine the step size"
+armijoStep(reg, loc, typ, inc, ttot) "Stock subsets on which to apply the Armijo step size algorithm"
+heuristicStep(reg, loc, typ, inc, ttot) "Stock subsets on which to apply a heuristic to determine the step size"
+totalStep(reg, loc, typ, inc, ttot) "Stock subsets for which step size adaptation is not terminated yet"
 
 *** Temporary: Save step size type across iterations
-armijoStepIter(iterationAll, reg, loc, typ, inc)
-heuristicStepIter(iterationAll, reg, loc, typ, inc)
+armijoStepIter(iterationAll, reg, loc, typ, inc, ttot)
+heuristicStepIter(iterationAll, reg, loc, typ, inc, ttot)
 
 *** building state
+stateAll(bsAll, hsAll)  "building state incl empty (none) field"
 stateFull(bsr,hsr)      "building state incl 0 for no renovation"
 state(bs,hs)            "building state"
+renAll(bsAll, hsAll, bsr, hsr)    "renovation alternatives incl empty (none) field"
 ren(bs,hs,bsr,hsr)      "renovation alternatives"
 
 *** mappings to filter unwanted combinations
@@ -176,8 +184,9 @@ renAllowed(bs,hs,bsr,hsr)          "Is this renovation transition allowed"
 renTarAllowed(flow, bsr, hsr)      "Is this renovation/construction target allowed"
 sameState(bs,hs,bsr,hsr)           "Is the state after the renovation the same as before"
 renEffective(bs,hs,bsr,hsr)        "Renovations without untouched buildings"
-gradientVars(flow, renType, bsr, hsr, vin)                       "Combinations to loop over to compute the gradient in the calibration"
-simpleCalibVars(flow, bs, hs, bsr, hsr, vin)  "Is this a valid configuration for specific installation costs?"
+gradientVars(flow, renType, bsr, hsr, vinAll, ttot)                       "Combinations to loop over to compute the gradient in the calibration"
+calibStates(flow, bsAll, hsAll, bsr, hsr, vinAll)
+simpleCalibVars(flow, bsAll, hsAll, bsr, hsr, vinAll)  "Is this a valid configuration for specific installation costs?"
 refVarExists (ref,refVar,reg,ttot) "There is a value for this combination of reference, variable, region and period"
 hsCarrier(hs,carrier)              "mapping between heating system and energy carrier"
 
@@ -197,8 +206,10 @@ hsBan(var,reg,ttot,hs) "heating systems are forbidden in the respective variable
 ;
 
 *** aliases
+alias(subs, subs2)
 alias(state,state2,state3,state4);
 alias(stateFull,stateFull2,stateFull3,stateFull4);
+alias(stateAll, stateAll2);
 alias(renAllowed,renAllowed2);
 
 
@@ -221,6 +232,7 @@ $endif.matching
 
 all_subs(reg,loc,typ,inc) = yes;
 subs(all_subs)            = yes;
+stateAll(bsAll, hsAll)    = yes;
 stateFull(bsr,hsr)        = yes;
 state(bs,hs)              = yes;
 ren(state,stateFull)      = yes;
@@ -249,17 +261,29 @@ loop((bs,hs,bsr,hsr),
 $endIf.shell
 
 *** Determine the combinations to loop over in the calibration
-loop((renAllowed(bs, hs, bsr, hsr), vin),
-  gradientVars("renovation", "identRepl", bsr, hsr, vin)$sameas(hs, hsr) = YES;
-  gradientVars("renovation", "newSys", bsr, hsr, vin)$(not sameas(hs, hsr) and not sameas(hsr, "0")) = YES;
-  gradientVars("renovation", "0", bsr, hsr, vin)$(sameas(hsr, "0")) = YES;
+loop((renAllowed(bs, hs, bsr, hsr), vin, tcalib),
+  gradientVars("renovation", "identRepl", bsr, hsr, vin, tcalib)$sameas(hs, hsr) = YES;
+  gradientVars("renovation", "newSys", bsr, hsr, vin, tcalib)$(not sameas(hs, hsr) and not sameas(hsr, "0")) = YES;
+  gradientVars("renovation", "0", bsr, hsr, vin, tcalib)$(sameas(hsr, "0")) = YES;
+  calibStates("renovation", bs, hs, bsr, hsr, vin) = yes;
 );
 loop(renTarAllowed(flow, bsr, hsr)$sameas("construction", flow),
-  gradientVars("construction", "newSys", bsr, hsr, "2000-2010") = YES;
+  gradientVars("construction", "newSys", bsr, hsr, "none", tcalib) = YES;
+  calibStates("construction", "none", "none", bsr, hsr, "none") = yes;
 );
 $elseIf.calibration "%RUNTYPE%" == "calibrationSimple"
-simpleCalibVars("construction", state, "0", "0", "2000-2010") = YES;
+vinVar(vin) = yes;
+
+simpleCalibVars("construction", "none", "none", state, "none") = YES;
+$ifThen.aggVin "%AGGREGATEVIN%" == "TRUE"
+simpleCalibVars("renovation", ren, "none") = yes;
+$else.aggVin
 simpleCalibVars("renovation", ren, vin)$renAllowed(ren) = YES;
+$endIf.aggVin
+
+loop(stateAll(bsAll, hsAll)$(not sameas(bsAll, "0") and not sameas(hsAll, "0")),
+  renAll(stateAll, stateFull) = yes;
+);
 
 loop(renAllowed(bs, hs, bsr, hsr),
   renTarAllowed("renovation", bsr, hsr) = yes;
@@ -267,6 +291,8 @@ loop(renAllowed(bs, hs, bsr, hsr),
 loop((bsr, hsr)$(bs(bsr) and hs(hsr)),
   renTarAllowed("construction", bsr, hsr) = yes;
 );
+
+totalStep(subs, tcalib) = yes;
 $endif.calibration
 * sets
 * vinCalib(vin)  "Dynamic vintages in calibration"

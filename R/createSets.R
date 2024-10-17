@@ -106,6 +106,12 @@ createSets <- function(m, config) {
     description = "construction vintage cohort"
   )
 
+  vinAll <- m$addSet(
+    name = "vinAll",
+    records = c(vin$getUELs(), "none"),
+    description = "vintage cohort including empty field"
+  )
+
   vinExists <- expandSets(ttot, vin) %>%
     left_join(vintages, by = "vin") %>%
     filter(.data[["ttot"]] > .data[["from"]] - 1) %>%
@@ -139,6 +145,12 @@ createSets <- function(m, config) {
     description = "renovated building shell"
   )
 
+  bsAll <- m$addSet(
+    name = "bsAll",
+    records = c(bsr$getUELs(), "none"),
+    description = "building shell including empty field"
+  )
+
 
   ## heating system ====
 
@@ -158,6 +170,12 @@ createSets <- function(m, config) {
     name = "hsr",
     records = c(0, hs$getUELs()),
     description = "renovated heating system"
+  )
+
+  hsAll <- m$addSet(
+    name = "hsAll",
+    records = c(hsr$getUELs(), "none"),
+    description = "heating system including empty field"
   )
 
   carrier <- hsMap %>%

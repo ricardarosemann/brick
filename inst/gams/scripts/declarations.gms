@@ -28,7 +28,7 @@ p_floorPerCap(reg,loc,typ,inc,ttot)         "floor space per capita in m2"
 
 p_stockHist(qty,bs,hs,vin,reg,loc,typ,inc,ttot)              "historic stock of buildings in million m2"
 p_constructionHist(qty,bs,hs,reg,loc,typ,inc,ttot)           "historic flow of new buildings in million m2/yr"
-p_renovationHist(qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings in million m2/yr"
+p_renovationHist(qty,bs,hs,bsr,hsr,vinAll,reg,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings in million m2/yr"
 p_demolitionHist(qty,bs,hs,vin,reg,loc,typ,inc,ttot)         "historic flow of demolished buildings in million m2/yr"
 
 p_shareDem(vin,reg,typ,ttot)           "minimum share of demolition at end of life"
@@ -53,50 +53,52 @@ p_refVals(ref,refVar,reg,ttot) "reference values to match"
 p_refValsMed(ref,reg)          "median non-zero reference value to normalise deviations"
 
 p_diff
-p_x(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
-p_xinitCon(bs, hs, reg, loc, typ, inc)
-p_xinitRen(bs, hs, bsr, hsr, vin, reg, loc, typ, inc)
-p_xDiff(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
-p_xA(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
+p_x(flow, renType, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
+p_xinitCon(bs, hs, reg, loc, typ, inc, ttot)
+p_xinitRen(bs, hs, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
+p_specCostCalib(flow, bsAll, hsAll, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
+p_xDiff(flow, renType, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
+p_xA(flow, renType, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
 
-p_f(reg, loc, typ, inc)
-p_f0(reg, loc, typ, inc)
-p_fPrev(reg, loc, typ, inc)
-p_fDiff(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
-p_fA(reg, loc, typ, inc)
-p_fMin(reg, loc, typ, inc)
+p_f(reg, loc, typ, inc, ttot)
+p_f0(reg, loc, typ, inc, ttot)
+p_fPrev(reg, loc, typ, inc, ttot)
+p_fDiff(flow, renType, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+p_fA(reg, loc, typ, inc, ttot)
+p_fMin(reg, loc, typ, inc, ttot)
 
-p_r(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
-p_d(flow, renType, bsr, hsr, vin, reg, loc, typ, inc)
-p_delta(reg, loc, typ, inc)
-p_alpha(flow, reg, loc, typ, inc)
-p_alphaL(flow, reg, loc, typ, inc)
+p_r(flow, renType, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+p_d(flow, renType, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+
+p_delta(reg, loc, typ, inc, ttot)
+p_alpha(reg, loc, typ, inc, ttot)
+p_alphaL(reg, loc, typ, inc)
 p_beta
 p_sigma
-p_phiDeriv(reg, loc, typ, inc)
+p_phiDeriv(reg, loc, typ, inc, ttot)
 
-p_renovation(qty,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot)
+p_renovation(qty,bs,hs,bsr,hsr,vinAll,reg,loc,typ,inc,ttot)
 p_construction(qty,bs,hs,reg,loc,typ,inc,ttot)
 p_stock(qty, bs, hs, vin, reg, loc, typ, inc, ttot)
 
-p_iterA(reg, loc, typ, inc)
-p_alphaIterA(iterA, flow, reg, loc, typ, inc)
-p_fAIterA(iterA, reg, loc, typ, inc)
-p_fArmijoRHIterA(iterA, flow, reg, loc, typ, inc)
-p_fArmijoRHMin(flow, reg, loc, typ, inc)
+p_iterA(reg, loc, typ, inc, ttot)
+p_alphaIterA(iterA, reg, loc, typ, inc, ttot)
+p_fAIterA(iterA, reg, loc, typ, inc, ttot)
+p_fArmijoRHIterA(iterA, reg, loc, typ, inc, ttot)
+p_fArmijoRHMin(reg, loc, typ, inc, ttot)
 
 p_xPS(var, reg, loc, typ, inc)
 p_xDiffPS(var, reg, loc, typ, inc)
 p_xAPS(var, reg, loc, typ, inc)
-p_fDiffPS(var, reg, loc, typ, inc)
+p_fDiffPS(var, reg, loc, typ, inc, ttot)
 p_rPS(var, reg, loc, typ, inc)
 p_dPS(var, reg, loc, typ, inc)
 p_deltaPS(reg, loc, typ, inc)
 
-p_dSimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
-p_xSimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
-p_xASimp(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
-p_xMin(flow, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
+p_dSimp(flow, bsAll, hsAll, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
+p_xSimp(flow, bsAll, hsAll, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
+p_xASimp(flow, bsAll, hsAll, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
+p_xMin(flow, bsAll, hsAll, bsr, hsr, vinAll, reg, loc, typ, inc, ttot)
 
 allPriceSensHS(iteration)
 
@@ -106,13 +108,13 @@ p_constructionDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, reg, loc, typ,
 p_renovationDiffIter(iterationAll, flow, bsr, hsr, vin, bs, hs, bsr, hsr, vin, reg, loc, typ, inc, ttot)
 
 p_calibDeviationCon(iterationAll,bs,hs,reg,loc,typ,inc,ttot)             "Ratio of actual value and calibration target for construction (should converge to 1)"
-p_calibDeviationRen(iterationAll,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
-p_calibDeviationRenTest(iterationAll,bs,hs,bsr,hsr,vin,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
+p_calibDeviationRen(iterationAll,bs,hs,bsr,hsr,vinAll,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
+p_calibDeviationRenTest(iterationAll,bs,hs,bsr,hsr,vinAll,reg,loc,typ,inc,ttot) "Ratio of actual value and calibration target for renovation (should converge to 1)"
 
 p_specCostConFut(bs, hs, reg, loc, typ, inc)
-p_specCostRenFut(bs, hs, bsr, hsr, vin, reg, loc, typ, inc)
+p_specCostRenFut(bs, hs, bsr, hsr, vinAll, reg, loc, typ, inc)
 p_specCostConFutZero(bs, hs, reg, loc, typ, inc)
-p_specCostRenFutZero(bs, hs, bsr, hsr, vin, reg, loc, typ, inc)
+p_specCostRenFutZero(bs, hs, bsr, hsr, vinAll, reg, loc, typ, inc)
 
 priceSensBS(var, reg, loc, typ, inc) "price sensitivity of building shell choice"
 priceSensHS(var, reg, loc, typ, inc) "price sensitivity of heating system choice"

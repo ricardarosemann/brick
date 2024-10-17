@@ -259,6 +259,10 @@ switches:
     # FALSE: Do not calibrate the price sensitivity
   CALIBRATEPRICESENS: FALSE
 
+  ### Aggregate vintages
+  # Switch to control whether renovation flows are aggregated across vintages in calibration
+  AGGREGATEVIN: FALSE
+
 
 # gams parameters --------------------------------------------------------------
 # passed to gams
