@@ -785,6 +785,29 @@ createParameters <- function(m, config, inputDir) {
   )
 
 
+
+  # Flows ----------------------------------------------------------------------
+
+  p_renovationTarget <- readInput("f_renovationFlow.cs4r",
+                                  c("ttot", "reg", "hs", "hsr", "typ", "loc"),
+                                  inputDir)
+  p_renovationTarget <- expandSets("qty", "bs", "hs", "bsr", "hsr", "vinAll",
+                                   "reg", "loc", "typ", "inc", "ttot", .m = m) %>%
+    filter(.data[["qty"]] == "area",
+           .data[["bs"]] == "low",
+           .data[["bsr"]] == "0",
+           .data[["vinAll"]] == "none") %>%
+    left_join(p_renovationTarget,
+              by = c("ttot", "reg", "hs", "hsr", "typ", "loc"))
+  p_renovationTarget <- m$addParameter(
+    "p_renovationTarget",
+    c("qty", "bs", "hs", "bsr", "hsr", "vin", "reg", "loc", "typ", "inc", "ttot"),
+    p_renovationTarget,
+    description = "historic flow of renovated buildings in million m2/yr"
+  )
+
+
+
   # Price sensitivity ---------------------------------------------------
   if (config[["switches"]][["RUNTYPE"]] == "calibration") {
     allPriceSensHS <- c(seq(200, 1000, 100), seq(2000, 10000, 1000))

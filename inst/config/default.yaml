@@ -88,7 +88,7 @@ tasks32: FALSE
 # data -------------------------------------------------------------------------
 
 ### input data revision ###
-inputRevision: "0.7"
+inputRevision: "0.8"
 
 ### force download ###
 # force the model to download new input data even though it seems unchanged
@@ -250,7 +250,7 @@ switches:
     # constant: Constant step size passed via p_alphaL.
     # priceSensHs: Take the respective lambda as the step size
     # adaptive: Use the adaptive step size method. Not yet available for simple calibration
-  CALIBRATIONSTEP: constant 
+  CALIBRATIONSTEP: constant
 
   ### Calibration of price sensitivity
   # Switch to control whether first price sensitivity is calibrated

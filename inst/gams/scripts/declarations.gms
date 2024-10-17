@@ -31,6 +31,8 @@ p_constructionHist(qty,bs,hs,reg,loc,typ,inc,ttot)           "historic flow of n
 p_renovationHist(qty,bs,hs,bsr,hsr,vinAll,reg,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings in million m2/yr"
 p_demolitionHist(qty,bs,hs,vin,reg,loc,typ,inc,ttot)         "historic flow of demolished buildings in million m2/yr"
 
+p_renovationTarget(qty,bs,hs,bsr,hsr,vinAll,reg,loc,typ,inc,ttot) "historic flow of renovated buildings in million m2/yr"
+
 p_shareDem(vin,reg,typ,ttot)           "minimum share of demolition at end of life"
 p_shareRenBS(reg,ttot,ttot)            "minimum share of renovation from the building shell reaching end of life"
 p_shareRenHS(hs,reg,typ,ttot,ttot)     "minimum share of renovation from the heating system reaching end of life"
