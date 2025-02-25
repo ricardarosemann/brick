@@ -17,6 +17,8 @@
 #'    Restricts the plot to the stock only and adjusts appearance of the plot.
 #' @param computeRenState logical, display the renovation flow in two separate
 #'    panels for original and final state
+#' @param bwReady logical, choose plotting style that is readable in grey scales
+#' @param deu logical, translate all labels to german
 #' @param scenNames character vector, when passing more than one gdx, provide
 #'    names for the given inputs and use these to facet by, if no facet is given
 #' @param scenNamesShort character vector, when scenNames is specified, provide
@@ -41,7 +43,7 @@
 
 plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = NULL,
                         showHistStock = FALSE, compareGdx = NULL, compRelTo = NULL,
-                        computeRenState = FALSE,
+                        computeRenState = FALSE, bwReady = FALSE, deu = FALSE,
                         scenNames = NULL, scenNamesShort = NULL, splitRen = FALSE, tMin = NULL,
                         nameAdd = "") {
 
@@ -86,6 +88,9 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
     contL <- c(contL, list(m))
 
     if (!is.null(compareGdx)) {
+      if (any(!grepl(".gdx$", compareGdx))) {
+        compareGdx <- file.path(compareGdx, "output.gdx")
+      }
       if (length(compareGdx) >= i) {
         n <- gamstransfer::Container$new(compareGdx[i])
       } else {
@@ -118,6 +123,11 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
       Renovation = "v_renovation"
     )
   }
+
+  deuTranslate <- c(Stock = "Bestand", Construction = "Neubau", Demolition = "Abriss",
+                    Renovation = "Renovierung",
+                    `Renovation: Initial` = "Renovierung: Vorher", `Renovation: Final` = "Renovierung: Nachher",
+                    `Renovation: Identical` = "Renovierung: Identisch", `Renovation: Different` = "Renovierung: Verschieden")
 
   data <- list()
 
@@ -169,7 +179,7 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
       return(var)
     })
     if ("Renovation" %in% names(dataCurr)) {
-      if (!is.null(compareGdx) & !computeRenState) {
+      if (!is.null(compareGdx) & !computeRenState && isFALSE(bwReady)) {
         dataCurr[["Renovation: Initial"]] <- dataCurr[["Renovation"]] %>%
           filter(.data[["renovation"]] == "from") %>%
           mutate(value = -.data[["value"]])
@@ -177,20 +187,33 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
           filter(.data[["renovation"]] == "to")
         dataCurr[["Renovation"]] <- NULL
         allNames <- c(names(vars)[-length(vars)], "Renovation: Initial", "Renovation: Final")
-      } else {
-        if (computeRenState) {
+      } else if (computeRenState && is.null(compareGdx)) {
           dataCurr[["Renovation: Identical"]] <- dataCurr[["Renovation"]] %>%
             filter(.data[["transparent"]] == "hs")
           dataCurr[["Renovation: Different"]] <- dataCurr[["Renovation"]] %>%
             filter(.data[["transparent"]] == "")
           dataCurr[["Renovation"]] <- NULL
           allNames <- c(names(vars)[-length(vars)], "Renovation: Identical", "Renovation: Different")
-        } else {
+      } else if (!is.null(compareGdx) & isTRUE(bwReady)) {
+        dataCurr[["Renovation: Initial"]] <- dataCurr[["Renovation"]] %>%
+          filter(.data[["renovation"]] == "from", .data[["transparent"]] == "") %>%
+          mutate(value = -.data[["value"]])
+        dataCurr[["Renovation: Final"]] <- dataCurr[["Renovation"]] %>%
+          filter(.data[["renovation"]] == "to", .data[["transparent"]] == "")
+        dataCurr[["Renovation: Identical"]] <- dataCurr[["Renovation"]] %>%
+          filter(.data[["renovation"]] == "to", .data[["transparent"]] == "hs") %>%
+          mutate(transparent = "")
+        dataCurr[["Renovation"]] <- NULL
+        allNames <- c(names(vars)[-length(vars)], "Renovation: Initial", "Renovation: Final", "Renovation: Identical")
+      } else {
           allNames <- names(vars)
-        }
       }
     } else {
       allNames <- names(vars)
+    }
+    if (isTRUE(deu)) {
+      dataCurr <- stats::setNames(dataCurr, deuTranslate[names(dataCurr)])
+      allNames <- deuTranslate[allNames]
     }
     data <- c(data, list(dataCurr))
   }
@@ -247,19 +270,44 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
 
   fillColours <- list()
   fillLabels  <- list()
-  fillTitle   <- list(hs = "Heating System", vin = "Construction cohort")
+  if (isFALSE(deu)) {
+    fillTitle   <- list(hs = "Heating System", vin = "Construction cohort")
+    yLabel <- expression(paste("Floor space [bn ", m^2, "or bn ", m^2, "/yr]"))
+  } else {
+    fillTitle <- list(hs = "Heizsystem", vin = "Konstruktionskohorte")
+    yLabel <- expression(paste("Wohnfläche [mrd ", m^2, "oder mrd ", m^2, "/Jahr]"))
+  }
 
   ## scales and labels ====
 
   ### heating system ####
 
   hsMap <- getBrickMapping("heatingSystem.csv")
+  if (isTRUE(deu)) {
+    deuTranslateHs <- c(biom = "Biomasseheizkessel", dihe = "Fernwärme", ehp1 = "Wärmepumpe",
+                        reel = "Elektrischer Widerstand", gabo = "Gasheizkessel",
+                        libo = "Ölheizkessel", sobo = "Kohleheizkessel")
+    hsMap <- mutate(hsMap, label = deuTranslateHs[.data[["hs"]]])
+  }
 
-  fillColours[["hs"]] <- as.character(hsMap[["colour"]])
+  if (isFALSE(bwReady)) {
+    fillColours[["hs"]] <- as.character(hsMap[["colour"]])
+  } else {
+    # fillColours[["hs"]] <- ColToGrey(gradient_n_pal(brewer_pal("div", 1, direction = -1)(9)[c(1,3:5,7:9)])(
+    #   seq(0, 1, length.out = length(hsMap[["hs"]]))))
+    fillColours[["hs"]] <- gradient_n_pal(brewer_pal("div", 1, direction = -1)(9)[c(1,3:5,7:9)])(
+      seq(0, 1, length.out = length(hsMap[["hs"]])))
+    # fillColours[["hs"]] <- gradient_n_pal(brewer_pal("seq", 6)(9)[2:8])(
+    #   seq(0, 1, length.out = length(hsMap[["hs"]])))
+  }
   fillLabels[["hs"]]  <- as.character(hsMap[["label"]])
   names(fillColours[["hs"]]) <- names(fillLabels[["hs"]]) <- as.character(hsMap[["hs"]])
   fillColours[["hs"]] <- c(`0` = "black", fillColours[["hs"]])
   fillLabels[["hs"]]  <- c(`0` = "no change", fillLabels[["hs"]])
+
+  data <- lapply(data, function(d) {
+    mutate(d, hs = factor(.data[["hs"]], levels = c("0", hsMap[["hs"]])))
+  })
 
 
   ### vintage ####
@@ -394,16 +442,16 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
         p <- pData %>%
           ggplot() +
           suppressWarnings(geom_col(aes(.data[["pos"]], .data[["value"]],
-                                        width = .data[["width"]],
-                                        alpha = .data[["transparent"]],
-                                        fill = .data[[fillDim]]))) +
+                                           width = .data[["width"]],
+                                           alpha = .data[["transparent"]],
+                                           fill = .data[[fillDim]]))) +
           facet_grid(.data[["quantity"]] ~ .data[["facet"]], scales = "free") +
           geom_hline(yintercept = 0)
         # geom_text(aes(.data[["pos"]], .data[["value"]]),
         #           flowUnit,
         #           label = "/yr", vjust = 1, hjust = .2, size = 6)
 
-        p <- addTheme(p, expression(paste("Floor space [bn ", m^2, "or bn ", m^2, "/yr]")), fillDim) +
+        p <- addTheme(p, yLabel, fillDim) +
           theme(panel.spacing = unit(4, "mm"))
       } else {
         p <- pData %>%
@@ -429,7 +477,7 @@ plotSummary <- function(path, facet = "typ", filtering = list(NULL), endyear = N
         dir.create(plotDir)
       }
       if (is.null(compRelTo)) {
-        pHeight <- 22 / 2.54 * length(allNames) / 4
+        pHeight <- 27 / 2.54 * length(allNames) / 4
       } else {
         pHeight <- 22 / 2.54 * length(allNames) / 2
         nameAdd <- paste(nameAdd, paste0("relTo", compRelTo), sep = "_")
