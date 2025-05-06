@@ -765,3 +765,22 @@ q_testRen(q,ren,vin,subs)$renAllowed(ren)..
 ;
 
 $endif.matching
+
+$ifthenE.calibration (sameas("%CALIBRATIONMETHOD%","optimization"))or(sameas("%CALIBRATIONMETHOD%","logit"))
+
+*** Compute totals for calibration -------------------------------------------------------
+
+* Total stocks
+q_stockTot(qty, vin, subs, tcalib)..
+  v_stockTot(qty, vin, subs, tcalib)
+  =e=
+  sum(state, v_stock(qty, state, vin, subs, tcalib))
+;
+
+* Total construction
+q_constructionTot(qty, subs, tcalib)..
+  v_constructionTot(qty, subs, tcalib)
+  =e=
+  sum(state, v_construction(qty, state, subs, tcalib))
+;
+$endif.calibration

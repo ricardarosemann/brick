@@ -25,6 +25,10 @@ $endif.shell
   q_zeroHeteroPrefCon
   q_zeroHeteroPrefRen
   q_statusQuoPref
+$ifthen.fixTotals "%FIXTOTALS%" == "TRUE"
+  q_stockTot
+  q_constructionTot
+$endif.fixTotals
 *  q_minDivConHS
 *  q_minDivConBS
 *  q_minDivRenBS

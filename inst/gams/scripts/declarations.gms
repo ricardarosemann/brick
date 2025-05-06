@@ -187,6 +187,16 @@ p_constructionCalibTarget(qty,bs,hs,region,loc,typ,inc,ttot)           "historic
 p_renovationCalibTarget(qty,bs,hs,bsr,hsr,vin,region,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings as calibration target in million m2/yr"
 p_f(region, loc, typ, inc, ttot)                                       "value of the objective function in the outer optimization of the calibration; unit depends on target choice"
 ;
+
+variables
+v_stockTot(qty,vin,reg,loc,typ,inc,ttot)               "Total stock of buildings in million m2"
+v_constructionTot(qty,reg,loc,typ,inc,ttot)            "Total flow of new buildings in million m2/yr"
+;
+
+equations
+q_stockTot(qty, vin, reg, loc, typ, inc, ttot)
+q_constructionTot(qty, reg, loc, typ, inc, ttot)
+;
 $endif.calibration
 
 $ifthenE.calibrationOptimization (sameas("%RUNTYPE%","calibration"))and(sameas("%CALIBRATIONMETHOD%","optimization"))

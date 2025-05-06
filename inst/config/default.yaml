@@ -273,6 +273,12 @@ switches:
     # vin
   AGGREGATEDIM: FALSE
 
+  ### Fix totals ###
+  # calibration quantities (currently stock and construction only)
+    # FALSE
+    # TRUE
+  FIXTOTALS: FALSE
+
 
 # gams parameters --------------------------------------------------------------
 # passed to gams
