@@ -60,6 +60,10 @@ $endif.shell
   q_statusQuoPref
   q_HeteroPrefCon
   q_HeteroPrefRen
+$ifthen.fixTotals "%FIXTOTALS%" == "TRUE"
+  q_stockTot
+  q_constructionTot
+$endif.fixTotals
 *  q_maxRenRate
   /
 ;
