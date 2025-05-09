@@ -194,7 +194,8 @@ v_constructionTot(qty,reg,loc,typ,inc,ttot)            "Total flow of new buildi
 ;
 
 equations
-q_stockTot(qty, vin, reg, loc, typ, inc, ttot)
+q_stockTot_upper(qty, vin, reg, loc, typ, inc, ttot)
+q_stockTot_lower(qty, vin, reg, loc, typ, inc, ttot)
 q_constructionTot(qty, reg, loc, typ, inc, ttot)
 ;
 $endif.calibration

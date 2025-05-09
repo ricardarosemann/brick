@@ -14,7 +14,7 @@ model fullSysLP "full system linear optimisation"
   q_stockBalNext
   q_stockBalPrev
 $ifthen.notFixedBuildings not "%FIXEDBUILDINGS%" == "TRUE"
-  q_housingDemand
+*  q_housingDemand
   q_buildingLifeTime
 $endif.notFixedBuildings
 $ifthen.shell not "%ignoreShell%" == "TRUE"
@@ -26,8 +26,9 @@ $endif.shell
   q_zeroHeteroPrefRen
   q_statusQuoPref
 $ifthen.fixTotals "%FIXTOTALS%" == "TRUE"
-  q_stockTot
-  q_constructionTot
+  q_stockTot_upper
+  q_stockTot_lower
+*  q_constructionTot
 $endif.fixTotals
 *  q_minDivConHS
 *  q_minDivConBS
@@ -49,7 +50,7 @@ model fullSysNLP "full system linear optimisation"
   q_stockBalNext
   q_stockBalPrev
 $ifthen.notFixedBuildings not "%FIXEDBUILDINGS%" == "TRUE"
-  q_housingDemand
+*  q_housingDemand
   q_buildingLifeTime
 $endif.notFixedBuildings
 $ifthen.shell not "%ignoreShell%" == "TRUE"
@@ -61,8 +62,9 @@ $endif.shell
   q_HeteroPrefCon
   q_HeteroPrefRen
 $ifthen.fixTotals "%FIXTOTALS%" == "TRUE"
-  q_stockTot
-  q_constructionTot
+  q_stockTot_upper
+  q_stockTot_lower
+*  q_constructionTot
 $endif.fixTotals
 *  q_maxRenRate
   /

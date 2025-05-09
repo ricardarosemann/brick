@@ -1,5 +1,5 @@
 ---
-title: "calibration-stocks-fixTot"
+title: "calibration-stocks-fixTot-exHousing"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2005, 2010, 2015]

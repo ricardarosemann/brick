@@ -183,13 +183,9 @@ renEffective(bs,hs,bsr,hsr)$(not(sameas(bsr,"0") and sameas(hsr,"0"))) = yes;
 *** temporal fixes, to be checked ---------------------------------------------
 
 
-
-$ifthen.calibrationOptimization "%CALIBRATIONMETHOD%" == "optimization"
-
+$ifthenE.calibration (sameas("%CALIBRATIONMETHOD%","optimization"))or(sameas("%CALIBRATIONMETHOD%","logit"))
 sets
 tcalib(ttot) "time steps considered by the calibration when minimising deviation from target trajectories"
-*** Temporary: Store renovation combinations with at least one zero element
-zeroFlow(bs, hs, bsr, hsr)      "renovation combinations where either the building shell or the heating system are left untouched"
 ;
 
 alias(tcalib, tcalib2);
@@ -197,6 +193,14 @@ alias(tcalib, tcalib2);
 $gdxin input.gdx
 $load tcalib
 $gdxin
+$endIf.calibration
+
+$ifthen.calibrationOptimization "%CALIBRATIONMETHOD%" == "optimization"
+
+sets
+*** Temporary: To check whether the stock calibration uses the right flow
+zeroFlow(bs, hs, bsr, hsr)
+;
 
 ***Determine sets of flows which are included in the stock calibration
 $ifthen.shell "%ignoreShell%" == "TRUE"

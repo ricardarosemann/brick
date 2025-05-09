@@ -13,9 +13,11 @@ reportingTemplate: ignoreShell_onlyRes
 ltEternalShare: 0.05
 # switches
 switches:
+  SOLVEPROBLEM: lp
   RUNTYPE: calibration
   CALIBRATIONMETHOD: logit
-  AGGREGATEDIM: vin
+  # AGGREGATEDIM: vin
+  FIXTOTALS: TRUE
 # parameters for calibration
 calibrationParameters:
   stepSizeInit: 80
