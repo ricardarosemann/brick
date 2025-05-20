@@ -217,10 +217,10 @@ switches:
   RUNTYPE: scenario
 
   ### type of calibration run ###
-    # NULL:         no calibration run
+    # None:         no calibration run
     # logit:        calibration heuristic treating BRICK like a logit model
     # optimization: calibration through outer optimization around BRICK
-  CALIBRATIONMETHOD: NULL
+  CALIBRATIONMETHOD: None
 
   ### optimisation problems to solve ###
   # solving an LP first can help to start from a good initial point

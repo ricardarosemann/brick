@@ -28,7 +28,8 @@ $endif.shell
 $ifthen.fixTotals "%FIXTOTALS%" == "TRUE"
   q_stockTot_upper
   q_stockTot_lower
-*  q_constructionTot
+*  q_constructionTot_upper
+*  q_constructionTot_lower
 $endif.fixTotals
 *  q_minDivConHS
 *  q_minDivConBS
@@ -64,7 +65,8 @@ $endif.shell
 $ifthen.fixTotals "%FIXTOTALS%" == "TRUE"
   q_stockTot_upper
   q_stockTot_lower
-*  q_constructionTot
+*  q_constructionTot_upper
+*  q_constructionTot_lower
 $endif.fixTotals
 *  q_maxRenRate
   /

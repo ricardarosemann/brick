@@ -18,9 +18,12 @@ $endif.notMatching
 
 $ifthenE.calibration (sameas("%CALIBRATIONMETHOD%","optimization"))or(sameas("%CALIBRATIONMETHOD%","logit"))
 v_stock.fx(qty,state,vin,subs,thist)$vinExists(thist,vin) = p_stockCalibTarget(qty,state,vin,subs,thist);
+v_stock.fx(qty, state, vin, subs, tcalib)$(not vinExists(tcalib, vin)) = 0;
 
-v_stockTot.fx(qty, vin, subs, tcalib)$vinExists(tcalib,vin) = sum(state,
+p_stockCalibTargetTot(qty, subs, tcalib) = sum((state, vin)$vinExists(tcalib, vin),
   p_stockCalibTarget(qty, state, vin, subs, tcalib));
+
+v_stockTot.fx(qty, subs, tcalib) = p_stockCalibTargetTot(qty, subs, tcalib);
 v_constructionTot.fx(qty, subs, tcalib) = sum(state,
   p_constructionCalibTarget(qty, state, subs, tcalib));
 $endif.calibration

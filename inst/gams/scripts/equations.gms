@@ -771,22 +771,28 @@ $ifthenE.calibration (sameas("%CALIBRATIONMETHOD%","optimization"))or(sameas("%C
 *** Compute totals for calibration -------------------------------------------------------
 
 * Total stocks
-q_stockTot_upper(qty, vin, subs, tcalib)..
-  v_stockTot(qty, vin, subs, tcalib)
+q_stockTot_upper(qty, subs, tcalib)..
+  v_stockTot(qty, subs, tcalib)
   =l=
-  sum(state, v_stock(qty, state, vin, subs, tcalib)) + epsilon
+  sum((state, vin), v_stock(qty, state, vin, subs, tcalib)) + epsilon
 ;
 
-q_stockTot_lower(qty, vin, subs, tcalib)..
-  v_stockTot(qty, vin, subs, tcalib)
+q_stockTot_lower(qty, subs, tcalib)..
+  v_stockTot(qty, subs, tcalib)
   =g=
-  sum(state, v_stock(qty, state, vin, subs, tcalib)) - epsilon
+  sum((state, vin), v_stock(qty, state, vin, subs, tcalib)) - epsilon
 ;
 
 * Total construction
-q_constructionTot(qty, subs, tcalib)..
+q_constructionTot_upper(qty, subs, tcalib)..
   v_constructionTot(qty, subs, tcalib)
-  =e=
-  sum(state, v_construction(qty, state, subs, tcalib))
+  =l=
+  sum(state, v_construction(qty, state, subs, tcalib)) + epsilon
+;
+
+q_constructionTot_lower(qty, subs, tcalib)..
+  v_constructionTot(qty, subs, tcalib)
+  =g=
+  sum(state, v_construction(qty, state, subs, tcalib)) - epsilon
 ;
 $endif.calibration
