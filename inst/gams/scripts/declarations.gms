@@ -183,22 +183,22 @@ $endif.matching
 $ifthenE.calibration (sameas("%CALIBRATIONMETHOD%","optimization"))or(sameas("%CALIBRATIONMETHOD%","logit"))
 parameters
 p_stockCalibTarget(qty,bs,hs,vin,region,loc,typ,inc,ttot)              "historic stock of buildings in million m2 as calibration target"
-p_stockCalibTargetTot(qty,reg,loc,typ,inc,ttot)
+p_stockCalibTargetTot(qty,region,loc,typ,inc,ttot)
 p_constructionCalibTarget(qty,bs,hs,region,loc,typ,inc,ttot)           "historic flow of new buildings as calibration target in million m2/yr"
 p_renovationCalibTarget(qty,bs,hs,bsr,hsr,vin,region,loc,typ,inc,ttot) "historic flow of renovated and untouched buildings as calibration target in million m2/yr"
 p_f(region, loc, typ, inc, ttot)                                       "value of the objective function in the outer optimization of the calibration; unit depends on target choice"
 ;
 
 variables
-v_stockTot(qty,reg,loc,typ,inc,ttot)               "Total stock of buildings in million m2"
-v_constructionTot(qty,reg,loc,typ,inc,ttot)            "Total flow of new buildings in million m2/yr"
+v_stockTot(qty,region,loc,typ,inc,ttot)               "Total stock of buildings in million m2"
+v_constructionTot(qty,region,loc,typ,inc,ttot)            "Total flow of new buildings in million m2/yr"
 ;
 
 equations
-q_stockTot_upper(qty, reg, loc, typ, inc, ttot)
-q_stockTot_lower(qty, reg, loc, typ, inc, ttot)
-q_constructionTot_upper(qty, reg, loc, typ, inc, ttot)
-q_constructionTot_lower(qty, reg, loc, typ, inc, ttot)
+q_stockTot_upper(qty, region, loc, typ, inc, ttot)
+q_stockTot_lower(qty, region, loc, typ, inc, ttot)
+q_constructionTot_upper(qty, region, loc, typ, inc, ttot)
+q_constructionTot_lower(qty, region, loc, typ, inc, ttot)
 ;
 $endif.calibration
 

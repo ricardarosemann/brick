@@ -10,7 +10,6 @@ regions: EUR
 inputRevision: 0.8.3
 ignoreShell: TRUE
 reportingTemplate: ignoreShell_onlyRes
-inputRevision: "0.8.3com3"
 ltEternalShare: 0.05
 # switches
 switches:
