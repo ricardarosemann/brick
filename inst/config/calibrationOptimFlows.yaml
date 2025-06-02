@@ -1,27 +1,18 @@
 ---
-title: "calibration-flows"
-basedOn: "default.yaml"
-# scope and resolution
-periods: [2005, 2010, 2015]
-startyear: 2010
-calibperiods: 2010
-regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
-regions: EUR
-ignoreShell: TRUE
-reportingTemplate: ignoreShell_onlyRes
-ltEternalShare: 0.05
+title: "calibration-flows-mtch-15-05-fixTot"
+basedOn: "calibration.yaml"
 # switches
 switches:
-  RUNTYPE: calibration
   CALIBRATIONMETHOD: optimization
   TARGETFUNCTION: minsquare
   CALIBRATIONTYPE: flows
-  AGGREGATEDIM: vin
+  # AGGREGATEDIM: vin
+  FIXTOTALS: stock
 # parameters for calibration
 calibrationParameters:
   stepSizeInit: 10
-  iterations: 2
-  iterationsArmijo: 20
-  sensitivityArmijo: 0.04
-  modifyData: FALSE
+  # iterations: 5
+  # iterationsArmijo: 20
+  # sensitivityArmijo: 0.04
+  # modifyData: FALSE
 ...

@@ -14,7 +14,6 @@ model fullSysLP "full system linear optimisation"
   q_stockBalNext
   q_stockBalPrev
 $ifthen.notFixedBuildings not "%FIXEDBUILDINGS%" == "TRUE"
-*  q_housingDemand
   q_buildingLifeTime
 $endif.notFixedBuildings
 $ifthen.shell not "%ignoreShell%" == "TRUE"
@@ -25,11 +24,16 @@ $endif.shell
   q_zeroHeteroPrefCon
   q_zeroHeteroPrefRen
   q_statusQuoPref
-$ifthen.fixTotals "%FIXTOTALS%" == "TRUE"
+$ifthen.fixTotals "%FIXTOTALS%" == "stock"
   q_stockTot_upper
   q_stockTot_lower
-*  q_constructionTot_upper
-*  q_constructionTot_lower
+$elseIf.fixTotals "%FIXTOTALS%" == "con"
+  q_constructionTot_upper
+  q_constructionTot_lower
+$else.fixTotals
+$ifthen.notFixedBuildings not "%FIXEDBUILDINGS%" == "TRUE"
+  q_housingDemand
+$endif.notFixedBuildings
 $endif.fixTotals
 *  q_minDivConHS
 *  q_minDivConBS
@@ -51,7 +55,6 @@ model fullSysNLP "full system linear optimisation"
   q_stockBalNext
   q_stockBalPrev
 $ifthen.notFixedBuildings not "%FIXEDBUILDINGS%" == "TRUE"
-*  q_housingDemand
   q_buildingLifeTime
 $endif.notFixedBuildings
 $ifthen.shell not "%ignoreShell%" == "TRUE"
@@ -62,11 +65,16 @@ $endif.shell
   q_statusQuoPref
   q_HeteroPrefCon
   q_HeteroPrefRen
-$ifthen.fixTotals "%FIXTOTALS%" == "TRUE"
+$ifthen.fixTotals "%FIXTOTALS%" == "stock"
   q_stockTot_upper
   q_stockTot_lower
-*  q_constructionTot_upper
-*  q_constructionTot_lower
+$elseIf.fixTotals "%FIXTOTALS%" == "con"
+  q_constructionTot_upper
+  q_constructionTot_lower
+$else.fixTotals
+$ifthen.notFixedBuildings not "%FIXEDBUILDINGS%" == "TRUE"
+  q_housingDemand
+$endif.notFixedBuildings
 $endif.fixTotals
 *  q_maxRenRate
   /

@@ -1,28 +1,16 @@
 ---
-title: "calibration-stocks-fixTot-exHousing"
-basedOn: "default.yaml"
-# scope and resolution
-periods: [2005, 2010, 2015]
-startyear: 2010
-calibperiods: 2010
-regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
-regions: EUR
-ignoreShell: TRUE
-reportingTemplate: ignoreShell_onlyRes
-ltEternalShare: 0.05
+title: "calibration-stocks-mtch-15-05-fixTot"
+basedOn: "calibration.yaml"
 # switches
 switches:
-  RUNTYPE: calibration
   CALIBRATIONMETHOD: optimization
   TARGETFUNCTION: minsquare
   CALIBRATIONTYPE: stocks
   # AGGREGATEDIM: vin
-  FIXTOTALS: TRUE
+  FIXTOTALS: stock
 # parameters for calibration
 calibrationParameters:
-  stepSizeInit: 1
-  iterations: 5
-  iterationsArmijo: 20
-  sensitivityArmijo: 0.04
-  modifyData: FALSE
+  stepSizeInit: 10
+  # iterations: 5
+  # iterationsArmijo: 20
 ...

@@ -1,5 +1,5 @@
 ---
-title: "calibration-mtch-15-05-fixTot-aggVin"
+title: "calibration"
 basedOn: "default.yaml"
 # scope and resolution
 periods: [2005, 2010, 2015]
@@ -7,21 +7,19 @@ startyear: 2010
 calibperiods: 2010
 regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
 regions: EUR
-inputRevision: 0.8.3
 ignoreShell: TRUE
+inputRevision: 0.8.5
 reportingTemplate: ignoreShell_onlyRes
 ltEternalShare: 0.05
 # switches
 switches:
   RUNTYPE: calibration
   CALIBRATIONMETHOD: logit
-  AGGREGATEDIM: vin
-  FIXTOTALS: TRUE
 # parameters for calibration
 calibrationParameters:
   stepSizeInit: 80
-  iterations: 2
+  iterations: 5
   iterationsArmijo: 20
-  sensitivityArmijo: 0.01
+  sensitivityArmijo: 0.04
   modifyData: FALSE
 ...
