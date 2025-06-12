@@ -755,9 +755,9 @@ runCalibrationOptim <- function(path,
            # Store case of computing the descent direction d
            dCase = case_when(
              # Non-zero deviation and non-zero historic values
-             .data[["target"]] > 0 & .data[["value"]] > 0 ~ "standard",
+             .data[["target"]] > 1E-6 & .data[["value"]] > 1E-6 ~ "standard",
              # One of historic data or Gams results is zero
-             xor(.data[["target"]] == 0, .data[["value"]] == 0) ~ "oneZero",
+             xor(.data[["target"]] <= 1E-6, .data[["value"]] <= 1E-6) ~ "oneZero",
              # None of the above holds
              .default = "bothZero"
            )) %>%

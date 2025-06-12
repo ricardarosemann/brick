@@ -58,6 +58,8 @@ priceSensBS(var, region, loc, typ, inc) "price sensitivity of building shell cho
 priceSensHS(var, region, loc, typ, inc) "price sensitivity of heating system choice"
 
 p_statusQuoPref "preference for replacehing a heating system with the same technology in USD/m2"
+
+p_rhsLifetimHS(qty,hs,vin,region,loc,typ,inc,ttot)
 ;
 
 scalars

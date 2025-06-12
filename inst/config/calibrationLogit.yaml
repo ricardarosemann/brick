@@ -1,15 +1,16 @@
 ---
-title: "calibration-mtch-15-05-fixTot"
+title: "calibration-mtch-12-06-fixedB-start2000"
 basedOn: "calibration.yaml"
-# granularity: lowGran
+granularity: lowGran
 # switches
 switches:
   # AGGREGATEDIM: vin
-  FIXTOTALS: stock
+  # FIXTOTALS: stock
+  FIXEDBUILDINGS: TRUE
 # parameters for calibration
 calibrationParameters:
   stepSizeInit: 80
-  # iterations: 5
+  iterations: 10
   # sensitivityArmijo: 0.01
   # modifyData: FALSE
 ...

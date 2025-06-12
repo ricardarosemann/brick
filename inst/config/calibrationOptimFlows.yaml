@@ -1,17 +1,19 @@
 ---
-title: "calibration-flows-mtch-15-05-fixTot"
+title: "calibration-flows-mtch-05-06-fixedB"
 basedOn: "calibration.yaml"
+granularity: lowGran
 # switches
 switches:
   CALIBRATIONMETHOD: optimization
   TARGETFUNCTION: minsquare
   CALIBRATIONTYPE: flows
   # AGGREGATEDIM: vin
-  FIXTOTALS: stock
+  # FIXTOTALS: stock
+  FIXEDBUILDINGS: TRUE
 # parameters for calibration
 calibrationParameters:
   stepSizeInit: 10
-  # iterations: 5
+  iterations: 10
   # iterationsArmijo: 20
   # sensitivityArmijo: 0.04
   # modifyData: FALSE
