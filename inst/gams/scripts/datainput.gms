@@ -76,8 +76,8 @@ execute_loadpoint "history",
   p_stockHist        = v_stock.l
   p_constructionHist = v_construction.l
   p_renovationHist   = v_renovation.l
-  p_renovationBSHist = v_renovationBS.l
-  p_renovationHSHist = v_renovationHS.l
+  p_renovationHistBS = v_renovationBS.l
+  p_renovationHistHS = v_renovationHS.l
   p_demolitionHist   = v_demolition.l
   p_carbonPrice
   p_carrierEmi

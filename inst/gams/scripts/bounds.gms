@@ -16,8 +16,8 @@ $ifthen.history exist "history.gdx"
 v_construction.fx(qty,state,subs,thist)                                  = p_constructionHist(qty,state,subs,thist);
 v_demolition.fx(qty,state,vin,subs,thist)$vinExists(thist,vin)           = p_demolitionHist(qty,state,vin,subs,thist);
 $ifthen.sequentialRen "%SEQUENTIALREN%" == "TRUE"
-v_renovationBS.fx(qty,renAllowedBS,vin,subs,thist)$vinExists(thist,vin) = p_renovationBSHist(qty,renAllowedBS,vin,subs,thist);
-v_renovationHS.fx(qty,renAllowedHS,vin,subs,thist)$vinExists(thist,vin) = p_renovationHSHist(qty,renAllowedHS,vin,subs,thist);
+v_renovationBS.fx(qty,renAllowedBS,vin,subs,thist)$vinExists(thist,vin) = p_renovationHistBS(qty,renAllowedBS,vin,subs,thist);
+v_renovationHS.fx(qty,renAllowedHS,vin,subs,thist)$vinExists(thist,vin) = p_renovationHistHS(qty,renAllowedHS,vin,subs,thist);
 $else.sequentialRen
 v_renovation.fx(qty,renAllowed,vin,subs,thist)$vinExists(thist,vin) = p_renovationHist(qty,renAllowed,vin,subs,thist);
 $endif.sequentialRen
