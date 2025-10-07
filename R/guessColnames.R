@@ -21,8 +21,20 @@ guessColnames <- function(x, m) {
     } else if (all(x[[j]] %in% readSymbol(m, "hs"))) {
       colnames(x)[j] <- "hs"
     } else {
-      stop("Cannot identify dimension with the following elements:\n  ",
-           paste(head(unique(x[[j]]), 8), collapse = ", "))
+      success <- FALSE
+      for (s in m$getSets()) {
+        if (s$dimension > 1) {
+          next
+        }
+        if (all(x[[j]] %in% s$getUELs())) {
+          colnames(x)[j] <- s$name
+          success <- TRUE
+        }
+      }
+      if (!success) {
+        stop("Cannot identify dimension with the following elements:\n  ",
+             paste(head(unique(x[[j]]), 8), collapse = ", "))
+      }
     }
   }
 

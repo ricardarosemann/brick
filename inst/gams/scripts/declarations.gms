@@ -12,7 +12,7 @@ p_specCostRenHS(cost,bs,hs,hsr,vin,region,loc,typ,inc,ttot)   "floor-space speci
 p_specCostOpe(bs,hs,vin,region,loc,typ,ttot)                  "floor-space specific operation cost [USD/m2/yr]"
 p_specCostDem                                                 "floor-space specific demolition cost [USD/m2]"
 
-p_carbonPrice(ttot)                   "Carbon price in USD/t_CO2eq"
+p_carbonPrice(carrier,ttot)           "Carbon price in USD/t_CO2eq"
 p_carrierPrice(carrier,region,ttot)   "final energy carrier price in USD/kWh"
 p_carrierEmi(carrier,region,ttot)     "energy carrier emission intensity in t_CO2/kWh"
 p_ueDemand(bs,vin,region,typ)         "floor-space specific useful energy demand for space heating in kWh/yr/m2"

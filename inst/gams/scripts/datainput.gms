@@ -117,7 +117,7 @@ p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot) =
   p_feDemand(hs,bs,vin,reg,typ,ttot)
   * sum(hsCarrier(hs,carrier),
       p_carrierPrice(carrier,reg,ttot)
-      + p_carbonPrice(ttot) * p_carrierEmi(carrier,reg,ttot)
+      + p_carbonPrice(carrier,ttot) * p_carrierEmi(carrier,reg,ttot)
     )
 ;
 display "Compute operational costs in GAMS code";

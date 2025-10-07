@@ -29,7 +29,7 @@ toModelResolution <- function(x, m, value = "value", unfilteredDims = NULL) {
   }
 
   # interpolate missing periods and remove additional ones
-  periods <- setNames(periodDims, periodDims) %>%
+  periods <- setNames(nm = periodDims) %>%
     lapply(function(d) as.numeric(m$getSymbols(d)[[1]]$getUELs()))
   for (dim in intersect(periodDims, colnames(x))) {
     x <- x %>%

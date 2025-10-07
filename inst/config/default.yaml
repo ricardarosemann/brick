@@ -149,6 +149,7 @@ boilerBan: []
 ### carbon price ###
 # named list with carbon price in USD/t_CO2
   # e.g. {2022: 0, 2030: 300, 2050: 500}
+  #      {elec.heat: {2020: 80, 2030: 150}, coal: {2025:0, 2030: 100}}
 carbonPrice: []
 
 ### shift of heating system life time ###

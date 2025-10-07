@@ -4,10 +4,13 @@
 \alias{listToDf}
 \title{Convert nested named list to long data.frame}
 \usage{
-listToDf(x, n = 1)
+listToDf(x, split = NULL, n = 1)
 }
 \arguments{
 \item{x}{named list with identical depth on each branch}
+
+\item{split}{character, split names by this pattern and assume same value for
+each separated item}
 
 \item{n}{Integer, number of nested function calls, leave default}
 }
