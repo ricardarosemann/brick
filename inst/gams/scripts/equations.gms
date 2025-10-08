@@ -530,8 +530,8 @@ q_lifeTimeHS(q,hs,vin,subs(reg,loc,typ,inc),ttot)$(    vinExists(ttot,vin)
                                                    and t(ttot))..
   sum(bs,
     sum(ttotOut$(    ttotOut.val le ttot.val
-               !!and p_shareRenHS(hs,reg,typ,ttotOut + 1,ttot) < 1
-               and vinExists(ttotOut,vin)),
+                 !!and p_shareRenHS(hs,reg,typ,ttotOut + 1,ttot) < 1
+                 and vinExists(ttotOut,vin)),
       p_dt(ttotOut)
       * (
         v_demolition(q,bs,hs,vin,subs,ttotOut)

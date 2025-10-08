@@ -98,7 +98,7 @@ tasks32: FALSE
 # data -------------------------------------------------------------------------
 
 ### input data revision ###
-inputRevision: "0.8.9"
+inputRevision: "0.8.9com1"
 
 ### force download ###
 # force the model to download new input data even though it seems unchanged
