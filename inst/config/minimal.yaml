@@ -4,6 +4,9 @@ basedOn: "default.yaml"
 # scope and resolution
 periods: [2000, 2005, 2010, 2015, 2020, 2030, 2040]
 regionmapping: ["regionmappingEU27asOne.csv", "mredgebuildings"]
+reportingTemplate: lowGran
 granularity: lowGran
 regions: EUR
+switches:
+  SEQUENTIALREN: TRUE
 ...
