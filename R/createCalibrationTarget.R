@@ -49,10 +49,9 @@ createCalibrationTarget <- function(path,
     periods <- cfgCalib$calibperiods
     startyear <- cfgCalib$startyear
 
-    dt <- data.frame(ttotAgg = periods, dt = c(NA, diff(periods)))
+    dt <- data.frame(ttotAgg = periods, dt = c(diff(periods)[1], diff(periods)))
 
     periodMap <- dt %>%
-      filter(!is.na(.data$dt), .data$ttotAgg >= startyear) %>%
       group_by(.data$ttotAgg) %>%
       reframe(ttot = seq(to = .data$ttotAgg, length.out = .data$dt))
 

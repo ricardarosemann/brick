@@ -52,7 +52,8 @@ runCalibration <- function(path,
 
   dims <- list(
     stock        = c("bs", "hs", "vin", "region", "loc", "typ", "inc", "ttot"),
-    construction = c("bs", "hs", "region", "loc", "typ", "inc", "ttot")
+    construction = c("bs", "hs", "region", "loc", "typ", "inc", "ttot"),
+    demolition   = c("bs", "hs", "vin", "region", "loc", "typ", "inc", "ttot")
   )
   if (isTRUE(switches[["SEQUENTIALREN"]])) {
     dims$renovationBS <- c("bs", "hs", "bsr", "vin", "region", "loc", "typ", "inc", "ttot")
@@ -116,7 +117,7 @@ runCalibrationLogit <- function(path,
   if (!file.exists(file.path(path, "input_init.gdx"))) {
     file.copy(from = file.path(path, "input.gdx"), to = file.path(path, "input_init.gdx"))
   }
-  variables <- setdiff(names(dims), "stock")
+  variables <- setdiff(names(dims), "stock", "demolition")
 
   # Read in required input data
   gdxInput <- file.path(path, "input.gdx")

@@ -26,7 +26,7 @@ $endif.matching
 
 $ifthen.renCorrect "%RUNTYPE%" == "renCorrect"
 $gdxin input.gdx
-$load p_stock p_construction
+$load p_stock p_construction p_demolition
 $ifthen.sequentialRen "%SEQUENTIALREN%" == "TRUE"
 $load p_renovationBS p_renovationHS
 $else.sequentialRen
@@ -37,7 +37,7 @@ $endif.renCorrect
 
 $ifthenE.calibration (sameas("%CALIBRATIONMETHOD%","optimization"))or(sameas("%CALIBRATIONMETHOD%","logit"))
 $gdxin input.gdx
-$load p_stockCalibTarget p_constructionCalibTarget
+$load p_stockCalibTarget p_constructionCalibTarget p_demolitionCalibTarget
 $ifThen.sequentialRen "%SEQUENTIALREN%" == "TRUE"
 $load p_renovationBSCalibTarget p_renovationHSCalibTarget
 $else.sequentialRen
