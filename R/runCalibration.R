@@ -117,7 +117,7 @@ runCalibrationLogit <- function(path,
   if (!file.exists(file.path(path, "input_init.gdx"))) {
     file.copy(from = file.path(path, "input.gdx"), to = file.path(path, "input_init.gdx"))
   }
-  variables <- setdiff(names(dims), "stock", "demolition")
+  variables <- setdiff(names(dims), c("stock", "demolition"))
 
   # Read in required input data
   gdxInput <- file.path(path, "input.gdx")
@@ -735,6 +735,7 @@ runCalibrationOptim <- function(path,
   paramNames <- c(
     stock = "p_stockCalibTarget",
     construction = "p_constructionCalibTarget",
+    demolition = "p_demolitionCalibTarget",
     renovation = "p_renovationCalibTarget",
     renovationBS = "p_renovationBSCalibTarget",
     renovationHS = "p_renovationHSCalibTarget"
@@ -743,6 +744,7 @@ runCalibrationOptim <- function(path,
   descriptions <- c(
     stock = "historic stock of buildings as calibration target in million m2",
     construction = "historic flow of new buildings as calibration target in million m2/yr",
+    demolition = "historic flow of demolished buildings as calibration target in million m2/yr",
     renovation = "historic flow of renovated and untouched buildings as calibration target in million m2/yr",
     renovationBS = "historic flow of shell renovation as calibration target in million m2/yr",
     renovationHS = "historic flow of heating system renovation as calibration target in million m2/yr"
