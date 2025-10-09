@@ -342,6 +342,8 @@ runCalibrationLogit <- function(path,
 
   # WRITE INTANGIBLE COSTS TO FILE -------------------------------------------------------------
 
+  .writeStockRes(m, path)
+
   fileNames <- list(
     construction = "costIntangCon.csv",
     renovation = "costIntangRen.csv",
@@ -459,6 +461,11 @@ runCalibrationOptim <- function(path,
 
   # Initial Brick run
   runGams(path, gamsOptions = gamsOptions, switches = switches, gamsCall = gamsCall)
+  gamsSuccess <- checkGamsSuccess(path)
+  if (isFALSE(all(gamsSuccess$success))) {
+    stop("Gams failed for at least one subset in calibration iteration 0, aborting. ",
+         "For details, refer to the model and solver summaries.")
+  }
 
   # Compute (virtual) objective function
   gdx <- file.path(path, paste0("calibration_0.gdx"))
@@ -518,12 +525,16 @@ runCalibrationOptim <- function(path,
       ## Evaluate outer objective of Brick results ====
 
       runGams(path, gamsOptions = gamsOptions, switches = switchesScenRun, gamsCall = gamsCall)
+      gamsSuccess <- checkGamsSuccess(path, silent = TRUE)
 
       gdxA <- file.path(path, "calibrationA.gdx")
       file.copy(from = gdxOutput, to = gdxA, overwrite = TRUE)
       mA <- Container$new(gdxA)
 
       outerObjective <- .readOuterObjectiveOptim(mA, outerObjective, varName = "fA")
+
+      # If Gams was not successful for a subset, reject this step size and save all run files
+      outerObjective <- .rejectErrorRun(path, outerObjective, gamsSuccess, i, j)
 
 
       ## Check step size conditions and update the step size ====
@@ -585,6 +596,7 @@ runCalibrationOptim <- function(path,
                         vinExists = vinExists, vinCalib = vinCalib, shiftIntang = switches[["SHIFTINTANG"]])
 
     runGams(path, gamsOptions = gamsOptions, switches = switches, gamsCall = gamsCall)
+    gamsSuccess <- checkGamsSuccess(path)
 
     # Rename the output file of the Brick run with updated specific costs
     gdx <- file.path(path, paste0("calibration_", i, ".gdx"))
@@ -609,6 +621,14 @@ runCalibrationOptim <- function(path,
       rbind(diagnostics[[nm]], mutate(diagObj[[nm]], iteration = i))
     })
 
+    if (isFALSE(all(gamsSuccess$success))) {
+      message("Gams failed for at least one subset in calibration iteration", i, ", aborting. ",
+              "For details, refer to the model and solver summaries. ",
+              "Diagnostics and output is still printed. If convergence is already satisfactory, ",
+              "you might want to restart with fewer iterations.")
+      break
+    }
+
     isConverged <- .checkStoppingCriterion(outerObjective, p_calibTarget, parameters[["threshold"]],
                                            zeroFlow = switches[["CALIBRATIONTYPE"]] == "stockszero")
     if (isConverged) {
@@ -621,6 +641,8 @@ runCalibrationOptim <- function(path,
 
 
   # WRITE INTANGIBLE COSTS TO FILE -------------------------------------------------------------
+
+  .writeStockRes(m, path)
 
   fileNames <- list(
     construction = "costIntangCon.csv",
@@ -1482,6 +1504,19 @@ runCalibrationOptim <- function(path,
   message("The calibration converged after ", iteration, " iterations. ",
           "The absolute deviation is below ", threshold[["abs"]],
           ", the relative deviation is below ", threshold[["rel"]], ".")
+}
+
+#' Write the stock of the calibration result to a csv file
+#'
+#' @param m Gams container with the calibration output.gdx
+#' @param path character, path to the calibration run
+#'
+#' @importFrom utils write.csv
+#'
+.writeStockRes <- function(m, path) {
+  stockRes <- readSymbol(m, symbol = "v_stock")
+
+  write.csv(stockRes, file.path(path, "stockCalibrationRes.csv"), row.names = FALSE)
 }
 
 #' Write the intangible costs to a .csv file
