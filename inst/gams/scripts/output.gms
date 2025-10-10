@@ -19,8 +19,17 @@ if(card(ErrStock) + card(ErrConstruction) + card(ErrRenovation) + card(ErrDemoli
 
 $ifThen.renCorrect "%RUNTYPE%" == "renCorrect"
 p_stockDiff("area",state,vin,subs,ttot) = v_stock.l("area",state,vin,subs,ttot) - p_stock("area",state,vin,subs,ttot);
-p_renovationHSDiff("area",renAllowedHS,vin,subs,t) =  v_renovationHS.l("area",renAllowedHS,vin,subs,t)
+p_constructionDiff("area",state,subs,ttot) = v_construction.l("area",state,subs,ttot) - p_construction("area",state,subs,ttot);
+p_demolitionDiff("area",state,vin,subs,ttot) = v_demolition.l("area",state,vin,subs,ttot) - p_demolition("area",state,vin,subs,ttot);
+$ifThen.sequentialRen "%SEQUENTIALREN%" == "TRUE"
+p_renovationBSDiff("area",renAllowedBS,vin,subs,t) = v_renovationBS.l("area",renAllowedBS,vin,subs,t)
+                                                      - p_renovationBS("area",renAllowedBS,vin,subs,t);
+p_renovationHSDiff("area",renAllowedHS,vin,subs,t) = v_renovationHS.l("area",renAllowedHS,vin,subs,t)
                                                       - p_renovationHS("area",renAllowedHS,vin,subs,t);
+$else.sequentialRen
+p_renovationDiff("area",renAllowed,vin,subs,t) = v_renovation.l("area",renAllowed,vin,subs,t)
+                                                  - p_renovation("area",renAllowed,vin,subs,t);
+$endIf.sequentialRen
 $endIf.renCorrect
 
 
