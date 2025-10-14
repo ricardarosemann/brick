@@ -21,7 +21,7 @@ createSets <- function(m, config) {
   ))
   var <- m$addSet(
     name = "var",
-    records = c("stock", "construction", "renovation", "demolition"),
+    records = c("stock", "construction", "renovation", "renovationBS", "renovationHS", "demolition"),
     description = "mayor variables of the model"
   )
   invisible(m$addSet(

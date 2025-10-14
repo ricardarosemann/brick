@@ -37,9 +37,9 @@ cost "type of cost"
   intangible "intangible cost (identified in calibration)"
   /
 var "mayor variables of the model"
-  / stock, construction, renovation, demolition /
+  / stock, construction, renovation, renovationBS, renovationHS, demolition /
 varFlow(var) "flow variables of the model"
-  / construction, renovation, demolition /
+  / construction, renovation, renovationBS, renovationHS, demolition /
 
 *** model analytics
 solveinfo	"model and solver stats"
@@ -138,6 +138,8 @@ typInSec(typ,sec)                                    "mapping between building t
 ErrStock(bs,hs,vin,region,loc,typ,inc,ttot)              "Error in stock of buildings"
 ErrConstruction(bs,hs,region,loc,typ,inc,ttot)           "Error in flow of new buildings"
 ErrRenovation(bs,hs,bsr,hsr,vin,region,loc,typ,inc,ttot) "Error in flow of renovated and untouched buildings"
+ErrRenovationBS(bs,hs,bsr,vin,region,loc,typ,inc,ttot)   "Error in flow of building shell retrofit"
+ErrRenovationHS(bs,hs,hsr,vin,region,loc,typ,inc,ttot)   "Error in flow of heating system replacement"
 ErrDemolition(bs,hs,vin,region,loc,typ,inc,ttot)         "Error in flow of demolished buildings"
 
 

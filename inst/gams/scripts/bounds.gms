@@ -50,7 +50,7 @@ $endif.notMatching
 
 *** boiler ban
 
-v_renovation.fx(qty,bs,hs,bsr,hs2,vin,region,loc,typ,inc,t)$(hsBan("renovation",region,t,hs2) and vinExists(t,vin)) = 0;
+v_renovationHS.fx(qty,bs,hs,hs2,vin,region,loc,typ,inc,t)$(hsBan("renovationHS",region,t,hs2) and vinExists(t,vin)) = 0;
 v_construction.fx(qty,bs,hs,region,loc,typ,inc,t)$hsBan("construction",region,t,hs) = 0;
 v_stock.fx(qty,bs,hs,vin,region,loc,typ,inc,t)$(hsBan("stock",region,t,hs) and vinExists(t,vin)) = 0;
 
