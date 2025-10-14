@@ -40,9 +40,15 @@ addAssump <- function(df, assumpFile, key = NULL) {
     }
   }
 
+  df[["ttot"]] <- as.numeric(as.character(df[["ttot"]]))
+  periods <- unique(df[["ttot"]])
+
   if (!".chunk" %in% colnames(assump)) {
     # If the data contains no chunk column: Assume that this is the full data
-    df <- left_join(df, assump, by = colnames(df))
+
+    df <- assump %>%
+      interpolate_missing_periods(ttot = periods, expand.values = TRUE) %>%
+      right_join(df, by = colnames(df))
 
     if (any(is.na(df$value))) {
       warning("Data on intangible costs is incomplete. First row with missing data: ",
@@ -53,8 +59,6 @@ addAssump <- function(df, assumpFile, key = NULL) {
     nos <- sort(unique(assump$.chunk))
 
     df[["value"]] <- 0
-    df[["ttot"]] <- as.numeric(as.character(df[["ttot"]]))
-    periods <- unique(df[["ttot"]])
 
     for (no in nos) {
       chunk <- assump[assump$.chunk == no, ]

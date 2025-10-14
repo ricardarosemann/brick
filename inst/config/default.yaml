@@ -116,6 +116,12 @@ startingPoint: NULL
 # TODO: to be removed when migrating to mredgebuidlings
 matchingRun: NULL
 
+### calibration run ###
+# path to calibration run
+# intangible costs and initial stock are taken from this run
+# If set, assumption files defined in the config are ignored
+calibrationRun: NULL
+
 
 # solvers ----------------------------------------------------------------------
 

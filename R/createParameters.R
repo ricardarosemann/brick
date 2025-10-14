@@ -64,12 +64,27 @@ createParameters <- function(m, config, inputDir) {
   # Specific cost --------------------------------------------------------------
 
   # intangible cost assumption files
-  intangCostFiles <- c(con = brick.file("assump", "costIntangCon.csv"),
-                       ren = brick.file("assump", "costIntangRen.csv"))
-  intangCostFilesCfg <- config[["intangCostFiles"]]
-  if (is.list(intangCostFilesCfg)) {
-    var <- intersect(names(intangCostFiles), names(intangCostFilesCfg))
-    intangCostFiles[var] <- intangCostFilesCfg[var]
+  intangCostFiles <- list(con = brick.file("assump", "costIntangCon.csv"),
+                          ren = brick.file("assump", "costIntangRen.csv"))
+  if (is.null(config[["calibrationRun"]])) {
+    intangCostFilesCfg <- config[["intangCostFiles"]]
+    if (is.list(intangCostFilesCfg)) {
+      var <- intersect(names(intangCostFiles), names(intangCostFilesCfg))
+      intangCostFiles[var] <- intangCostFilesCfg[var]
+    }
+  } else {
+    pattern <- ".*costIntang(.+)\\.csv$"
+    intangCostFilesCalib <- list.files(config[["calibrationRun"]],
+                                       pattern, full.names = TRUE)
+    intangCostFilesCalib <- setNames(intangCostFilesCalib,
+                                     sub(pattern, "\\1", intangCostFilesCalib))
+    intangCostFiles[["con"]] <- intangCostFilesCalib[["Con"]]
+    intangCostFiles[["ren"]] <- if (isTRUE(config[["switches"]][["SEQUENTIALREN"]])) {
+      list(BS = intangCostFilesCalib[["RenBS"]],
+           HS = intangCostFilesCalib[["RenHS"]])
+    } else {
+      intangCostFilesCalib[["Ren"]]
+    }
   }
 
 
@@ -638,17 +653,22 @@ createParameters <- function(m, config, inputDir) {
   # Historic stock -------------------------------------------------------------
 
   # stock of residential floor space
-  p_stockHist <- readInput("f_buildingStock.cs4r",
-                           c("ttot", "region", "variable", "typ", "loc", "vin", "hs", "bs"),
-                           inputDir) %>%
-    filter(.data[["variable"]] == "floor") %>%
-    select(-"variable") %>%
-    mutate(qty = "area")
+  p_stockHist <- if (is.null(config[["calibrationRun"]])) {
+    readInput("f_buildingStock.cs4r",
+              c("ttot", "region", "variable", "typ", "loc", "vin", "hs", "bs"),
+              inputDir) %>%
+      filter(.data[["variable"]] == "floor") %>%
+      select(-"variable") %>%
+      mutate(qty = "area")
+  } else {
+    read.csv(file.path(config[["calibrationRun"]], "stockCalibrationRes.csv")) %>%
+      mutate(qty = "area")
+  }
   p_stockHist <- expandSets("qty", "bs", "hs", "vin", "region", "loc", "typ",
                             "inc", "ttot", .m = m) %>%
     inner_join(vinExists, by = c("vin", "ttot")) %>%
     left_join(p_stockHist,
-              by = c("qty", "bs", "hs", "vin", "region", "loc", "typ", "ttot")) %>%
+              by = setdiff(names(p_stockHist), "value")) %>%
     mutate(value = replace_na(.data[["value"]], 0))
 
   if (isTRUE(config[["ignoreShell"]])) {
