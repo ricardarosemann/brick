@@ -118,7 +118,7 @@ p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot) =
   * sum(hsCarrier(hs,carrier),
       p_carrierPrice(carrier,reg,ttot)
       + p_carbonPrice(carrier,ttot) * p_carrierEmi(carrier,reg,ttot)
-    )
+    ) * 1.2 !! coarse accounting for VAT
 ;
 display "Compute operational costs in GAMS code";
 $endIf.lowop
