@@ -199,7 +199,7 @@ createParameters <- function(m, config, inputDir) {
     p_carbonPrice <- carbonPrice %>%
       right_join(p_carbonPrice,
                  by = intersect(names(carbonPrice), names(p_carbonPrice))) %>%
-      mutate(value = .data$value + .data$valueConfig,
+      mutate(value = .data$value + replace_na(.data$valueConfig, 0),
              .keep = "unused")
   }
   p_carbonPrice <- m$addParameter(
