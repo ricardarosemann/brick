@@ -182,6 +182,7 @@ runCalibrationLogit <- function(path,
   # Compute (virtual) objective function
   gdx <- file.path(path, paste0("calibration_0.gdx"))
   file.copy(from = gdxOutput, to = gdx, overwrite = TRUE)
+  file.copy(from = gdxOutput, to = file.path(path, "start.gdx"), overwrite = TRUE)
 
   m <- Container$new(gdx)
   outerObjective <- .combineOuterObjective(m, outerObjective, p_calibTarget,
@@ -310,6 +311,7 @@ runCalibrationLogit <- function(path,
     # Store results with final step sizes in calibration iteration gdx
     gdx <- file.path(path, paste0("calibration_", i, ".gdx"))
     file.copy(from = gdxOutput, to = gdx, overwrite = TRUE)
+    file.copy(from = gdxOutput, to = file.path(path, "start.gdx"), overwrite = TRUE)
     m <- Container$new(gdx)
 
     outerObjective <- .combineOuterObjective(m, outerObjective, p_calibTarget,
@@ -471,6 +473,7 @@ runCalibrationOptim <- function(path,
   # Compute (virtual) objective function
   gdx <- file.path(path, paste0("calibration_0.gdx"))
   file.copy(from = gdxOutput, to = gdx, overwrite = TRUE)
+  file.copy(from = gdxOutput, to = file.path(path, "start.gdx"), overwrite = TRUE)
 
   m <- Container$new(gdx)
   outerObjective <- .readOuterObjectiveOptim(m, outerObjective)
@@ -602,6 +605,7 @@ runCalibrationOptim <- function(path,
     # Rename the output file of the Brick run with updated specific costs
     gdx <- file.path(path, paste0("calibration_", i, ".gdx"))
     file.copy(from = gdxOutput, to = gdx, overwrite = TRUE)
+    file.copy(from = gdxOutput, to = file.path(path, "start.gdx"), overwrite = TRUE)
     m <- Container$new(gdx)
 
     outerObjective <- .readOuterObjectiveOptim(m, outerObjective)
