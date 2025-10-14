@@ -864,18 +864,22 @@ runCalibrationOptim <- function(path,
            # Store case of computing the descent direction d
            dCase = case_when(
              # Non-zero deviation and non-zero historic values
-             .data$target > 0 & .data$value > 0 ~ "standard",
+             .data$target > 1E-14 & .data$value > 1E-14 ~ "standard",
              # One of historic data or Gams results is zero
-             xor(.data$target == 0, .data$value == 0) ~ "oneZero",
+             xor(.data$target <= 1E-14, .data$value <= 1E-14) ~ "oneZero",
              # None of the above holds
              .default = "bothZero"
            )) %>%
     mutate(d = case_match(
       .data$dCase,
       "standard" ~ log(.data$dev),
-      "oneZero" ~ (.data$value - .data$target) * ifelse(abs(.data$intangible) > 1E-6,
-                                                        0.5 * abs(.data$intangible),
-                                                        0.1 * .data$tangible),
+      "oneZero" ~ case_when(
+        .data$value - .data$target <= -1 ~ -1,
+        abs(.data$value - .data$target) < 1 ~ .data$value - .data$target,
+        .data$value - .data$target >= 1 ~ 1
+      ) * ifelse(abs(.data$intangible) > 1E-6,
+                 0.5 * abs(.data$intangible),
+                 0.1 * .data$tangible),
       "bothZero" ~ 0
     )) %>%
     select(dims, "dCase", "dev", "d")
