@@ -47,7 +47,6 @@ createCalibrationTarget <- function(path,
   # build mapping between matching and calibration periods
   .buildPeriodMap <- function(cfgCalib, cfgMatching) {
     periods <- cfgCalib$calibperiods
-    startyear <- cfgCalib$startyear
 
     dt <- data.frame(ttotAgg = periods, dt = c(diff(periods)[1], diff(periods)))
 
