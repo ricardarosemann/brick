@@ -202,13 +202,15 @@ createCalibrationTarget <- function(path,
   # CORRECT RENOVATION ---------------------------------------------------------
 
   # create run config based on calibration config
-  cfgCalib[["switches"]][["RUNTYPE"]] <- "renCorrect"
-  cfgCalib[["switches"]][["CALIBRATIONMETHOD"]] <- NULL
-  cfgCalib[["title"]] <- paste(basename(path), "for", basename(calibConfig), sep = "_")
-  cfgCalib[["matchingRun"]] <- normalizePath(path)
-  cfgCalib[["periods"]] <- cfgCalib$calibperiods
+  cfg <- cfgCalib
+  cfg[["switches"]][["RUNTYPE"]] <- "renCorrect"
+  cfg[["switches"]][["CALIBRATIONMETHOD"]] <- NULL
+  cfg[["title"]] <- paste(basename(path), "for", basename(calibConfig), sep = "_")
+  cfg[["matchingRun"]] <- normalizePath(path)
+  cfg[["periods"]] <- cfgCalib$calibperiods
+  cfg[["boilerBan"]] <- cfgMatching[["boilerBan"]]
 
-  runPath <- initModel(config = cfgCalib,
+  runPath <- initModel(config = cfg,
                        outputFolder = outputFolder,
                        runReporting = FALSE,
                        sendToSlurm = FALSE)
@@ -216,13 +218,20 @@ createCalibrationTarget <- function(path,
   correctionGdx <- file.path(runPath, "output.gdx")
   vCorrected <- lapply(vars, readSymbol, x = correctionGdx, selectArea = FALSE)
 
-  deviation <- .calcMaxDeviation(v, vCorrected, flows, cfgCalib$startyear)
+  deviation <- .calcMaxDeviation(v, vCorrected, flows, cfg$startyear)
   message("Largest deviations from renovation correction:")
   print(deviation)
 
 
 
   # OUTPUT ---------------------------------------------------------------------
+
+  # normalise paths for unambiguous documentation
+  path <- normalizePath(path)
+  runPath <- normalizePath(runPath)
+  if (file.exists(calibConfig)) {
+    calibConfig <- normalizePath(calibConfig)
+  }
 
   # write files into aggregation subfolder
   header <- c(paste0("* matching run: ", path),
