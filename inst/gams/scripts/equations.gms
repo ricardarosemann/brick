@@ -720,9 +720,13 @@ q_flowVariation(varFlow,q,subs,t)$(ord(t) lt card(t))..
     sqr(v_flowVariationCon(q,state,subs,t))
   )$sameas(varFlow,"construction")
   +
-  sum(ren(renAllowed),
-    sqr(v_flowVariationRen(q,ren,subs,t) / 8)  !! rescale to roughly match order of magnitude of other flows
-  )$sameas(varFlow,"renovation")
+  sum(renAllowedBS,
+    sqr(v_flowVariationRenBS(q,renAllowedBS,subs,t) / 8)  !! rescale to roughly match order of magnitude of other flows
+  )$sameas(varFlow,"renovationBS")
+  +
+  sum(renAllowedHS,
+    sqr(v_flowVariationRenHS(q,renAllowedHS,subs,t) / 8)  !! rescale to roughly match order of magnitude of other flows
+  )$sameas(varFlow,"renovationHS")
   +
   sum(state,
     sqr(v_flowVariationDem(q,state,subs,t))
@@ -737,15 +741,6 @@ q_flowVariationCon(q,state,subs,t)$(ord(t) lt card(t))..
   =e=
   (  v_construction(q,state,subs,t+1)
    - v_construction(q,state,subs,t))
-  / p_dt(t+1)
-;
-
-q_flowVariationRen(q,ren,subs,t)$(    (ord(t) lt card(t))
-                                  and renAllowed(ren))..
-  v_flowVariationRen(q,ren,subs,t)
-  =e=
-  (  sum(vinExists(t,vin),   v_renovation(q,ren,vin,subs,t))
-   - sum(vinExists(t+1,vin), v_renovation(q,ren,vin,subs,t+1)))
   / p_dt(t+1)
 ;
 

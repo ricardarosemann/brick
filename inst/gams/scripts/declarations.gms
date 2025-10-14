@@ -102,7 +102,6 @@ v_matchingObj                                   "matching objective: reference d
 
 v_flowVariation(varFLow,qty,region,loc,typ,inc,ttot)       "temporal variation of flows [million m2/yr/yr]"
 v_flowVariationCon(qty,bs,hs,region,loc,typ,inc,t)         "temporal variation of construction flow [million m2/yr/yr]"
-v_flowVariationRen(qty,bs,hs,bsr,hsr,region,loc,typ,inc,t) "temporal variation of renovation flow [million m2/yr/yr]"
 v_flowVariationRenBS(qty,bs,hs,bsr,region,loc,typ,inc,ttot)   "temporal variation of building shell retrofit flow"
 v_flowVariationRenHS(qty,bs,hs,hsr,region,loc,typ,inc,ttot)   "temporal variation of heating system replacement flow"
 v_flowVariationDem(qty,bs,hs,region,loc,typ,inc,t)         "temporal variation of demolition flow [million m2/yr/yr]"
@@ -194,7 +193,6 @@ q_replacementDeviation "total deviation from technology replacement according to
 q_flowVariationTot                                            "total temporal variation of flows"
 q_flowVariation(varFLow,qty,region,loc,typ,inc,ttot)          "temporal variation of flows"
 q_flowVariationCon(qty,bs,hs,region,loc,typ,inc,ttot)         "temporal variation of construction flow"
-q_flowVariationRen(qty,bs,hs,bsr,hsr,region,loc,typ,inc,ttot) "temporal variation of renovation flow"
 q_flowVariationRenBS(qty,bs,hs,bsr,region,loc,typ,inc,ttot)   "temporal variation of building shell retrofit flow"
 q_flowVariationRenHS(qty,bs,hs,hsr,region,loc,typ,inc,ttot)   "temporal variation of heating system replacement flow"
 q_flowVariationDem(qty,bs,hs,region,loc,typ,inc,ttot)         "temporal variation of demolition flow"
