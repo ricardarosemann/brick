@@ -518,10 +518,27 @@ createParameters <- function(m, config, inputDir) {
 
   ## discrete choice calibration =====
 
+  if (is.character(config[["statusQuoPreference"]])) {
+    if (file.exists(config[["statusQuoPreference"]])) {
+      p_statusQuoPref <- read.csv(config[["statusQuoPreference"]])
+      p_statusQuoPref <- expandSets("hs", "region", .m = m) %>%
+        left_join(p_statusQuoPref, by = intersect(colnames(p_statusQuoPref), c("hs", "region")))
+      browser()
+    } else {
+      stop("The file passed as status quo preference does not exist.")
+    }
+  } else if (is.numeric(config[["statusQuoPreference"]])) {
+    p_statusQuoPref <- expandSets("hs", "region", .m = m) %>%
+      mutate(value = config[["statusQuoPreference"]])
+  } else {
+    stop("Invalid specification of status quo preference. Please check your config file.")
+  }
+
   invisible(m$addParameter(
     name = "p_statusQuoPref",
-    records = config[["statusQuoPreference"]],
-    description = "preference for replacehing a heating system with the same technology in USD/m2"
+    domain = c("hs", "region"),
+    records = p_statusQuoPref,
+    description = "preference for replacing a heating system with the same technology in USD/m2"
   ))
 
 
