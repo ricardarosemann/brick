@@ -65,7 +65,7 @@ p_refWeight(reference)                  "Weight of reference"
 priceSensBS(var, region, loc, typ, inc) "price sensitivity of building shell choice"
 priceSensHS(var, region, loc, typ, inc) "price sensitivity of heating system choice"
 
-p_statusQuoPref "preference for replacehing a heating system with the same technology in USD/m2"
+p_statusQuoPref(hs,region) "preference for replacehing a heating system with the same technology in USD/m2"
 p_statusQuoShare(hs) "share of heating systems that are identically replaced"
 
 ;
