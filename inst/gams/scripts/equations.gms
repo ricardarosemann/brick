@@ -430,15 +430,15 @@ q_zeroHeteroPrefRen(subs,t)..
 
 *** status quo preference ------------------------------------------------------
 
-q_statusQuoPref(subs,t)..
+q_statusQuoPref(subs(region,loc,typ,inc),t)..
   v_statusQuoPref(subs,t)
   =e=
-  p_statusQuoPref
-  * sum((bs,hs,hsr,vin)$(    not(sameas(hs,hsr))
+  sum((bs,hs,hsr,vin)$(    not(sameas(hs,hsr))
                          and not(sameas(hsr,"0"))
                          and vinExists(t,vin)
                          and renAllowedHS(bs,hs,hsr)),
-    v_renovationHS("area",bs,hs,hsr,vin,subs,t)
+    p_statusQuoPref(hs,region)
+    * v_renovationHS("area",bs,hs,hsr,vin,subs,t)
   )
 ;
 
