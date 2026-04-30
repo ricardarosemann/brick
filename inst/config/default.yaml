@@ -235,6 +235,10 @@ priceSens:
   # {params: [p_carrierPrice, p_eff], period: 2020}
 freezeParams: []
 
+### Cost reduction zero flow ###
+# Value to reduce the zero flow intangible costs by (and re-shift)
+costReductionZeroF: NULL
+
 ### share-dependent intangible cost parameters ###
 # Set parameters for the share dependent decline of heat pump intangible costs.
 # The decline follows an S-curve parametrized by <midpoint> and <scale>,

@@ -154,7 +154,8 @@ createParameters <- function(m, config, inputDir) {
                                          "loc", "typ", "inc", "ttot", .m = m) %>%
       .filter(readSymbol(m, "renAllowedHS"), vinExists) %>%
       mutate(cost = "intangible", .before = 1) %>%
-      addAssump(intangCostFiles[["ren"]], key = "HS")
+      addAssump(intangCostFiles[["ren"]], vinDimMap = vintages, key = "HS") %>%
+      .adjustCostBalance(config[["costReductionZeroF"]])
 
     p_specCostRenBS <- rbind(p_specCostRenBS_tang, p_specCostRenBS_intang)
     p_specCostRenHS <- rbind(p_specCostRenHS_tang, p_specCostRenHS_intang)
@@ -177,7 +178,8 @@ createParameters <- function(m, config, inputDir) {
     p_specCostRen_intang <- expandSets("bs", "hs", "bsr", "hsr", "vin", "region",
                                        "loc", "typ", "inc", "ttot", .m = m) %>%
       mutate(cost = "intangible", .before = 1) %>%
-      addAssump(intangCostFiles[["ren"]])
+      addAssump(intangCostFiles[["ren"]]) %>%
+      .adjustCostBalance(config[["costReductionZeroF"]])
 
     p_specCostRen_tang <- full_join(p_specCostRenBS_tang, p_specCostRenHS_tang,
                                     by = c("cost", state, "vin", "region", "loc", "typ", "inc", "ttot"),
@@ -549,7 +551,6 @@ createParameters <- function(m, config, inputDir) {
       p_statusQuoPref <- read.csv(config[["statusQuoPreference"]])
       p_statusQuoPref <- expandSets("hs", "region", .m = m) %>%
         left_join(p_statusQuoPref, by = intersect(colnames(p_statusQuoPref), c("hs", "region")))
-      browser()
     } else {
       stop("The file passed as status quo preference does not exist.")
     }
@@ -787,6 +788,27 @@ createParameters <- function(m, config, inputDir) {
     group_by(across(-all_of(c("vin", "value")))) %>%
     mutate(value = mean(.data$value, na.rm = TRUE)) %>%
     ungroup()
+}
+
+
+#' Adjust zero flow costs
+#'
+#' Reduce zero flow costs by given value and rebalance all costs to obtain non-negative intangible costs.
+#'
+#' @param df data frame with cost data to be adjusted
+#' @param costRed numeric, value by which to decrease the zero flow costs
+#'
+#' @returns data frame
+#'
+.adjustCostBalance <- function(df, costRed) {
+  if (!is.null(costRed)) {
+    df <- df %>%
+      mutate(value = .data$value - ifelse(.data$hsr == "0", costRed, 0)) %>%
+      group_by(across(-any_of(c("bsr", "hsr", "value")))) %>%
+      mutate(value = .data$value - min(.data$value, na.rm = TRUE) + 1E-5) %>%
+      ungroup()
+  }
+  df
 }
 
 
