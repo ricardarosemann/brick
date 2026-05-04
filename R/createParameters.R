@@ -154,7 +154,7 @@ createParameters <- function(m, config, inputDir) {
                                          "loc", "typ", "inc", "ttot", .m = m) %>%
       .filter(readSymbol(m, "renAllowedHS"), vinExists) %>%
       mutate(cost = "intangible", .before = 1) %>%
-      addAssump(intangCostFiles[["ren"]], vinDimMap = vintages, key = "HS") %>%
+      addAssump(intangCostFiles[["ren"]], key = "HS") %>%
       .adjustCostBalance(config[["costReductionZeroF"]])
 
     p_specCostRenBS <- rbind(p_specCostRenBS_tang, p_specCostRenBS_intang)
