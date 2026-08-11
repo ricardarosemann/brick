@@ -4,12 +4,13 @@
 \alias{findLatestRun}
 \title{Find latest run}
 \usage{
-findLatestRun(run, outputFolder, fileNames = NULL)
+findLatestRun(outputFolder, run = NULL, fileNames = NULL)
 }
 \arguments{
-\item{run}{character, name of a run in the output folder}
-
 \item{outputFolder}{character, path to output folder.}
+
+\item{run}{character, name of a run in the output folder. If \code{NULL}, any
+run is considered}
 
 \item{fileNames}{character, file names to consider when looking for files
 in run folders. If you allow multiple file names, they are tested in the

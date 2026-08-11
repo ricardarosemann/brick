@@ -3,8 +3,9 @@
 #' Find the latest run of a given name in the output folder. If specified,
 #' require files in the runs and point to them.
 #'
-#' @param run character, name of a run in the output folder
 #' @param outputFolder character, path to output folder.
+#' @param run character, name of a run in the output folder. If \code{NULL}, any
+#'   run is considered
 #' @param fileNames character, file names to consider when looking for files
 #'   in run folders. If you allow multiple file names, they are tested in the
 #'   given order and the first match is returned (start with highest priority).
@@ -14,10 +15,17 @@
 #'
 #' @author Robin Hasse
 
-findLatestRun <- function(run, outputFolder, fileNames = NULL) {
+findLatestRun <- function(outputFolder, run = NULL, fileNames = NULL) {
+
+  pattern <- if (is.null(run)) {
+    paste0(".*_", REGEX_STAMP, "$")
+  } else {
+    paste0("^", run, "_", REGEX_STAMP, "$")
+  }
+
   # all runs with given name in output folder
   finds <- grep(
-    pattern = paste0("^", run, "_", REGEX_STAMP, "$"),
+    pattern = pattern,
     x = list.dirs(outputFolder, full.names = FALSE, recursive = FALSE),
     value = TRUE
   )
@@ -36,7 +44,8 @@ findLatestRun <- function(run, outputFolder, fileNames = NULL) {
 
   if (length(finds) > 0) {
     # return latest find
-    return(tail(sort(finds), 1))
+    stamps <- sub(paste0("^.*_(", REGEX_STAMP, ")(/.*)?$"), "\\1", finds)
+    return(finds[order(stamps, decreasing = TRUE)][1])
   }
 
   NULL

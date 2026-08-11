@@ -153,7 +153,7 @@ initModel <- function(config = NULL,
     if (!is.null(path) && file.exists(path)) {
       message("Restarting on given path: ", path)
     } else if (is.null(path)) {
-      path <- findLastRun(outputFolder)
+      path <- findLatestRun(outputFolder)
       message("Restart: No path given or given path does not exist. Restarting on the latest run: ", path)
     } else {
       stop("Restart: You passed a non-existing path in a restart run.")
