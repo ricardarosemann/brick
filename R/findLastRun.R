@@ -11,9 +11,8 @@
 findLastRun <- function(outputFolder) {
 
   if (dir.exists(outputFolder)) {
-    regexStamp <- "\\d{4}-\\d{2}-\\d{2}_\\d{2}\\.\\d{2}\\.\\d{2}"
     paths <- list.dirs(outputFolder, recursive = FALSE)
-    paths <- grep(paste0(regexStamp, "$"), paths, value = TRUE)
+    paths <- grep(paste0(REGEX_STAMP, "$"), paths, value = TRUE)
     stamp <- sub(paste0("^.*_(", regexStamp, ")$"), "\\1", paths)
     if (length(stamp) > 0) {
       path <- paths[which(stamp == max(stamp))]

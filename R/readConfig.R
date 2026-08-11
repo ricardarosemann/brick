@@ -33,7 +33,7 @@ readConfig <- function(config = NULL, configFolder = NULL, readDirect = FALSE) {
       warning("'configFolder' is ignored as the config is read directly from here: ",
               config)
     }
-    return(.readCfg(config))
+    return(.readCfg(config, warn = FALSE, commentsAsAttr = TRUE))
   }
 
   # use default in config folder if available, otherwise internal default
@@ -60,7 +60,7 @@ readConfig <- function(config = NULL, configFolder = NULL, readDirect = FALSE) {
 
   # find file to given config and read yaml file
   customCfgPath <- .findCfg(config, configFolder, isFinalCfg = is.null(basisOf))
-  customCfg <- .readCfg(customCfgPath)
+  customCfg <- .readCfg(customCfgPath, warn = TRUE)
 
   # end recursion: default config is not based on another config
   if (file.path(customCfgPath) == file.path(defaultCfgPath)) {
@@ -88,6 +88,7 @@ readConfig <- function(config = NULL, configFolder = NULL, readDirect = FALSE) {
   attr(cfg, "file") <- attr(customCfg, "file")
   attr(cfg, "basedOn") <- c(attr(basedOnCfg, "file"),
                             attr(basedOnCfg, "basedOn"))
+  attr(cfg, "isConfig") <- TRUE
 
   return(cfg)
 }
@@ -98,20 +99,36 @@ readConfig <- function(config = NULL, configFolder = NULL, readDirect = FALSE) {
 
 #' Read config file
 #'
-#' Read yaml file from given path, check minimum requirement (title exists) and
-#' save the file path as a attribute.
+#' Read yaml file from given path, fill title with file name and save the file
+#' path as an attribute.
 #'
 #' @param file character, path to config file
+#' @param warn logical, raise a warning if a title has been declared in the
+#'   config
+#' @param commentsAsAttr logical, if \code{TRUE}, commented lines are read as
+#'   yaml of config attributes
 #' @returns named list with config parameters
 #'
 #' @importFrom yaml read_yaml
 
-.readCfg <- function(file) {
-  cfg <- read_yaml(file)
-  if (!"title" %in% names(cfg)) {
-    stop("There is no title given in the config file: ", file)
+.readCfg <- function(file, warn, commentsAsAttr = FALSE) {
+  commentPattern <- "^# "
+  fileTxt <- readLines(file)
+  isComment <- grepl(commentPattern, fileTxt)
+  cfg <- yaml::yaml.load(fileTxt[!isComment])
+  if (is.null(cfg[["title"]])) {
+    cfg <- c(list(title = .getFileName(file)), cfg)
+  } else if (warn) {
+    warning("It is recommended not to specify a title in the config file ",
+            "to avoid inconsistency with the file name.")
   }
-  attr(cfg, "file") <- normalizePath(file)
+  if (commentsAsAttr) {
+    attrTxt <- sub(commentPattern, "", fileTxt[isComment])
+    attrLst <- yaml::yaml.load(attrTxt)
+    attributes(cfg) <- c(attributes(cfg), attrLst)
+  } else {
+    attr(cfg, "file") <- normalizePath(file)
+  }
   return(cfg)
 }
 
@@ -144,15 +161,15 @@ readConfig <- function(config = NULL, configFolder = NULL, readDirect = FALSE) {
         matchingFiles <- list.files(configFolder, pattern = config,
                                     full.names = TRUE, recursive = TRUE)
         if (length(matchingFiles) == 0) {
-          stop("Cannot find a config yaml file matching '", config,
+          stop("Cannot find a config yaml file for the pattern '", config,
                "' in this configFolder: ", configFolder)
         } else if (length(matchingFiles) == 1) {
           customCfgPath <- matchingFiles
           if (isFinalCfg) {
-            message("Using matching config ", matchingFiles)
+            message("Reading config file: ", matchingFiles)
           }
         } else {
-          stop("Be more specific! There is more than one matching config file:\n  ",
+          stop("Be more specific! There is more than one potential config file:\n  ",
                paste(matchingFiles, collapse = "\n  "))
         }
       }

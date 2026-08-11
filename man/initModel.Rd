@@ -16,7 +16,8 @@ initModel(
   slurmQOS = NULL,
   tasksPerNode = NULL,
   timeLimit = NULL,
-  tasks32 = FALSE
+  tasks32 = FALSE,
+  .bundleSettings = NULL
 )
 }
 \arguments{
@@ -56,6 +57,9 @@ BRICK-internal config folder is used.}
 \item{timeLimit}{character, time limit of the slurm job given in the format hh:mm:ss}
 
 \item{tasks32}{boolean whether or not the SLURM run should be with 32 tasks}
+
+\item{.bundleSettings}{character, path to bundle settings file. Internal
+argument. Do not set manually!}
 }
 \value{
 path (invisible)

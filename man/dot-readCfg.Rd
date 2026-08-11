@@ -4,15 +4,21 @@
 \alias{.readCfg}
 \title{Read config file}
 \usage{
-.readCfg(file)
+.readCfg(file, warn, commentsAsAttr = FALSE)
 }
 \arguments{
 \item{file}{character, path to config file}
+
+\item{warn}{logical, raise a warning if a title has been declared in the
+config}
+
+\item{commentsAsAttr}{logical, if \code{TRUE}, commented lines are read as
+yaml of config attributes}
 }
 \value{
 named list with config parameters
 }
 \description{
-Read yaml file from given path, check minimum requirement (title exists) and
-save the file path as a attribute.
+Read yaml file from given path, fill title with file name and save the file
+path as an attribute.
 }

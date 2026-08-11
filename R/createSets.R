@@ -74,9 +74,9 @@ createSets <- function(m, config) {
       stop("Calibration time periods are missing from the calibration config.")
     }
     if (!is.null(config[["calibrationRun"]])) {
-      if (file.exists(file.path(config[["calibrationRun"]], "config", "config_COMPILED.yaml"))) {
+      if (file.exists(file.path(config[["calibrationRun"]], "config", CONFIG_COMPILED))) {
         calibConfig <- readConfig(
-          file.path(config[["calibrationRun"]], "config", "config_COMPILED.yaml"),
+          file.path(config[["calibrationRun"]], "config", CONFIG_COMPILED),
           readDirect = TRUE
         )
         tcalib <- periodFromConfig(calibConfig, "tcalib")

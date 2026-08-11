@@ -31,7 +31,7 @@ reportMif <- function(path, file = NULL, tmpl = NULL) {
   }
 
   # read config
-  configFile <- file.path(path, "config", "config_COMPILED.yaml")
+  configFile <- file.path(path, "config", CONFIG_COMPILED)
   config <- readConfig(configFile, readDirect = TRUE)
   neededConfigParams <- c("title", "periods")
   if (is.null(tmpl)) {
@@ -54,7 +54,7 @@ reportMif <- function(path, file = NULL, tmpl = NULL) {
 
   # reporting template
   if (is.null(tmpl)) {
-    tmplFile <- file.path(path, "config", "brickSets_COMPILED.yaml")
+    tmplFile <- file.path(path, "config", BRICKSETS_COMPILED)
     tmpl <- if (file.exists(tmplFile)) {
       tmplFile
     } else {

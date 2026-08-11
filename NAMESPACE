@@ -12,6 +12,7 @@ export(readInput)
 export(reportMif)
 export(setSlurmConfig)
 export(startModel)
+export(updateScenarioRuns)
 import(madrat)
 import(magclass)
 importFrom(dplyr,

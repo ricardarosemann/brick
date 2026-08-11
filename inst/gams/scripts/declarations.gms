@@ -9,7 +9,7 @@ p_specCostCon(cost,bs,hs,region,loc,typ,inc,ttot)             "floor-space speci
 p_specCostRen(cost,bs,hs,bsr,hsr,vin,region,loc,typ,inc,ttot) "floor-space specific renovation cost [USD/m2]"
 p_specCostRenBS(cost,bs,hs,bsr,vin,region,loc,typ,inc,ttot)   "floor-space specific building shell retrofit cost [USD/m2]"
 p_specCostRenHS(cost,bs,hs,hsr,vin,region,loc,typ,inc,ttot)   "floor-space specific heating system replacement cost [USD/m2]"
-p_specCostOpe(bs,hs,vin,region,loc,typ,ttot)                  "floor-space specific operation cost [USD/m2/yr]"
+p_specCostOpe(enduse,bs,hs,vin,region,loc,typ,ttot)           "floor-space specific operation cost [USD/m2/yr]"
 p_specCostDem                                                 "floor-space specific demolition cost [USD/m2]"
 
 p_carbonPrice(carrier,ttot)           "Carbon price in USD/t_CO2eq"

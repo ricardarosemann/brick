@@ -1,7 +1,4 @@
 ---
-title: "default"
-
-
 # scope and resolution ---------------------------------------------------------
 
 ### time steps ###
@@ -58,11 +55,6 @@ regions: NULL
   # TRUE
   # FALSE
 ignoreShell: FALSE
-
-### status quo preference ###
-# preference to replace heating system by the same technology during renovation
-# investment cost mark up on the choice of a different technology in USD/m2
-statusQuoPreference: 20
 
 ### calibration ###
 # intangible cost assumption files
@@ -160,6 +152,11 @@ fsScenario: SSP2
   # water_heating
   # [space_heating, water_heating]
 enduses: space_heating
+
+### status quo preference ###
+# preference to replace heating system by the same technology during renovation
+# investment cost mark up on the choice of a different technology in USD/m2
+statusQuoPreference: 20
 
 ### ban heating systems ###
 # named list of a data.frame with last period of allowed installation as value

@@ -44,6 +44,7 @@ Imports:
     stringr,
     tidyr,
     withr,
+    xfun,
     yaml
 Suggests:
     covr,

@@ -129,7 +129,7 @@ createCalibrationTarget <- function(path,
   # CONFIG ---------------------------------------------------------------------
 
   cfgCalib <- readConfig(calibConfig)
-  cfgMatching <- readConfig(file.path(path, "config", "config_COMPILED.yaml"), readDirect = TRUE)
+  cfgMatching <- readConfig(file.path(path, "config", CONFIG_COMPILED), readDirect = TRUE)
 
   periodMap <- .buildPeriodMap(cfgCalib, cfgMatching)
   regionMap <- .buildRegionMap(cfgCalib, cfgMatching)
@@ -214,7 +214,7 @@ createCalibrationTarget <- function(path,
   cfg <- cfgCalib
   cfg[["switches"]][["RUNTYPE"]] <- "renCorrect"
   cfg[["switches"]][["CALIBRATIONMETHOD"]] <- NULL
-  cfg[["title"]] <- paste(basename(path), "for", basename(calibConfig), sep = "_")
+  cfg[["title"]] <- sub("\\.[^.]+$", "", basename(calibConfig))
   cfg[["matchingRun"]] <- normalizePath(path)
   cfg[["periods"]] <- .subsetWithPrev(cfgCalib$periods, cfgCalib$calibperiods)
   cfg[["boilerBan"]] <- cfgMatching[["boilerBan"]]
