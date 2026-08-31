@@ -157,7 +157,7 @@ startModel <- function(path, runReporting = TRUE) {
   }
   settings <- .readSettings(settingsPath)
   outputFolder <- .getSettingsPath(settings, "outputFolder")
-  settings$run[[title]] <- if (.identicalPath(outputFolder, attr(path))) {
+  settings$run[[title]] <- if (.identicalPath(outputFolder, dirname(path))) {
     basename(path)
   } else {
     warning("This run is associated with the settings file ", settingsPath,
