@@ -30,20 +30,23 @@ loadMadratData <- function(config) {
   # where are the old files from?
   sourceFiles <- file.path(inputDir, "source_files.log")
   if (file.exists(sourceFiles)) {
-    madratOld <- readLines(sourceFiles)[1]
+    madratOld <- readLines(sourceFiles)[1:2]
   } else {
     madratOld <- "noData"
   }
 
   regionmapHash <- paste0(regionscode(regionmapping), "_")
   granularityHash <- .argsHash(list(granularity = config[["granularity"]]), TRUE)
+  inputRevision <- config[["inputRevision"]]
+  extraMapHash <- ifelse(is.null(config[["extramappings_historic"]]),
+                         "",
+                         paste0("-", regionscode(config[["extramappings_historic"]])))
 
   # where to get new files from
-  madratNew <- paste0("rev",
-                      config[["inputRevision"]], "_",
-                      regionmapHash,
-                      granularityHash,
-                      "brick.tgz")
+  madratNew <- c(
+    paste0("rev", inputRevision, "_", regionmapHash, granularityHash, "brick.tgz"),
+    paste0("rev", inputRevision, "_", regionmapHash, extraMapHash, "_", "validationbrick.tgz")
+  )
 
   if (!setequal(madratNew, madratOld) || isTRUE(config[["forceDownload"]])) {
     message(

@@ -40,6 +40,11 @@ granularity: onlyRes
   # [name, where]: regionmapping via toolGetMapping
 regionmapping: []
 
+### extra region mappings ###
+# file that maps countries to aggregated reporting regions
+# has to exist in the regional madrat mappings folder
+extramappings_historic: extramappingEU27asOne.csv
+
 ### regions ###
 # list of region codes
 # used only select specific regions from a mapping
