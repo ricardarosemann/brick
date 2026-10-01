@@ -6,7 +6,7 @@
 \alias{brick-package}
 \title{brick: Building sector model with heterogeneous renovation and construction of the stock}
 \description{
-\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+\if{html}{\figure{logo.svg}{options: style='float: right' alt='logo' width='120'}}
 
 This building stock model represents residential and commercial buildings at customisable regional and temporal resolution. The building stock is quantified in floor area and distinguished by building type (SFH/MFH) and location (rural/urban). In each building category, construction cohorts are tracked explicitly. This allows to characterise buildings specifically for each subset of buildings. The evolution of the building stock follows from the flows of constructed, renovated and demolished buildings and is optimised under cost minimisation with a benefit for heterogeneity in the choice of construction and renovation alternatives. This benefit captures heterogeneity in the preferences of the agents and the building structure.
 }
@@ -22,6 +22,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Robin Hasse \email{robin.hasse@pik-potsdam.de} (\href{https://orcid.org/0000-0003-1818-3186}{ORCID})
   \item Ricarda Rosemann \email{ricarda.rosemann@pik-potsdam.de} (\href{https://orcid.org/0009-0006-5939-3197}{ORCID})
 }
 

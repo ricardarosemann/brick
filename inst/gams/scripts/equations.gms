@@ -820,38 +820,62 @@ q_flowVariation(varFlow,q,subs,t)$(ord(t) gt 1)..
 ;
 
 
-* temporal variations of each flow
+* second order temporal variations of each flow
 
-q_flowVariationCon(q,state,subs,t)$(ord(t) gt 1)..
+q_flowVariationCon(q,state,subs,t)$(ord(t) gt 2)..
   v_flowVariationCon(q,state,subs,t)
   =e=
-  (  v_construction(q,state,subs,t)
-   - v_construction(q,state,subs,t-1))
-  / p_dt(t)
+  (
+    (  v_construction(q,state,subs,t)
+     - v_construction(q,state,subs,t-1))
+    / p_dt(t)
+    -
+    (  v_construction(q,state,subs,t-1)
+     - v_construction(q,state,subs,t-2))
+    / p_dt(t-1)
+  ) / ((p_dt(t) + p_dt(t-1)) / 2)
 ;
 
-q_flowVariationRenBS(q,renAllowedBS,subs,t)$(ord(t) gt 1)..
+q_flowVariationRenBS(q,renAllowedBS,subs,t)$(ord(t) gt 2)..
   v_flowVariationRenBS(q,renAllowedBS,subs,t)
   =e=
-  (  sum(vinExists(t,vin),   v_renovationBS(q,renAllowedBS,vin,subs,t))
-   - sum(vinExists(t-1,vin), v_renovationBS(q,renAllowedBS,vin,subs,t-1)))
-  / p_dt(t)
+  (
+    (  sum(vinExists(t,vin),   v_renovationBS(q,renAllowedBS,vin,subs,t))
+     - sum(vinExists(t-1,vin), v_renovationBS(q,renAllowedBS,vin,subs,t-1)))
+    / p_dt(t)
+    -
+    (  sum(vinExists(t-1,vin), v_renovationBS(q,renAllowedBS,vin,subs,t-1))
+     - sum(vinExists(t-2,vin), v_renovationBS(q,renAllowedBS,vin,subs,t-2)))
+    / p_dt(t-1)
+  ) / ((p_dt(t) + p_dt(t-1)) / 2)
 ;
 
-q_flowVariationRenHS(q,renAllowedHS,subs,t)$(ord(t) gt 1)..
+q_flowVariationRenHS(q,renAllowedHS,subs,t)$(ord(t) gt 2)..
   v_flowVariationRenHS(q,renAllowedHS,subs,t)
   =e=
-  (  sum(vinExists(t,vin),   v_renovationHS(q,renAllowedHS,vin,subs,t))
-   - sum(vinExists(t-1,vin), v_renovationHS(q,renAllowedHS,vin,subs,t-1)))
-  / p_dt(t)
+  (
+    (  sum(vinExists(t,vin),   v_renovationHS(q,renAllowedHS,vin,subs,t))
+     - sum(vinExists(t-1,vin), v_renovationHS(q,renAllowedHS,vin,subs,t-1)))
+    / p_dt(t)
+    -
+    (  sum(vinExists(t-1,vin), v_renovationHS(q,renAllowedHS,vin,subs,t-1))
+     - sum(vinExists(t-2,vin), v_renovationHS(q,renAllowedHS,vin,subs,t-2)))
+    / p_dt(t)
+  ) / ((p_dt(t) + p_dt(t-1)) / 2)
 ;
 
-q_flowVariationDem(q,state,subs,t)$(ord(t) gt 1)..
+q_flowVariationDem(q,state,subs,t)$(ord(t) gt 2)..
   v_flowVariationDem(q,state,subs,t)
   =e=
-  (  sum(vinExists(t,vin),   v_demolition(q,state,vin,subs,t))
-   - sum(vinExists(t-1,vin), v_demolition(q,state,vin,subs,t-1)))
-  / p_dt(t)
+  (
+    (  sum(vinExists(t,vin),   v_demolition(q,state,vin,subs,t))
+     - sum(vinExists(t-1,vin), v_demolition(q,state,vin,subs,t-1)))
+    / p_dt(t)
+    -
+    (  sum(vinExists(t-1,vin), v_demolition(q,state,vin,subs,t-1))
+     - sum(vinExists(t-2,vin), v_demolition(q,state,vin,subs,t-2)))
+    / p_dt(t)
+  ) / ((p_dt(t) + p_dt(t-1)) / 2)
 ;
 
 

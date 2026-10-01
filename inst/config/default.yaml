@@ -158,8 +158,9 @@ fsScenario: SSP2
 # named list of a data.frame with last period of allowed installation as value
 # allowed column names: var, region, ttot, hs
 # mandatory column name: value
+# avoid duplicated declaration by grouping items with .
   # e.g. var:   [renovation, renovation, construction]
-  #      hs:    [      sobo,       libo,         libo]
+  #      hs:    [ sobo.biom,       libo,         libo]
   #      value: [      2025,       2030,         2035]
 boilerBan: []
 

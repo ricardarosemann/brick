@@ -96,7 +96,7 @@ v_slackRenHS(hs,vin,region,loc,typ,inc,ttot) "difference between actual and min 
 $ifthen.matching "%RUNTYPE%" == "matching"
 v_replacementDeviation "total deviation from technology replacement according to life time"
 
-v_flowVariationTot                              "total temporal variation of flows"
+v_flowVariationTot                              "total 2nd order temporal variation of flows"
 v_refVals(reference,refVar,region,t)            "model variable values at reference aggregation"
 v_refValsBasic(reference,refVarGroup,region,t)  "v_refVals summed to basic value of reference shares"
 v_refDeviation(reference,region,ttot)           "summed squared deviation from reference sources"
@@ -104,11 +104,11 @@ v_refDeviationTot                               "total weighted squared deviatio
 v_refDeviationVar(reference,refVar,region,ttot) "deviation from each variable in reference sources"
 v_matchingObj                                   "matching objective: reference deviation and flow variation"
 
-v_flowVariation(varFLow,qty,region,loc,typ,inc,ttot)       "temporal variation of flows [million m2/yr/yr]"
-v_flowVariationCon(qty,bs,hs,region,loc,typ,inc,t)         "temporal variation of construction flow [million m2/yr/yr]"
-v_flowVariationRenBS(qty,bs,hs,bsr,region,loc,typ,inc,ttot)   "temporal variation of building shell retrofit flow"
-v_flowVariationRenHS(qty,bs,hs,hsr,region,loc,typ,inc,ttot)   "temporal variation of heating system replacement flow"
-v_flowVariationDem(qty,bs,hs,region,loc,typ,inc,t)         "temporal variation of demolition flow [million m2/yr/yr]"
+v_flowVariation(varFLow,qty,region,loc,typ,inc,ttot)        "2nd order temporal variation of flows [million m2/yr3]"
+v_flowVariationCon(qty,bs,hs,region,loc,typ,inc,t)          "2nd order temporal variation of construction flow [million m2/yr3]"
+v_flowVariationRenBS(qty,bs,hs,bsr,region,loc,typ,inc,ttot) "2nd order temporal variation of building shell retrofit flow [million m2/yr3]"
+v_flowVariationRenHS(qty,bs,hs,hsr,region,loc,typ,inc,ttot) "2nd order temporal variation of heating system replacement flow [million m2/yr3]"
+v_flowVariationDem(qty,bs,hs,region,loc,typ,inc,t)          "2nd order temporal variation of demolition flow [million m2/yr3]"
 $endif.matching
 
 v_sysCost(region,loc,typ,inc,ttot) "system cost cost cash flow in USD/yr"

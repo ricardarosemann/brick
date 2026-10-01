@@ -14,106 +14,128 @@ export(setSlurmConfig)
 export(startModel)
 import(madrat)
 import(magclass)
-importFrom(dplyr,"%>%")
-importFrom(dplyr,.data)
-importFrom(dplyr,across)
-importFrom(dplyr,all_of)
-importFrom(dplyr,anti_join)
-importFrom(dplyr,any_of)
-importFrom(dplyr,arrange)
-importFrom(dplyr,bind_rows)
-importFrom(dplyr,case_match)
-importFrom(dplyr,case_when)
-importFrom(dplyr,cross_join)
-importFrom(dplyr,everything)
-importFrom(dplyr,filter)
-importFrom(dplyr,full_join)
-importFrom(dplyr,group_by)
-importFrom(dplyr,inner_join)
-importFrom(dplyr,lag)
-importFrom(dplyr,left_join)
-importFrom(dplyr,matches)
-importFrom(dplyr,mutate)
-importFrom(dplyr,n)
-importFrom(dplyr,pull)
-importFrom(dplyr,reframe)
-importFrom(dplyr,relocate)
-importFrom(dplyr,rename)
-importFrom(dplyr,rename_with)
-importFrom(dplyr,right_join)
-importFrom(dplyr,row_number)
-importFrom(dplyr,select)
-importFrom(dplyr,semi_join)
-importFrom(dplyr,summarise)
-importFrom(dplyr,ungroup)
-importFrom(gamstransfer,Container)
-importFrom(gamstransfer,SpecialValues)
-importFrom(ggplot2,aes)
-importFrom(ggplot2,element_blank)
-importFrom(ggplot2,element_line)
-importFrom(ggplot2,element_text)
-importFrom(ggplot2,facet_grid)
-importFrom(ggplot2,facet_wrap)
-importFrom(ggplot2,geom_area)
-importFrom(ggplot2,geom_col)
-importFrom(ggplot2,geom_hline)
-importFrom(ggplot2,geom_line)
-importFrom(ggplot2,geom_point)
-importFrom(ggplot2,geom_text)
-importFrom(ggplot2,geom_tile)
-importFrom(ggplot2,geom_vline)
-importFrom(ggplot2,ggplot)
-importFrom(ggplot2,ggsave)
-importFrom(ggplot2,ggtitle)
-importFrom(ggplot2,labs)
-importFrom(ggplot2,scale_alpha_manual)
-importFrom(ggplot2,scale_fill_brewer)
-importFrom(ggplot2,scale_fill_manual)
-importFrom(ggplot2,scale_x_continuous)
-importFrom(ggplot2,scale_x_discrete)
-importFrom(ggplot2,scale_y_continuous)
-importFrom(ggplot2,scale_y_discrete)
-importFrom(ggplot2,theme)
-importFrom(ggplot2,theme_classic)
-importFrom(ggplot2,theme_minimal)
-importFrom(ggplot2,unit)
+importFrom(dplyr,
+  "%>%",
+  .data,
+  across,
+  all_of,
+  anti_join,
+  any_of,
+  arrange,
+  bind_rows,
+  case_match,
+  case_when,
+  cross_join,
+  everything,
+  filter,
+  full_join,
+  group_by,
+  inner_join,
+  lag,
+  left_join,
+  matches,
+  mutate,
+  n,
+  pull,
+  reframe,
+  relocate,
+  rename,
+  rename_with,
+  right_join,
+  row_number,
+  select,
+  semi_join,
+  summarise,
+  ungroup
+)
+importFrom(gamstransfer,
+  Container,
+  SpecialValues
+)
+importFrom(ggplot2,
+  aes,
+  element_blank,
+  element_line,
+  element_text,
+  facet_grid,
+  facet_wrap,
+  geom_area,
+  geom_col,
+  geom_hline,
+  geom_line,
+  geom_point,
+  geom_text,
+  geom_tile,
+  geom_vline,
+  ggplot,
+  ggsave,
+  ggtitle,
+  labs,
+  scale_alpha_manual,
+  scale_fill_brewer,
+  scale_fill_manual,
+  scale_x_continuous,
+  scale_x_discrete,
+  scale_y_continuous,
+  scale_y_discrete,
+  theme,
+  theme_classic,
+  theme_minimal,
+  unit
+)
 importFrom(gms,download_distribute)
-importFrom(madrat,calcOutput)
-importFrom(madrat,getConfig)
-importFrom(madrat,regionscode)
-importFrom(madrat,toolGetMapping)
+importFrom(madrat,
+  calcOutput,
+  getConfig,
+  regionscode,
+  toolGetMapping
+)
 importFrom(piamutils,getSystemFile)
 importFrom(pkgload,is_dev_package)
 importFrom(purrr,pmap)
-importFrom(quitte,as.quitte)
-importFrom(quitte,calc_addVariable)
-importFrom(quitte,interpolate_missing_periods)
-importFrom(quitte,interpolate_missing_periods_)
-importFrom(quitte,revalue.levels)
-importFrom(reportbrick,convGDX2MIF)
-importFrom(reportbrick,plotBRICKCalib)
-importFrom(reportbrick,plotMatchingComparison)
-importFrom(reportbrick,readBrickSets)
-importFrom(reportbrick,reportCalibration)
-importFrom(reportbrick,showSankey)
-importFrom(scales,brewer_pal)
-importFrom(scales,gradient_n_pal)
-importFrom(stats,median)
-importFrom(stats,pweibull)
+importFrom(quitte,
+  as.quitte,
+  calc_addVariable,
+  interpolate_missing_periods,
+  interpolate_missing_periods_,
+  revalue.levels
+)
+importFrom(reportbrick,
+  convGDX2MIF,
+  plotBRICKCalib,
+  plotMatchingComparison,
+  readBrickSets,
+  reportCalibration,
+  showSankey
+)
+importFrom(scales,
+  brewer_pal,
+  gradient_n_pal
+)
+importFrom(stats,
+  median,
+  pweibull
+)
 importFrom(stringr,str_escape)
-importFrom(tidyr,complete)
-importFrom(tidyr,pivot_longer)
-importFrom(tidyr,pivot_wider)
-importFrom(tidyr,replace_na)
-importFrom(tidyr,unite)
-importFrom(tidyr,unnest_longer)
-importFrom(utils,head)
-importFrom(utils,read.csv)
-importFrom(utils,read.csv2)
-importFrom(utils,tail)
-importFrom(utils,write.csv)
-importFrom(utils,write.csv2)
-importFrom(utils,write.table)
+importFrom(tidyr,
+  complete,
+  pivot_longer,
+  pivot_wider,
+  replace_na,
+  unite,
+  unnest_longer
+)
+importFrom(utils,
+  head,
+  read.csv,
+  read.csv2,
+  tail,
+  write.csv,
+  write.csv2,
+  write.table
+)
 importFrom(withr,with_dir)
-importFrom(yaml,read_yaml)
-importFrom(yaml,write_yaml)
+importFrom(yaml,
+  read_yaml,
+  write_yaml
+)

@@ -1,8 +1,8 @@
 # <a href=''><img src='man/figures/logo_text_wide.svg' align='right' alt='logo' height=70 /></a> Building sector model with heterogeneous renovation and construction of the stock
 
-R package **brick**, version **0.14.1**
+R package **brick**, version **0.14.2**
 
-[![CRAN status](https://www.r-pkg.org/badges/version/brick)](https://cran.r-project.org/package=brick) [![R build status](https://github.com/pik-piam/brick/workflows/check/badge.svg)](https://github.com/pik-piam/brick/actions) [![codecov](https://codecov.io/gh/pik-piam/brick/branch/master/graph/badge.svg)](https://app.codecov.io/gh/pik-piam/brick) [![r-universe](https://pik-piam.r-universe.dev/badges/brick)](https://pik-piam.r-universe.dev/builds)
+   [![R build status](https://github.com/pik-piam/brick/workflows/check/badge.svg)](https://github.com/pik-piam/brick/actions) [![codecov](https://codecov.io/gh/pik-piam/brick/branch/master/graph/badge.svg)](https://app.codecov.io/gh/pik-piam/brick) [![r-universe](https://pik-piam.r-universe.dev/badges/brick)](https://pik-piam.r-universe.dev/builds)
 
 ## Purpose and Functionality
 
@@ -30,13 +30,13 @@ The additional repository can be made available permanently by adding the line a
 
 After that the most recent version of the package can be installed using `install.packages`:
 
-```r 
+```r
 install.packages("brick")
 ```
 
 Package updates can be installed using `update.packages` (make sure that the additional repository has been added before running that command):
 
-```r 
+```r
 update.packages()
 ```
 
@@ -48,15 +48,17 @@ In case of questions / problems please contact Robin Hasse <robin.hasse@pik-pots
 
 To cite package **brick** in publications use:
 
-Hasse R, Rosemann R (2026). "brick: Building sector model with heterogeneous renovation and construction of the stock - Version 0.14.1."
+Hasse R, Rosemann R (2026). "brick: Building sector model with heterogeneous renovation and construction of the stock." Version: 0.14.2, <https://github.com/pik-piam/brick>.
 
 A BibTeX entry for LaTeX users is
 
  ```latex
 @Misc{,
-  title = {brick: Building sector model with heterogeneous renovation and construction of the stock - Version 0.14.1},
+  title = {brick: Building sector model with heterogeneous renovation and construction of the stock},
   author = {Robin Hasse and Ricarda Rosemann},
-  date = {2026-04-20},
+  date = {2026-08-31},
   year = {2026},
+  url = {https://github.com/pik-piam/brick},
+  note = {Version: 0.14.2},
 }
 ```
