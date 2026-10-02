@@ -100,8 +100,8 @@ $endif.history
 *** derived parameters ---------------------------------------------------------
 
 * floor-space specific final energy demand
-p_feDemand(hs,bs,vin,reg,typ,ttot) =
-  p_ueDemand(bs,vin,reg,typ)
+p_feDemand(enduse,hs,bs,vin,reg,typ,ttot) =
+  p_ueDemand(enduse,bs,vin,reg,typ)
   / p_eff(hs,reg,typ,ttot)
 ;
 
@@ -115,8 +115,8 @@ $endIf.sequentialRen
 
 $ifThen.lowop "%CALIBRATIONLOWOP%" == "FALSE"
 * floor-space specific operation cost
-p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot) =
-  p_feDemand(hs,bs,vin,reg,typ,ttot)
+p_specCostOpe(enduse,bs,hs,vin,reg,loc,typ,ttot) =
+  p_feDemand(enduse,hs,bs,vin,reg,typ,ttot)
   * sum(hsCarrier(hs,carrier),
       p_carrierPrice(carrier,reg,ttot)
       + p_carbonPrice(carrier,ttot) * p_carrierEmi(carrier,reg,ttot)
@@ -149,8 +149,10 @@ p_lccCon(cost,var,bs,hs,reg,loc,typ,inc,ttot) =
           p_dtVin(ttot,vin)
           / p_dt(ttot)
           * (
-              p_specCostOpe(bs,hs,vin,reg,loc,typ,ttot)$(    sameas(var,"stock")
-                                                       and sameas(cost,"tangible"))
+              sum(enduse,
+                p_specCostOpe(enduse,bs,hs,vin,reg,loc,typ,ttot)$(    sameas(var,"stock")
+                                                                  and sameas(cost,"tangible"))
+              )
             + p_specCostRen(cost,bs,hs,bs,"0",vin,reg,loc,typ,inc,ttot)$sameas(var,"renovation")
               / p_lifeTimeBS(reg)
             + p_specCostRen(cost,bs,hs,"0",hs,vin,reg,loc,typ,inc,ttot)$sameas(var,"renovation")

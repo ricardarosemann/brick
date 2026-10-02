@@ -10,6 +10,7 @@
 #'
 #' @importFrom dplyr mutate left_join case_when full_join
 #' @importFrom gamstransfer Container
+#' @importFrom utils tail
 #' @importFrom ggplot2 ggplot geom_tile facet_wrap aes theme_minimal theme
 #'   element_blank geom_text scale_x_discrete scale_y_discrete scale_fill_manual
 #'   scale_fill_brewer element_text ggtitle geom_vline

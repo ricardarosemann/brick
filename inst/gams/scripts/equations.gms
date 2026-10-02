@@ -34,7 +34,7 @@ q_sysCost(subs,t)..
   =e=
     v_conCost(subs,t)
   + v_renCost(subs,t)
-  + v_opeCost(subs,t)
+  + sum(enduse, v_opeCost(enduse,subs,t))
   + v_demCost(subs,t)
 ;
 
@@ -187,14 +187,14 @@ q_specCostRen(cost, bs, hs, bsr, hsr, vin, subs, t)$(    renAllowed(bs,hs,bsr,hs
 * we assume a linear transition from the previous to the current stock and
 * therefore take the average stock between the two for the operation cost
 
-q_opeCost(subs(reg,loc,typ,inc),ttot)$(t(ttot))..
-  v_opeCost(subs,ttot)
+q_opeCost(enduse,subs(reg,loc,typ,inc),ttot)$(t(ttot))..
+  v_opeCost(enduse,subs,ttot)
   =e=
   sum((state,vinExists(ttot,vin)),
     sum(ttot2$((sameas(ttot2,ttot) or sameas(ttot2,ttot-1)) and vinExists(ttot2,vin)),
       v_stock("area",state,vin,subs,ttot2)
     ) / 2
-    * p_specCostOpe(state,vin,reg,loc,typ,ttot)
+    * p_specCostOpe(enduse,state,vin,reg,loc,typ,ttot)
   )
 ;
 

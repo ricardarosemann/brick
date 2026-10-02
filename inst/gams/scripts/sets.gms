@@ -11,6 +11,9 @@ hs(hsr) "heating system"
 vin "construction vintage cohort"
 
 *** energy carriers
+enduse "energy enduse"
+
+*** energy carriers
 carrier "energy carrier"
 
 *** buildings subsectors
@@ -102,7 +105,7 @@ $load bsr hsr bs hs
 $load region loc typ inc
 $load tall ttot t thist tinit tcalib tcalibLast
 $load vin
-$load carrier
+$load carrier enduse
 $load sec
 $gdxin
 

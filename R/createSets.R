@@ -74,9 +74,9 @@ createSets <- function(m, config) {
       stop("Calibration time periods are missing from the calibration config.")
     }
     if (!is.null(config[["calibrationRun"]])) {
-      if (file.exists(file.path(config[["calibrationRun"]], "config", "config_COMPILED.yaml"))) {
+      if (file.exists(file.path(config[["calibrationRun"]], "config", CONFIG_COMPILED))) {
         calibConfig <- readConfig(
-          file.path(config[["calibrationRun"]], "config", "config_COMPILED.yaml"),
+          file.path(config[["calibrationRun"]], "config", CONFIG_COMPILED),
           readDirect = TRUE
         )
         tcalib <- periodFromConfig(calibConfig, "tcalib")
@@ -208,6 +208,18 @@ createSets <- function(m, config) {
     name = "hsr",
     records = c(0, hs$getUELs()),
     description = "renovated heating system"
+  )
+
+  enduse <- config[["enduses"]]
+  availableEnduses <- c("space_heating", "water_heating")
+  if (any(!enduse %in% availableEnduses)) {
+    stop("enduses have to be one or more out of ",
+         paste(availableEnduses, collapse = ", "), ".")
+  }
+  enduse <- m$addSet(
+    name = "enduse",
+    records = enduse,
+    description = "energy enduse"
   )
 
   carrier <- hsMap %>%

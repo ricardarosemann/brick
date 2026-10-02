@@ -1,7 +1,4 @@
 ---
-title: "default"
-
-
 # scope and resolution ---------------------------------------------------------
 
 ### time steps ###
@@ -43,6 +40,11 @@ granularity: onlyRes
   # [name, where]: regionmapping via toolGetMapping
 regionmapping: []
 
+### extra region mappings ###
+# file that maps countries to aggregated reporting regions
+# has to exist in the regional madrat mappings folder
+extramappings_historic: extramappingEU27asOne.csv
+
 ### regions ###
 # list of region codes
 # used only select specific regions from a mapping
@@ -58,11 +60,6 @@ regions: NULL
   # TRUE
   # FALSE
 ignoreShell: FALSE
-
-### status quo preference ###
-# preference to replace heating system by the same technology during renovation
-# investment cost mark up on the choice of a different technology in USD/m2
-statusQuoPreference: 20
 
 ### calibration ###
 # intangible cost assumption files
@@ -153,6 +150,18 @@ popScenario: SSP2
   # SSP1 - SSP5
   # SDP_EI, SDP_MC, SDP_RC
 fsScenario: SSP2
+
+### energy enduses ###
+# energy enduses considered in the operation of buildings
+  # space_heating
+  # water_heating
+  # [space_heating, water_heating]
+enduses: space_heating
+
+### status quo preference ###
+# preference to replace heating system by the same technology during renovation
+# investment cost mark up on the choice of a different technology in USD/m2
+statusQuoPreference: 20
 
 ### ban heating systems ###
 # named list of a data.frame with last period of allowed installation as value

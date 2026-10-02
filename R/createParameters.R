@@ -257,16 +257,16 @@ createParameters <- function(m, config, inputDir) {
 
   ### useful energy demand for space heating ####
   p_ueDemand <- readInput("f_ueDemand.cs4r",
-                          c("region", "typ", "vin", "bs", "value"),
+                          c("region", "typ", "vin", "enduse", "bs", "value"),
                           inputDir) %>%
-    select("bs", "vin", "region", "typ", "value") %>%
+    select("enduse", "bs", "vin", "region", "typ", "value") %>%
     toModelResolution(m)
   if (isTRUE(config[["identVinCharact"]])) {
     p_ueDemand <- .makeIdentVin(p_ueDemand)
   }
   p_ueDemand <- m$addParameter(
     name = "p_ueDemand",
-    domain = c("bs", "vin", "region", "typ"),
+    domain = c("enduse", "bs", "vin", "region", "typ"),
     records = p_ueDemand,
     description = "floor-space specific useful energy demand for space heating in kWh/yr/m2"
   )

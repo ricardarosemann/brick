@@ -156,6 +156,7 @@
 }
 
 
+
 #' Add time stamp
 #'
 #' Append current date and time
@@ -225,4 +226,105 @@
     warning("x is not a factor. This can lead to unexpected results.")
   }
   as.numeric(as.character(x))
+}
+
+
+
+#' Get file name without ending
+#'
+#' @param filePath character vector, file path including file ending
+#' @returns file name without ending and directory
+
+.getFileName <- function(filePath) {
+  sub("^(.*)\\.(.*)$", "\\1", basename(filePath))
+}
+
+
+
+#' Check if file exists
+#'
+#' Wrapper around \code{base::file.exists} with special treatment of \code{NULL}
+#'
+#' @param ... arguments to \code{file.exists}
+#' @returns logical, \code{NULL} for \code{NULL}
+
+.fileExists <- function(...) {
+  if (is.null(...)) {
+    return(FALSE)
+  }
+  file.exists(...)
+}
+
+
+
+#' Check if an object is a BRICK config
+#'
+#' @param x any R object (should be a named list if you expect a config)
+#' @returns logical
+
+.isConfig <- function(x) {
+  isTRUE(attr(x, "isConfig", exact = TRUE))
+}
+
+
+
+#' Check if an object is a cascade of BRICK configs
+#'
+#' @param x any R object (should be a named list if you expect a cascade)
+#' @returns logical
+
+.isCascade <- function(x) {
+  isTRUE(attr(x, "isCascade", exact = TRUE))
+}
+
+
+
+#' Set config switch
+#'
+#' This function preserves attributes that usually get lost when doing simple
+#' replacements.
+#'
+#' @param config named list, config or cascade of configs
+#' @param ... named arguments wit switch values
+#' @returns config or cascade with changed switch value
+
+.setSwitch <- function(config, ...) {
+  at <- attributes(config)
+  if (.isCascade(config)) {
+    config <- lapply(config, .setSwitch, ...)
+  } else if (.isConfig(config)) {
+    lst <- list(...)
+    for (switch in names(lst)) {
+      config[[switch]] <- lst[[switch]]
+    }
+  } else {
+    stop("'config' has to be either a config or a cascade of configs.")
+  }
+  attributes(config) <- at
+  config
+}
+
+
+
+#' Test paths for equality
+#'
+#' @param x,y character, paths
+#' @returns logical indicating if paths are identical
+
+.identicalPath <- function(x, y) {
+  identical(normalizePath(x), normalizePath(y))
+}
+
+
+
+#' Get run paths from settings file
+#'
+#' @param settings named list with bundle settings
+#' @returns named vector of run paths
+
+.getBundleRunPaths <- function(settings) {
+  setNames(
+    file.path(.getSettingsPath(settings, "outputFolder"), settings$run),
+    names(settings$run)
+  )
 }
