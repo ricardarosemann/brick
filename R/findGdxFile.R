@@ -34,7 +34,7 @@ findGdxFile <- function(gdx, outputFolder = NULL, gdxNames = "output.gdx") {
   }
   if (!is.null(outputFolder)) {
     # look for latest run in the output folder that has the given name
-    latestGdx <- findLatestRun(gdx, outputFolder, gdxNames)
+    latestGdx <- findLatestRun(outputFolder, run = gdx, fileNames = gdxNames)
     if (!is.null(latestGdx)) {
       return(latestGdx)
     }
