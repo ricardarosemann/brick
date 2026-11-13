@@ -44,7 +44,7 @@ getDimMap <- function(dim, granularity = NULL) {
 
 .getMapping <- function(mapping) {
   if (mapping %in% c("dim", "agg")) {
-    folder <- piamutils::getSystemFile("extdata", "sectoral", package = "brick")
+    folder <- brick.file("extdata", "sectoral")
     pattern <- paste0(mapping, "_(.*)\\.csv")
     files <- list.files(folder, pattern)
     dims <- sub(pattern, "\\1", files)

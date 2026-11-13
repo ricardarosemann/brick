@@ -1,7 +1,4 @@
 ---
-title: "default"
-
-
 # scope and resolution ---------------------------------------------------------
 
 ### time steps ###
@@ -43,6 +40,11 @@ granularity: onlyRes
   # [name, where]: regionmapping via toolGetMapping
 regionmapping: []
 
+### extra region mappings ###
+# file that maps countries to aggregated reporting regions
+# has to exist in the regional madrat mappings folder
+extramappings_historic: extramappingEU27asOne.csv
+
 ### regions ###
 # list of region codes
 # used only select specific regions from a mapping
@@ -58,11 +60,6 @@ regions: NULL
   # TRUE
   # FALSE
 ignoreShell: FALSE
-
-### status quo preference ###
-# preference to replace heating system by the same technology during renovation
-# investment cost mark up on the choice of a different technology in USD/m2
-statusQuoPreference: 20
 
 ### calibration ###
 # intangible cost assumption files
@@ -105,7 +102,7 @@ tasks32: FALSE
 # data -------------------------------------------------------------------------
 
 ### input data revision ###
-inputRevision: "0.8.11"
+inputRevision: "0.9.0"
 
 ### force download ###
 # force the model to download new input data even though it seems unchanged
@@ -154,6 +151,18 @@ popScenario: SSP2
   # SDP_EI, SDP_MC, SDP_RC
 fsScenario: SSP2
 
+### energy enduses ###
+# energy enduses considered in the operation of buildings
+  # space_heating
+  # water_heating
+  # [space_heating, water_heating]
+enduses: space_heating
+
+### status quo preference ###
+# preference to replace heating system by the same technology during renovation
+# investment cost mark up on the choice of a different technology in USD/m2
+statusQuoPreference: 20
+
 ### ban heating systems ###
 # named list of a data.frame with last period of allowed installation as value
 # allowed column names: var, region, ttot, hs
@@ -176,6 +185,13 @@ boilerBan: []
   #      ttot:    [     2020,      2030, 2025, 2030]
   #      value:   [       80,       150,    0,  100]
 carbonPrice: []
+
+### ignore vintage age ###
+# ignore vintage age in the assumption of when the initial stock of building ´
+#  shells and heating systems was installed?
+  # TRUE:  less oscillations in young vintages
+  # FALSE: physically correct - assets can't be older that their building
+ignoreVinAge: TRUE
 
 ### shift of heating system life time ###
 # named list with the shift in the Weibull scale parameter in yr

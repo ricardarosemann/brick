@@ -16,7 +16,8 @@ initModel(
   slurmQOS = NULL,
   tasksPerNode = NULL,
   timeLimit = NULL,
-  tasks32 = FALSE
+  tasks32 = FALSE,
+  .bundleSettings = NULL
 )
 }
 \arguments{
@@ -42,6 +43,8 @@ BRICK-internal config folder is used.}
  \item \code{"createMatching"} to recreate the matching data
  \item \code{"reweightMatching"} to update the matching reference selection and weighting
  \item \code{"useAsStart"} to use the run from which we restart as the starting point
+ \item \code{"copyStart"} copy gdx of starting point to run folder (irrelevant if ["useAsStart] is set)
+ \item \code{"copyHistory"} copy gdx of historic run to run folder
  \item \code{"none"} (or any other string) to do none of the above
 }}
 
@@ -56,6 +59,9 @@ BRICK-internal config folder is used.}
 \item{timeLimit}{character, time limit of the slurm job given in the format hh:mm:ss}
 
 \item{tasks32}{boolean whether or not the SLURM run should be with 32 tasks}
+
+\item{.bundleSettings}{character, path to bundle settings file. Internal
+argument. Do not set manually!}
 }
 \value{
 path (invisible)

@@ -129,7 +129,7 @@ createCalibrationTarget <- function(path,
   # CONFIG ---------------------------------------------------------------------
 
   cfgCalib <- readConfig(calibConfig)
-  cfgMatching <- readConfig(file.path(path, "config", "config_COMPILED.yaml"), readDirect = TRUE)
+  cfgMatching <- readConfig(file.path(path, "config", CONFIG_COMPILED), readDirect = TRUE)
 
   periodMap <- .buildPeriodMap(cfgCalib, cfgMatching)
   regionMap <- .buildRegionMap(cfgCalib, cfgMatching)
@@ -214,7 +214,7 @@ createCalibrationTarget <- function(path,
   cfg <- cfgCalib
   cfg[["switches"]][["RUNTYPE"]] <- "renCorrect"
   cfg[["switches"]][["CALIBRATIONMETHOD"]] <- NULL
-  cfg[["title"]] <- paste(basename(path), "for", basename(calibConfig), sep = "_")
+  cfg[["title"]] <- sub("\\.[^.]+$", "", basename(calibConfig))
   cfg[["matchingRun"]] <- normalizePath(path)
   cfg[["periods"]] <- .subsetWithPrev(cfgCalib$periods, cfgCalib$calibperiods)
   cfg[["boilerBan"]] <- cfgMatching[["boilerBan"]]
@@ -244,13 +244,13 @@ createCalibrationTarget <- function(path,
   header <- c(paste0("* matching run: ", path),
               paste0("* calibration config: ", calibConfig),
               paste0("* correction run", if (rmCorrectionRun) " (deleted)", ": ", runPath))
-  outFiles <- lapply(names(vCorrected), function(var) {
+  outFiles <- unlist(lapply(names(vCorrected), function(var) {
     outFile <- file.path(runPath, paste0("f_", var, "CalibTarget.cs4r"))
     writeLines(header, outFile)
     write.table(vCorrected[[var]], outFile, append = TRUE, quote = FALSE, sep = ",",
                 row.names = FALSE, col.names = FALSE)
     outFile
-  })
+  }))
 
   # copy files to given directory
   if (!is.null(outDir)) {

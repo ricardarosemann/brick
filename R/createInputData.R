@@ -40,6 +40,7 @@ createInputData <- function(path,
   }
 
   inputDir <- loadMadratData(config)
+  file.copy(file.path(inputDir, "historicalBuildings.mif"), path)
 
   if (identical(config$switches$RUNTYPE, "calibration")) {
     loadCalibrationTarget(config)

@@ -10,7 +10,7 @@
 #' the inflow decreases quadratically with the age of the system going back from
 #' initial time to the start of the vintage cohort, but at most 25 years.
 #' For the rather outdated technologies solids (\code{sobo}) and liquids (\code{libo}) boilers,
-#' we assume that the inlow increases quadratically with the age of the system going back from
+#' we assume that the inflow increases quadratically with the age of the system going back from
 #' initial time to the start of the vintage cohort, but at most 25 (\code{sobo}) or 20 (\code{libo}) years.
 #'
 #' @param params data frame with parameters of the Weibull distribution
@@ -19,6 +19,8 @@
 #' @param standingLifeTime logical, whether standing lifetime needs to be considered
 #' @param timePeriods data frame with time periods for which the calculations should be done
 #' @param vintages data frame with vintages and their starting and end year
+#' @param ignoreVinAge logical, ignore vintage age in the assumption of when the
+#'   initial stock was installed? This is non-physical but avoids oscillations.
 #'
 #' @returns Data frame of shares to be renovated in each time period
 #'
@@ -27,7 +29,11 @@
 #' @importFrom tidyr pivot_wider
 #'
 computeShareRen <- function(params, m,
-                            cutOffShare = 1, standingLifeTime = FALSE, timePeriods = NULL, vintages = NULL) {
+                            cutOffShare = 1,
+                            standingLifeTime = FALSE,
+                            timePeriods = NULL,
+                            vintages = NULL,
+                            ignoreVinAge = TRUE) {
 
 
 
@@ -57,19 +63,8 @@ computeShareRen <- function(params, m,
   .probXleqY <- function(shift, shape, scale, hs, maxAge) {
 
     # Set function to integrate over as the density of Y multiplied with the Weibull distribution function
-    if (hs == "ehp1") {
-      func <- .decreasingBeta
-      distrLength <- min(25, maxAge)
-    } else if (hs %in% c("libo", "sobo")) {
-      func <- .increasingBeta
-      distrLength <- min(25, maxAge)
-    } else if (hs == "libo") {
-      func <- .increasingBeta
-      distrLength <- min(20, maxAge)
-    } else {
-      func <- .shiftedPweibull
-      distrLength <- maxAge
-    }
+    func <- .shiftedPweibull
+    distrLength <- maxAge
 
     # Numerically integrate over the density function
     res <- stats::integrate(
@@ -119,8 +114,13 @@ computeShareRen <- function(params, m,
     # standing life time considers stock not flows -> no consideration of dt
     share %>%
       cross_join(vintages) %>%
-      # Vintage cohorts start at 01.01.<from>, stock is taken at 31.12.<ttotIn>
-      mutate(maxAge = .data$ttotIn - .data$from + 1) %>%
+      mutate(maxAge = if (ignoreVinAge) {
+        # assume an age long enough to cover almost all cases independent of vintage age
+        stats::qweibull(0.995, shape = .data$shape, scale = .data$scale)
+      } else {
+        # Vintage cohorts start at 01.01.<from>, stock is taken at 31.12.<ttotIn>
+        .data$ttotIn - .data$from + 1
+      }) %>%
       filter(.data$maxAge > 0) %>% # Remove non-existing vintages
       select(-any_of(c("from", "to", "colour", "label"))) %>%
       group_by(across(everything())) %>%
@@ -143,15 +143,29 @@ computeShareRen <- function(params, m,
 
     # for renovations/construction ====
 
-    # average past flow activity happened dt/2 before nominal time step ttotIn
+    # Weibull for age = ttotOut - ttotIn
+    # assuming ttotIn is equally distributed across dt until nominal ttotIn
+    .pWeibullSegment <- function(ttotIn, ttotOut, dt, shape, scale) {
+      lower = ttotOut - ttotIn
+      upper = ttotOut - (ttotIn - dt)
+      res <- stats::integrate(f = pweibull, lower = lower, upper = upper,
+                              shape = shape, scale = scale)
+      res$value / dt
+    }
+
+    # average past flow activity happened equally distributed across the dt until ttotIn
     share %>%
       left_join(readSymbol(m, "p_dt") %>%
                   rename(dt = "value"),
                 by = c(ttotIn = "ttot")) %>%
       filter(!is.na(.data$dt)) %>%
-      mutate(lt = .data$ttotOut - (.data$ttotIn - .data$dt / 2),
-             p0 = 0,
-             p  = pweibull(.data$lt, .data$shape, .data$scale))
+      mutate(p0 = 0,
+             p = unlist(Map(.pWeibullSegment,
+                            ttotIn = .data$ttotIn,
+                            ttotOut = .data$ttotOut,
+                            dt = .data$dt,
+                            shape = .data$shape,
+                            scale = .data$scale)))
   }
 
   share %>%

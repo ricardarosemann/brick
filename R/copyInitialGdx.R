@@ -2,44 +2,20 @@
 #'
 #' @param path character vector with folders to write input data into
 #' @param startingPoint character with path to the starting point or the respective directory
+#' @param outputFolder directory of output folder
 #' @param overwrite logical, should existing input.gdx be overwritten?
 #'
 #' @author Robin Hasse
 
-copyInitialGdx <- function(path, startingPoint, overwrite = FALSE) {
-  # recognised file names for inital gdx (in order of priority)
-  initialGdxNames <- c("output.gdx")
+copyInitialGdx <- function(path, startingPoint, outputFolder, overwrite = FALSE) {
+
+  if (is.null(startingPoint)) {
+    return(invisible(NULL))
+  }
 
   # find file for starting point
-  initialGdx <- startingPoint
-  if (length(initialGdx) > 1) {
-    stop("Don't give more than one starting point. You gave:\n",
-         paste(initialGdx, collapse = "\n"))
-  }
-  initialGdxFiles <- file.path(initialGdx, initialGdxNames)
-  initialGdxFile <- if (!is.null(initialGdx)) {
-    if (file.exists(initialGdx) && !dir.exists(initialGdx)) {
-      initialGdx
-    } else if (dir.exists(initialGdx)) {
-      if (any(file.exists(initialGdxFiles))) {
-        head(initialGdxFiles[which(file.exists(initialGdxFiles))], 1)
-      } else {
-        stop("There is no file for the starting point in the given directory: ",
-             initialGdx)
-      }
-    } else {
-      stop("Unable to find a file for the starting point with given config ",
-           "parameter: ", initialGdx)
-    }
-  } else {
-    NULL
-  }
+  initialGdxFile <- findGdxFile(startingPoint, outputFolder)
 
   # copy file
-  if (!is.null(initialGdxFile)) {
-    file.copy(initialGdxFile, file.path(path, "start.gdx"),
-              overwrite = overwrite)
-    message("Using ", initialGdxFile, " as start.gdx")
-  }
-
+  copyGdxFile(initialGdxFile, path, "start.gdx", overwrite)
 }

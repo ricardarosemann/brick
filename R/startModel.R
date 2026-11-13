@@ -16,13 +16,9 @@
 #'
 startModel <- function(path, runReporting = TRUE) {
 
-  cfg <- readConfig(file.path(path, "config", "config_COMPILED.yaml"), readDirect = TRUE)
+  cfg <- readConfig(file.path(path, "config", CONFIG_COMPILED), readDirect = TRUE)
 
-  if (file.exists(file.path(path, "config", "restartOptions.csv"))) {
-    restart <- read.csv2(file.path(path, "config", "restartOptions.csv"))[["restart"]]
-  } else {
-    restart <- FALSE
-  }
+  restart <- .readInitArgs(path)$restart
 
   if (isFALSE(restart) || "createInput" %in% restart) {
     createInputData(path, cfg, overwrite = !isFALSE(restart))
@@ -102,4 +98,75 @@ startModel <- function(path, runReporting = TRUE) {
 
   }
 
+  if (isFALSE(restart)) {
+    .updateBundleSettings(path, cfg[["title"]])
+    .initNextScens(path)
+  }
+
+}
+
+
+
+#' Read model initialisation arguments
+#'
+#' Since its function call, \code{initModel} might have changed arguments,
+#' namely the restart options.
+#'
+#' @param path character, path to run folder
+#' @returns named list of arguments to \code{initModel}
+.readInitArgs <- function(path) {
+  yaml::read_yaml(file.path(path, "config", INIT_ARGS))
+}
+
+
+
+#' Initialise next scenarios
+#'
+#' Initialise the runs that start from a given run as historic run
+#'
+#' @param path character, path to the historic run folder
+
+.initNextScens <- function(path) {
+  pathNextConfigs <- file.path(path, "config", "nextRuns")
+  if (dir.exists(pathNextConfigs)) {
+    nextConfigs <- readNextConfigs(pathNextConfigs)
+    nextConfigs <- .setSwitch(nextConfigs, historic = path)
+    args <- .readInitArgs(path)
+    args$config <- nextConfigs
+    args$path <- NULL
+    do.call(initModel, args)
+  }
+}
+
+
+
+#' Update bundle settings
+#'
+#' Write run path into settings file
+#'
+#' @param path character, path to the historic run folder
+#' @param title character, path to the historic run folder
+.updateBundleSettings <- function(path, title) {
+  settingsPath <- .readInitArgs(path)$.bundleSettings
+  if (is.null(settingsPath)) {
+    return(invisible(NULL))
+  }
+  if (!file.exists(settingsPath)) {
+    warning("Can't find bundle settings file: ", settingsPath)
+    return(invisible(NULL))
+  }
+  settings <- .readSettings(settingsPath)
+  outputFolder <- .getSettingsPath(settings, "outputFolder")
+  settings$run[[title]] <- if (.identicalPath(outputFolder, dirname(path))) {
+    basename(path)
+  } else {
+    warning("This run is associated with the settings file ", settingsPath,
+            "but is not located in the defined outputFolder: ", outputFolder)
+    normalizePath(path)
+  }
+  if (!settings$newRunAlways) {
+    settings$newRunNext[[title]] <- FALSE
+  }
+  write_yaml(settings, settingsPath)
+  return(invisible(settingsPath))
 }

@@ -23,6 +23,9 @@ readInput <- function(filename, dims, inputDir = NULL) {
   # call last column 'value' if name is missing
   if (length(dims) == ncol(out) - 1 && all(is.numeric(out[, ncol(out)]))) {
     dims <- c(dims, "value")
+  } else if (length(dims) != ncol(out)) {
+    stop("The input file ", filename, " has ", ncol(out),
+         " columns but you provide ", length(dims), " dims.")
   }
 
   colnames(out) <- dims

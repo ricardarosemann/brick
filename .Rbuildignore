@@ -14,3 +14,4 @@
 ^inst/input$
 ^\.claude$
 ^_pkgdown\.yml$
+^CODE_STYLE\.md$

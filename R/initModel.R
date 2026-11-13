@@ -24,6 +24,8 @@
 #'   \item \code{"createMatching"} to recreate the matching data
 #'   \item \code{"reweightMatching"} to update the matching reference selection and weighting
 #'   \item \code{"useAsStart"} to use the run from which we restart as the starting point
+#'   \item \code{"copyStart"} copy gdx of starting point to run folder (irrelevant if ["useAsStart] is set)
+#'   \item \code{"copyHistory"} copy gdx of historic run to run folder
 #'   \item \code{"none"} (or any other string) to do none of the above
 #'  }
 #' @param runReporting logical, whether to run the reporting, i.e. write the mif
@@ -32,6 +34,8 @@
 #' @param tasksPerNode numeric, number of tasks per node to be requested
 #' @param timeLimit character, time limit of the slurm job given in the format hh:mm:ss
 #' @param tasks32 boolean whether or not the SLURM run should be with 32 tasks
+#' @param .bundleSettings character, path to bundle settings file. Internal
+#'   argument. Do not set manually!
 #' @returns path (invisible)
 #'
 #' @importFrom pkgload is_dev_package
@@ -48,12 +52,74 @@ initModel <- function(config = NULL,
                       slurmQOS = NULL,
                       tasksPerNode = NULL,
                       timeLimit = NULL,
-                      tasks32 = FALSE) {
+                      tasks32 = FALSE,
+                      .bundleSettings = NULL) {
 
   if (!dir.exists(outputFolder)) {
     dir.create(outputFolder)
   }
 
+  # Multiple scenarios ---------------------------------------------------------
+
+  # checks each item for isFALSE
+  .isFALSE <- function(x) {
+    vapply(x, function(item) isFALSE(item), logical(1))
+  }
+  .isTRUE <- function(x) {
+    vapply(x, function(item) isTRUE(item), logical(1))
+  }
+
+  if (!.isConfig(config) &&
+        (length(path) > 1 || is.list(path) || length(config) > 1 || is.list(config))) {
+
+    return(invisible(
+      if (any(.isTRUE(restart))) {
+        ## independent restarts ====
+        Map(function(.path, .restart) {
+          initModel(path = .path,
+                    configFolder = configFolder,
+                    outputFolder = outputFolder,
+                    references = references,
+                    restart = .restart,
+                    runReporting = runReporting,
+                    sendToSlurm = sendToSlurm,
+                    slurmQOS = slurmQOS,
+                    tasksPerNode = tasksPerNode,
+                    timeLimit = timeLimit,
+                    tasks32 = tasks32,
+                    .bundleSettings = .bundleSettings)
+        },
+        .path = path,
+        .restart = restart
+        )
+      } else if (all(.isFALSE(restart))) {
+        ## model cascade ====
+        cascade <- if (.isCascade(config)) {
+          config
+        } else {
+          makeCascade(config, configFolder)
+        }
+        Map(function(.config) {
+          initModel(config = .config,
+                    path = path,
+                    configFolder = configFolder,
+                    outputFolder = outputFolder,
+                    references = references,
+                    runReporting = runReporting,
+                    sendToSlurm = sendToSlurm,
+                    slurmQOS = slurmQOS,
+                    tasksPerNode = tasksPerNode,
+                    timeLimit = timeLimit,
+                    tasks32 = tasks32,
+                    .bundleSettings = .bundleSettings)
+        },
+        .config = cascade
+        )
+      } else {
+        stop("Don't initialise restarts and new runs at the same time.")
+      }
+    ))
+  }
 
 
   # Determine whether to send to SLURM -----------------------------------------
@@ -89,7 +155,7 @@ initModel <- function(config = NULL,
     if (!is.null(path) && file.exists(path)) {
       message("Restarting on given path: ", path)
     } else if (is.null(path)) {
-      path <- findLastRun(outputFolder)
+      path <- findLatestRun(outputFolder)
       message("Restart: No path given or given path does not exist. Restarting on the latest run: ", path)
     } else {
       stop("Restart: You passed a non-existing path in a restart run.")
@@ -98,16 +164,15 @@ initModel <- function(config = NULL,
       message("No restart options were specified. ",
               "Default options are applied: Copy Gams files, recreate input data, ",
               "recreate and reweight matching if applicable, and use output gdx as starting point if existent.")
-      restart <- c("copyGams", "createInput", "createMatching", "reweightMatching", "useAsStart")
+      restart <- c("copyGams", "createInput", "createMatching", "reweightMatching", "useAsStart", "copyStart", "copyHistory")
     }
-    write.csv2(data.frame(restart = restart), file.path(path, "config", "restartOptions.csv"))
 
     if (!is.null(config)) {
       warning("You passed a config in a restart run. ",
-              "This config will be ignored and the existing config in 'config/config_COMPILED.yaml' will be used.")
+              "This config will be ignored and the existing config in 'config/", CONFIG_COMPILED, "' will be used.")
     }
 
-    cfg <- readConfig(config = file.path(path, "config", "config_COMPILED.yaml"),
+    cfg <- readConfig(config = file.path(path, "config", CONFIG_COMPILED),
                       configFolder = configFolder,
                       readDirect = TRUE)
     title <- cfg[["title"]]
@@ -121,7 +186,7 @@ initModel <- function(config = NULL,
       stop("You passed an existing path, but did not set this as a restart run.")
     }
 
-    cfg <- if (is.list(config)) {
+    cfg <- if (.isConfig(config)) {
       config
     } else {
       readConfig(config = config,
@@ -136,6 +201,13 @@ initModel <- function(config = NULL,
 
     createRunFolder(path, cfg)
   }
+
+
+
+  # Save function arguments ----------------------------------------------------
+
+  args <- as.list(environment(), all.names = TRUE)[names(formals(initModel))]
+  yaml::write_yaml(args, file.path(path, "config", INIT_ARGS))
 
 
 
@@ -163,9 +235,14 @@ initModel <- function(config = NULL,
     cfg[["startingPoint"]] <- file.path(path, "output.gdx")
     message("Using the output-gdx of the restarted run as starting point.")
   }
-  copyInitialGdx(path, cfg[["startingPoint"]])
+  if (isFALSE(restart) || any(c("copyStart", "useAsStart") %in% restart)) {
+    copyInitialGdx(path, cfg[["startingPoint"]], outputFolder)
+  }
 
-  copyHistoryGdx(path, outputFolder, cfg)
+  # Copy historic gdx
+  if (isFALSE(restart) || "copyHistory" %in% restart) {
+    copyHistoryGdx(path, outputFolder, cfg)
+  }
 
   # In matching run: Save references to csv
   if (cfg[["switches"]][["RUNTYPE"]] == "matching") {
@@ -192,7 +269,8 @@ initModel <- function(config = NULL,
                               " --mail-type=END,FAIL",
                               " --comment=BRICK",
                               " --wrap=\"",
-                              paste("Rscript", slurmScriptPath, path, brickDir, isDev,
+                              paste(trimws(paste(Sys.getenv("RSCRIPT_SLURM_HOOK", unset = ""), "Rscript")),
+                                    slurmScriptPath, path, brickDir, isDev,
                                     loadMredgebuildings, runReporting),
                               "\" ",
                               slurmConfig))

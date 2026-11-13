@@ -18,7 +18,8 @@ element of ttot}
 gams Container
 }
 \description{
-Select parameters and freeze them to the value in a selected period
+Select parameters and freeze them to the value in a selected period or the
+closest period that exists
 }
 \author{
 Robin Hasse

@@ -9,14 +9,14 @@ p_specCostCon(cost,bs,hs,region,loc,typ,inc,ttot)             "floor-space speci
 p_specCostRen(cost,bs,hs,bsr,hsr,vin,region,loc,typ,inc,ttot) "floor-space specific renovation cost [USD/m2]"
 p_specCostRenBS(cost,bs,hs,bsr,vin,region,loc,typ,inc,ttot)   "floor-space specific building shell retrofit cost [USD/m2]"
 p_specCostRenHS(cost,bs,hs,hsr,vin,region,loc,typ,inc,ttot)   "floor-space specific heating system replacement cost [USD/m2]"
-p_specCostOpe(bs,hs,vin,region,loc,typ,ttot)                  "floor-space specific operation cost [USD/m2/yr]"
+p_specCostOpe(enduse,bs,hs,vin,region,loc,typ,ttot)           "floor-space specific operation cost [USD/m2/yr]"
 p_specCostDem                                                 "floor-space specific demolition cost [USD/m2]"
 
 p_carbonPrice(carrier,ttot)           "Carbon price in USD/t_CO2eq"
 p_carrierPrice(carrier,region,ttot)   "final energy carrier price in USD/kWh"
 p_carrierEmi(carrier,region,ttot)     "energy carrier emission intensity in t_CO2/kWh"
-p_ueDemand(bs,vin,region,typ)         "floor-space specific useful energy demand for space heating in kWh/yr/m2"
-p_feDemand(hs,bs,vin,region,typ,ttot) "floor-space specific final energy demand for space heating in kWh/yr/m2"
+p_ueDemand(enduse,bs,vin,region,typ)  "floor-space specific useful energy demand for space and water heating in kWh/yr/m2"
+p_feDemand(enduse,hs,bs,vin,region,typ,ttot) "floor-space specific final energy demand for space and water heating in kWh/yr/m2"
 p_eff(hs,region,typ,ttot)             "technical efficiency of space heating technologies"
 p_renDepth(bs,bsr)                    "renovation depth"
 
@@ -130,7 +130,7 @@ positive variables
 v_specCostRen(cost,bs,hs,bsr,hsr,vin,region,loc,typ,inc,ttot) "floor-space specific renovation cost with heat pump intangible cost adjustment [USD/m2]"
 v_specCostRenHS(cost,bs,hs,hsr,vin,region,loc,typ,inc,ttot)   "floor-space specific heating system replacement cost with heat pump intangible cost adjustment [USD/m2]"
 
-v_opeCost(region,loc,typ,inc,ttot) "operational cost cash flow in USD/yr"
+v_opeCost(enduse,region,loc,typ,inc,ttot) "operational cost cash flow in USD/yr"
 v_demCost(region,loc,typ,inc,ttot) "demolition cost cash flow in USD/yr"
 
 v_stock(qty,bs,hs,vin,region,loc,typ,inc,ttot)              "stock of buildings in [million m2/yr]"
@@ -168,7 +168,7 @@ q_sysCost(region,loc,typ,inc,ttot) "system cost (con + ren + ope + dem)"
 q_conCost(region,loc,typ,inc,ttot) "construction cost"
 q_renCost(region,loc,typ,inc,ttot) "renovation cost"
 q_renCostLinear(region,loc,typ,inc,ttot) "linear renovation cost"
-q_opeCost(region,loc,typ,inc,ttot) "operation cost"
+q_opeCost(enduse,region,loc,typ,inc,ttot) "operation cost"
 q_demCost(region,loc,typ,inc,ttot) "demolition cost"
 
 q_factorIntangCostHeatPump(region,loc,typ,inc,ttot)     "factor to scale down intangible costs for heat pumps"
